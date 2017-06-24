@@ -32,7 +32,7 @@
               <h1 class="center blue-text text-darken-4">
                 <i class="large material-icons">fast_forward</i>
                 <h4 class="blue-text text-darken-4">
-                  Students Can Join Quickly
+                  Students Can Join Instantly
                 </h4>
               </h1>
               <p class="flow-text blue-text text-darken-2">
@@ -47,7 +47,7 @@
                 <i class="large material-icons">airplay</i>
               </h1>
               <h4 class="blue-text text-darken-4">
-                Transfers Images With Questions
+                Images Transfer With Questions
               </h4>
               <p class="flow-text blue-text text-darken-2">
                 No projector? Our software will transfer any image associated with the question to
@@ -108,13 +108,12 @@
             email: email,
           };
 
-          $.post("http://149.56.101.26:3001/database", params, (result) => {
+          $.post("http://149.56.101.26/database", params, (result) => {
             console.log(result);
-            if (result.state === 'success') {
-              $('#emailDiv').attr('hidden', true);
-              $('#thanks').toggleClass('hide');
-            }
           });
+
+          $('#emailDiv').attr('hidden', true);
+          $('#thanks').toggleClass('hide');
         })
       });
 

@@ -21,6 +21,10 @@
   filter: blur(10px);
 }
 
+.textcol {
+  margin-top: 10px;
+}
+
 .header-container {
   margin-top: 200px;
   margin-bottom: 200px;
@@ -30,7 +34,7 @@
 .header {
   display: inline-block;
   padding: 5px;
-  font-size: 72px;
+  font-size: 64px;
   font-weight: bolder;
 }
 

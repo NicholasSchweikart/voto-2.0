@@ -27,7 +27,7 @@
         </div>
 
         <div class="row center-text">
-          <div class="col s12 m4">
+          <div class="col s12 m4 textcol">
             <div class="icon-block center white-opacity">
               <h1 class="center blue-text text-darken-4">
                 <i class="large material-icons">fast_forward</i>
@@ -41,7 +41,7 @@
               </p>
             </div>
           </div>
-          <div class="col s12 m4">
+          <div class="col s12 m4 textcol">
             <div class="icon-block center white-opacity">
               <h1 class="center blue-text text-darken-4">
                 <i class="large material-icons">airplay</i>
@@ -55,7 +55,7 @@
               </p>
             </div>
           </div>
-          <div class="col s12 m4">
+          <div class="col s12 m4 textcol">
             <div class="icon-block center white-opacity">
               <h1 class="center blue-text text-darken-4">
                 <i class="large material-icons">loop</i>
@@ -75,14 +75,17 @@
           <div class="col s12">
             <div class="icon-block center">
               <h3 class="footer white-text">Interested?</h3>
-              <a id="buyNowButton" href="#" class="waves-effect waves-light btn-large blue darken-2">BUY NOW!</a>
-              <div id="emailDiv" hidden="false">
+              <a id="buyNowButton" href="#" class="waves-effect waves-light btn-large blue darken-2" style="margin-bottom: 25px;">BUY NOW!</a>
+              <div id="emailDiv" class="hide">
                 <h4 class="white-text low-header">Oops! This product is still in development. With your email however, we can tell you as soon as its complete! </h4>
                 <input id="email" type="email" class="white-text footer">
                 <a id="submit" href="#" class="waves-effect waves-light btn-large blue darken-2">Submit</a>
               </div>
               <div id="thanks" class="hide">
                 <h4 class="white-text low-header">Thanks! We will send you an email as soon as the product is ready!</h4>
+              </div>
+              <div id="error" class="hide">
+                <h4 class="white-text low-header">Oops! Something went wrong! Please refresh your page.</h4>
               </div>
             </div>
           </div>
@@ -96,24 +99,35 @@
     <script>
       $(document).ready(() => {
         buyNowButton = $('#buyNowButton');
-        buyNowButton.click(() => {
-          $('#emailDiv').attr('hidden', false);
+        buyNowButton.click((evt) => {
+          evt.preventDefault();
+          $('#emailDiv').toggleClass('hide');
           buyNowButton.toggleClass('hide');
         });
 
         submitButton = $('#submit');
-        submitButton.click(() => {
+        submitButton.click((evt) => {
+          evt.preventDefault();
           let email = $('#email').val();
           let params = {
             email: email,
           };
 
-          $.post("http://149.56.101.26/database", params, (result) => {
-            console.log(result);
+          $.post("http://localhost/database", params)
+          .done((response) => {
+            console.log(response);
+            $('#emailDiv').toggleClass('hide');
+            $('#thanks').toggleClass('hide');
+          })
+          .fail((xhr, status, err) => {
+            console.log(xhr);
+            console.log(status);
+            console.log(err);
+            $('#emailDiv').toggleClass('hide');
+            $('#error').toggleClass('hide');
           });
 
-          $('#emailDiv').attr('hidden', true);
-          $('#thanks').toggleClass('hide');
+
         })
       });
 

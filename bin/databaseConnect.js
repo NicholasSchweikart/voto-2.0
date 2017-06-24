@@ -41,10 +41,10 @@ exports.getUser = function(request,callback)
     });
 };
 
-exports.addEmail = function(request,callback)
+exports.addEmail = function(email,callback)
 {
     var sql = "INSERT INTO emails (email) VALUES ?";
-    var parameters = [request.email]
+    var parameters = [email];
 
     QUERY(sql, parameters, function(err, data){
 

@@ -17,7 +17,10 @@ const dataBase = require('./../bin/databaseConnect');
 /* POST new email*/
 router.post('/', function(req, res, next) {
 
-  dataBase.addEmail(req, function(err, data) {
+  var data = req.body;
+  console.log("Processing new email: " + data.email);
+
+  dataBase.addEmail(data.email, function(err, data) {
 
         if (err) {
             console.log(err)

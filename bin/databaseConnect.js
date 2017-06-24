@@ -17,10 +17,34 @@ var pool = mysql.createPool({
  });
 
 
-exports.get_User = function(request,callback)
+exports.getUser = function(request,callback)
 {
     var sql = "SELECT * FROM gyms WHERE user_name= ? AND password= ?";
     var parameters = [request.username, request.password]
+
+    QUERY(sql, parameters, function(err, data){
+
+        if(!err)
+        {
+            if(data.length == 0)
+                callback("", null);
+            else
+                callback("", data[0]);
+        }
+
+        if(err)
+        {
+            callback(err);
+            return;
+        }
+
+    });
+};
+
+exports.addEmail = function(request,callback)
+{
+    var sql = "INSERT INTO emails (email) VALUES ?";
+    var parameters = [request.email]
 
     QUERY(sql, parameters, function(err, data){
 

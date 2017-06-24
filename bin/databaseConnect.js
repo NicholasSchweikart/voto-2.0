@@ -73,7 +73,6 @@ function QUERY(queryString, parametersArray, callback)
         if (err)
         {
              connection.release();
-
              callback(err);
              return;
         };
@@ -86,6 +85,11 @@ function QUERY(queryString, parametersArray, callback)
                 callback("", data);
             };
 
+            if (err)
+            {
+                 callback(err);
+                 return;
+            };
         });
 
         connection.on('error', function(err) {

@@ -43,7 +43,7 @@ exports.getUser = function(request,callback)
 
 exports.addEmail = function(email,callback)
 {
-    var sql = "INSERT INTO emails (email) VALUES ?";
+    var sql = "INSERT INTO emails (email) VALUES (?)";
     var parameters = [email];
 
     QUERY(sql, parameters, function(err, data){

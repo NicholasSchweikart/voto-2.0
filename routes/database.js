@@ -28,7 +28,7 @@ router.post('/', function(req, res, next) {
                 'error': err
             });
         } else {
-            res.json(data);
+            res.json({status:"success"});
         }
     });
 });

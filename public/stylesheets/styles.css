@@ -21,19 +21,21 @@
   filter: blur(10px);
 }
 
-.textcol {
-  margin-top: 10px;
+.header-container {
+  margin-top: 100px;
+  margin-bottom: 100px;
 }
 
-.header-container {
-  margin-top: 200px;
-  margin-bottom: 200px;
+.border {
+  display: inline-block;
   border: thick solid white;
+  padding-left: 3%;
+  padding-right: 3%;
+  padding-bottom: 20px;
 }
 
 .header {
   display: inline-block;
-  padding: 5px;
   font-size: 64px;
   font-weight: bolder;
 }
@@ -46,6 +48,7 @@
 .white-opacity {
   background-color: rgba(255, 255, 255, .7);
   padding: 10px;
+  height: 100%;
 }
 
 .center-text {

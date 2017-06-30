@@ -42,7 +42,7 @@ exports.getUser = function(request,callback)
 };
 
 exports.addNewMessage = function(user, _cb) {
-  var sql = "INSERT INTO emailMessages (name, email, text) VALUES (?)";
+  var sql = "INSERT INTO emailMessages (name, email, text) VALUES (?, ?, ?)";
   var params = [user.name, user.email, user.text];
 
   QUERY(sql, params, (err, data) => {

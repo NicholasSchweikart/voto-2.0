@@ -41,6 +41,26 @@ exports.getUser = function(request,callback)
     });
 };
 
+exports.addNewMessage = function(user, _cb) {
+  var sql = "INSERT INTO emailMessages (name, email, text) VALUES (?, ?, ?)";
+  var params = [user.name, user.email, user.text];
+
+  QUERY(sql, params, (err, data) => {
+    if (!err) {
+      if (data.lenth == 0) {
+        _cb('', null);
+      } else {
+        _cb('', data[0])
+      }
+    }
+
+    if (err) {
+      _cb(err);
+      return;
+    }
+  })
+}
+
 exports.addEmail = function(email,callback)
 {
     var sql = "INSERT INTO emails (email) VALUES (?)";

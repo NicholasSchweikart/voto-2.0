@@ -8,7 +8,7 @@
 var mysql = require('mysql');
 
 var pool = mysql.createPool({
-     connectionLimit : 10, //important
+     connectionLimit : 10, //IMPORTANT
      host     : 'localhost',
      user     : 'root',
      password : 'votouser',
@@ -16,38 +16,31 @@ var pool = mysql.createPool({
      debug    :  false
  });
 
+// exports.getEmails = (_cb) => {
+//   var sql = "SELECT * FROM emails";
+//
+//   QUERY(sql, null, (err, data) => {
+//     if (!err) {
+//       if (data.length == 0) {
+//         _cb('', null);
+//       } else {
+//         _cb('', data[0]);
+//       }
+//     } else {
+//       _cb(err);
+//     }
+//
+//     return;
+//   })
+// }
 
-exports.getUser = function(request,callback)
-{
-    var sql = "SELECT * FROM gyms WHERE user_name= ? AND password= ?";
-    var parameters = [request.username, request.password]
-
-    QUERY(sql, parameters, function(err, data){
-
-        if(!err)
-        {
-            if(data.length == 0)
-                callback("", null);
-            else
-                callback("", data[0]);
-        }
-
-        if(err)
-        {
-            callback(err);
-            return;
-        }
-
-    });
-};
-
-exports.addNewMessage = function(user, _cb) {
+exports.addNewMessage = (user, _cb) => {
   var sql = "INSERT INTO emailMessages (name, email, text) VALUES (?, ?, ?)";
   var params = [user.name, user.email, user.text];
 
   QUERY(sql, params, (err, data) => {
     if (!err) {
-      if (data.lenth == 0) {
+      if (data.length == 0) {
         _cb('', null);
       } else {
         _cb('', data[0])
@@ -61,34 +54,28 @@ exports.addNewMessage = function(user, _cb) {
   })
 }
 
-exports.addEmail = function(email,callback)
-{
+exports.addEmail = (email, _cb) => {
     var sql = "INSERT INTO emails (email) VALUES (?)";
     var parameters = [email];
 
-    QUERY(sql, parameters, function(err, data){
+    QUERY(sql, parameters, (err, data) => {
 
-        if(!err)
-        {
+        if(!err) {
             if(data.length == 0)
-                callback("", null);
+                _cb("", null);
             else
-                callback("", data[0]);
+                _cb("", data[0]);
         }
 
-        if(err)
-        {
-            callback(err);
+        if(err) {
+            _cb(err);
             return;
         }
-
     });
 };
 
-function QUERY(queryString, parametersArray, callback)
-{
-    // Query and get thisGym from the gyms table.
-    pool.getConnection(function(err,connection){
+function QUERY(queryString, parametersArray, callback) {
+    pool.getConnection(function(err, connection) {
 
         if (err)
         {

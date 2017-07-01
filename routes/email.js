@@ -4,9 +4,6 @@ var router = express.Router();
 const db = require('./../bin/databaseConnect');
 
 router.post('/', function(req, res, next) {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'PUT, GET, POST, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'accept, content-type, x-parse-application-id, x-parse-rest-api-key, x-parse-session-token');
 
   var data = req.body;
   console.log("New email from client: " + data.name);

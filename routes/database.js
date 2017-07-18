@@ -8,7 +8,7 @@ router.post('/', function(req, res, next) {
   var data = req.body;
   console.log("Processing new email: " + data.email);
 
-  db.addEmail(data.email, function(err, data) {
+  db.addEmail(data.email, (err, data) => {
 
         if (err) {
             console.log(err)

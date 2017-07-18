@@ -673,16 +673,20 @@
           text: text,
         };
 
-        $.post("http://voto.io/email", params)
-        .done((response) => {
-          console.log(response);
-        })
-        .fail((xhr, status, err) => {
-          console.log(xhr);
-          console.log(status);
-          console.log(err);
-        });
-      })
+        if(params.name == "" || params.email == "" || params.text == ""){
+            alert("Please input all fields to submit");
+        }else{
+            $.post("http://voto.io/email", params)
+            .done((response) => {
+              console.log(response);
+            })
+            .fail((xhr, status, err) => {
+              console.log(xhr);
+              console.log(status);
+              console.log(err);
+            });
+        }
+    });
 
       submitButton.click((evt) => {
         evt.preventDefault();
@@ -691,16 +695,22 @@
           email: email,
         };
 
-        $.post("http://voto.io/database", params)
-        .done((response) => {
-          console.log(response);
-          $('#myModal').modal('show')
-        })
-        .fail((xhr, status, err) => {
-          console.log(xhr);
-          console.log(status);
-          console.log(err);
-        });
+        if(params.email == ""){
+            alert("Please provide an email address!");
+        }
+        else
+        {
+            $.post("http://voto.io/database", params)
+            .done((response) => {
+              console.log(response);
+              $('#myModal').modal('show')
+            })
+            .fail((xhr, status, err) => {
+              console.log(xhr);
+              console.log(status);
+              console.log(err);
+            });
+        }
     });
 });
   </script>

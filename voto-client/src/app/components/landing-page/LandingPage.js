@@ -1,51 +1,30 @@
 import React from 'react';
 import './LandingPageStyles.css';
-import {
-  Button,
-  Icon,
-  Row,
-  Col,
-} from 'react-materialize';
+
+import VotoNav from '../../shared/components/VotoNav';
+
+import VotoIcon from '../../shared/images/voto_icon.png';
 
 export default class LandingPage extends React.Component {
 
-  render() {
-    return (
-      <div className = "background white-text">
-        <h1 className = "center">
-          Welcome to VOTO
-        </h1>
-        <br />
-        <h2 className = "center">
-          Select an option
-        </h2>
-        <br />
-        <Row>
-          <Col s={6} className = "center">
-            <Icon large>speaker_phone</Icon>
-            <br />
-            <Button className = "blue darken-2" large
-             onClick = {this.handleClick.bind(this, "student")}>
-              Student</Button>
-          </Col>
-          <Col s={6} className = "center">
-            <Icon large>perm_identity</Icon>
-            <br />
-            <Button className = "blue darken-2" large
-             onClick = {this.handleClick.bind(this, "teacher")}>
-              Teacher</Button>
-          </Col>
-        </Row>
-      </div>
-    );
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      code: this.props.match.params.code,
+    }
   }
 
-  handleClick(param) {
-    if(param === "student") {
-      console.log("student");
-    } else {
-      console.log("teacher");
-    }
+  render() {
+    return (
+      <div>
+        <div className='container center top'>
+          <div className='card-panel'>
+            <img src={VotoIcon} className='responsive-img' alt='' />
 
+          </div>
+        </div>
+      </div>
+    );
   }
 }

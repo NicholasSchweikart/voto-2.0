@@ -5,11 +5,11 @@
   "dependencies": {
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
-    "react-materialize": "^1.0.1"
+    "react-materialize": "^1.0.1",
+    "react-router-dom": "^4.1.2",
+    "react-scripts": "^1.0.7"
   },
-  "devDependencies": {
-    "react-scripts": "1.0.7"
-  },
+  "devDependencies": {},
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",

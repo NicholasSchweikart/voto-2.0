@@ -77,7 +77,7 @@ const DashboardCard = (props) => {
           <img src={slide} alt="Slide" className={classes.slide} />
         </CardMedia>
 
-        <CardActions >
+        <CardActions>
           <IconButton aria-label="Host Session">
             <PlayArrow className={classes.icon} />
           </IconButton>

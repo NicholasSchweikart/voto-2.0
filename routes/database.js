@@ -1,11 +1,11 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
 const db = require('./../bin/databaseConnect');
 
 router.post('/', function(req, res, next) {
 
-  var data = req.body;
+  let data = req.body;
   console.log("Processing new email: " + data.email);
 
   db.addEmail(data.email, (err, data) => {

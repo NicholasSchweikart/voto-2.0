@@ -4,7 +4,9 @@ import {
   createStyleSheet
 } from 'material-ui/styles';
 import {
-  blue
+  blue,
+  blueGrey,
+  indigo,
 } from 'material-ui/colors';
 import {
   CardContent,
@@ -18,39 +20,50 @@ import {
   TextField,
   Button,
 } from 'material-ui';
-import {
-  Email,
-  VpnKey
-} from 'material-ui-icons';
 
+//IMAGE IMPORTS
 import logo from '../images/logo.png';
 
 const styleSheet = createStyleSheet('LoginPage', {
   root: {
     flex: 1,
-    backgroundColor: blue[500],
+    backgroundColor: blueGrey[700],
+    padding: 30,
   },
-  height: {
+  fillHeight: {
     height: '100%',
   },
   card: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    width: 300,
+    width: 320,
     padding: 32,
     boxShadow: '0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)',
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: 128,
+    height: 128,
   },
   title: {
-    color: blue[700],
+    color: indigo[500],
+    fontSize: 32,
+  },
+  field: {
+    width: 256,
+    fontSize: 20,
   },
   input: {
-    width: 250,
-  }
+    color: indigo[700],
+    textUnderlineColor: indigo[700],
+  },
+  label: {
+    color: indigo[200],
+  },
+  button: {
+    width: 96,
+    margin: 8,
+  },
 });
 
 class LoginPage extends React.Component {
@@ -71,7 +84,7 @@ class LoginPage extends React.Component {
         <Grid item xs={12}>
           <Grid
             container
-            className={classes.height}
+            className={classes.fillHeight}
             align="center"
             direction="row"
             justify="center"
@@ -84,7 +97,7 @@ class LoginPage extends React.Component {
                 </CardMedia>
 
                 <CardContent>
-                  <Typography type="title" className={classes.title}>
+                  <Typography type="root" className={classes.title}>
                     V O T O
                   </Typography>
                 </CardContent>
@@ -93,7 +106,9 @@ class LoginPage extends React.Component {
                   <TextField
                     id="email"
                     label="Email"
-                    className={classes.input}
+                    labelClassName={classes.label}
+                    className={classes.field}
+                    InputClassName={classes.input}
                   />
                 </CardContent>
 
@@ -101,14 +116,41 @@ class LoginPage extends React.Component {
                   <TextField
                     id="password"
                     label="Password"
-                    className={classes.input}
+                    labelClassName={classes.label}
+                    className={classes.field}
+                    InputClassName={classes.input}
                   />
                 </CardContent>
 
-                <CardContent>
-                  <Button raised color="primary" style={{width: 250, marginTop: 16}}>
-                    L O G I N
+                <CardContent style={{paddingBottom: 0}}>
+                  <Button raised color="primary"
+                          className={classes.button}>
+                    <Typography type="button">
+                      Login
+                    </Typography>
                   </Button>
+
+                  <Button raised color="primary"
+                          className={classes.button}>
+                    <Typography type="button">
+                      Register
+                    </Typography>
+                  </Button>
+                </CardContent>
+
+                <CardContent style={{paddingTop: 8}}>
+                  <Button raised color="primary"
+                          style={{width: 208}}>
+                    <Typography type="button">
+                      Students, Click Here
+                    </Typography>
+                  </Button>
+                </CardContent>
+
+                <CardContent>
+                  <Typography type="caption">
+                    Forgot Your Password?
+                  </Typography>
                 </CardContent>
               </Card>
 

@@ -12,6 +12,9 @@ import {
   IconButton,
 } from 'material-ui';
 import MenuIcon from 'material-ui-icons/Menu';
+import {
+  indigo
+} from 'material-ui/colors';
 import VotoNavDrawer from './VotoNavDrawer';
 
 const styleSheet = createStyleSheet('VotoNavBar', {
@@ -21,6 +24,9 @@ const styleSheet = createStyleSheet('VotoNavBar', {
   flex: {
     flex: 1,
   },
+  indigo: {
+    backgroundColor: indigo[500],
+  }
 });
 
 class VotoNavBar extends React.Component {
@@ -43,7 +49,7 @@ class VotoNavBar extends React.Component {
 
     return (
       <div className={classes.root}>
-        <AppBar position="static">
+        <AppBar position="static" className={classes.indigo}>
           <Toolbar>
             <IconButton color="contrast" aria-label="Menu" onClick={this.openDrawer}>
               <MenuIcon />

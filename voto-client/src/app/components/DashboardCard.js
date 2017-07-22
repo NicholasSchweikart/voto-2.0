@@ -19,17 +19,23 @@ import {
   Typography,
   Button,
   Avatar,
+  IconButton,
 } from 'material-ui';
 import {
   MoreVert,
-  Slideshow
+  Slideshow,
+  Delete,
+  Edit,
+  PlayArrow,
 } from 'material-ui-icons';
-import logo from '../images/logo.png'
+import slide from '../images/sampleslide.png'
 
 const styleSheet = createStyleSheet('DashboardCard', {
   card: {
     display: 'flex',
     flexDirection: 'column',
+    alignItems: 'center',
+    borderRadius: 0,
   },
   moreVert: {
     alignSelf: 'flex-end',
@@ -38,12 +44,13 @@ const styleSheet = createStyleSheet('DashboardCard', {
   avatar: {
     backgroundColor: indigo[900],
   },
-  logo: {
-    width: '100%',
-    height: '100%',
-    color: indigo[500],
+  header: {
+    alignSelf: 'flex-start',
   },
-  title: {
+  slide: {
+    width: '100%',
+  },
+  icon: {
     color: indigo[500],
   }
 });
@@ -54,7 +61,8 @@ const DashboardCard = (props) => {
   return (
     <Grid item xs={6} sm={4} md={3} lg={2}>
       <Card className={classes.card}>
-        <CardHeader
+
+        <CardHeader className={classes.header}
           avatar={
             <Avatar aria-label={name} className={classes.avatar}>
               {name.charAt(0).toUpperCase()}
@@ -62,13 +70,25 @@ const DashboardCard = (props) => {
           }
           title={name}
           subheader="Created on Sep. 5th"
-          classes={{
-            title: classes.title
-          }}
         />
+
         <CardMedia>
-          <Slideshow className={classes.logo} />
+          {/*<Slideshow className={classes.logo} />*/}
+          <img src={slide} alt="Slide" className={classes.slide} />
         </CardMedia>
+
+        <CardActions >
+          <IconButton aria-label="Host Session">
+            <PlayArrow className={classes.icon} />
+          </IconButton>
+          <IconButton aria-label="Edit Session">
+            <Edit className={classes.icon} />
+          </IconButton>
+          <IconButton aria-label="Delete Session">
+            <Delete className={classes.icon} />
+          </IconButton>
+        </CardActions>
+
       </Card>
     </Grid>
   );

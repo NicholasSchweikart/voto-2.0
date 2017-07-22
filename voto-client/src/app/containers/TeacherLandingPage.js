@@ -10,12 +10,11 @@ import {
 import {
   Grid,
   Card,
+  Button,
 } from 'material-ui';
 import {
-  CardContent,
-  CardActions,
-  CardMedia,
-} from 'material-ui/Card';
+  Add
+} from 'material-ui-icons';
 import VotoNavBar from '../components/VotoNavBar';
 import DashboardCard from '../components/DashboardCard';
 import logo from '../images/logo.png'
@@ -26,10 +25,19 @@ const styleSheet = createStyleSheet('TeacherLandingPage', {
     backgroundColor: blueGrey[500],
   },
   cardContainer: {
-    padding: 16,
+    padding: 8,
   },
   logo: {
     width: '100%',
+  },
+  fab: {
+    backgroundColor: '#F44336',
+    color: 'white',
+    right: 24,
+    bottom: 24,
+    top: 'auto',
+    position: 'fixed',
+    zIndex: 2,
   }
 });
 
@@ -54,8 +62,12 @@ class TeacherLandingPage extends React.Component {
           <DashboardCard name="CS3429" />
           <DashboardCard name="CS3425" />
 
-
         </Grid>
+
+        <Button fab className={classes.fab}>
+          <Add />
+        </Button>
+
       </div>
     );
   }

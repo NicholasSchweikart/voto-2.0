@@ -43,24 +43,35 @@ const styleSheet = createStyleSheet('TeacherLandingPage', {
 
 class TeacherLandingPage extends React.Component {
 
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      cards: [
+        "Demo",
+        "Test",
+        "CS3425",
+        "History",
+        "CS4411",
+        "UN1015",
+        "Japan"
+      ]
+    }
+  }
+
+
   render() {
     const { classes } = this.props;
+    const { cards } = this.state;
 
     return (
       <div className={classes.root}>
         <VotoNavBar />
         <Grid container className={classes.cardContainer}>
 
-          <DashboardCard name="CS3421" />
-          <DashboardCard name="CS3422" />
-          <DashboardCard name="CS3423" />
-          <DashboardCard name="CS3424" />
-          <DashboardCard name="CS3425" />
-          <DashboardCard name="CS3426" />
-          <DashboardCard name="CS3427" />
-          <DashboardCard name="CS3428" />
-          <DashboardCard name="CS3429" />
-          <DashboardCard name="CS3425" />
+          {cards.map((name, i) => (
+            <DashboardCard name={name} />
+          ))}
 
         </Grid>
 

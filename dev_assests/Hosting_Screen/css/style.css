@@ -6,6 +6,10 @@
  * Made By MaterializeCSS.com
  */
 
+nav {
+  height: 6vh;
+}
+
 .icon-block {
   padding: 0 15px;
 }
@@ -27,5 +31,6 @@
 }
 
 .container{
-  width: 95%
+  width: 95vw;
+  height: 94vh;
 }

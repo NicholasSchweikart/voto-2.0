@@ -1,0 +1,61 @@
+nav {
+  height: 6vh;
+}
+
+.content-main {
+  display: flex;
+  height: 94vh;
+  flex-direction: row;
+}
+
+.slide-preview-container {
+  display: flex;
+  flex-direction: column;
+  margin: 10px;
+  overflow-y: scroll;
+  overflow-x: hidden;
+}
+
+.slide-viewer-slide {
+  width: 15vw;
+  margin: 5px;
+}
+
+.main-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.main-slide-container {
+  display: flex;
+  flex: 1;
+  margin: 10px;
+}
+
+.image-wrapper {
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  justify-content: center;
+}
+
+.image {
+  height: 100%;
+  width: auto;
+}
+
+.button-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 10px;
+}
+
+.chart-container {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 10px;
+}

@@ -51,14 +51,14 @@ const SlidePreview = (props) => {
   const { classes } = props;
 
   return (
-    <Grid item xs={4} md={3} lg={2} style={{margin: 4}}>
+    <Grid item xs={4} md={3} lg={3} style={{margin: 4}}>
 
       <Card className={classes.slideContainer}>
-        <CardMedia>
+        <CardMedia style={{marginBottom: -4}}>
           <img src={sampleslide} alt="Slide" className={classes.slide} />
-          <IconButton className={classes.arrowButton}>
-            <PlayArrow />
-          </IconButton>
+          {/*<IconButton className={classes.arrowButton}>*/}
+            {/*<PlayArrow />*/}
+          {/*</IconButton>*/}
         </CardMedia>
       </Card>
 

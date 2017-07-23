@@ -19,7 +19,7 @@ import VotoNavDrawer from './VotoNavDrawer';
 
 const styleSheet = createStyleSheet('VotoNavBar', {
   root: {
-    width: '100%',
+    flex: 1,
   },
   flex: {
     flex: 1,

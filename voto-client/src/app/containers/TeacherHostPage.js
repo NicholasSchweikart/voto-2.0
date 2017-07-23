@@ -36,6 +36,8 @@ const styleSheet = createStyleSheet('TeacherHostPage', {
   root: {
     flex: 1,
     backgroundColor: blueGrey[500],
+    flexDirection: 'column',
+    justifyContent: 'center',
   },
   container: {
     flex: 1,
@@ -49,11 +51,19 @@ const styleSheet = createStyleSheet('TeacherHostPage', {
   currentSlide: {
     width: '100%',
   },
+  chartContainer: {
+    height: '100%',
+    display: 'flex',
+    flex: 1,
+    flexDirection: 'column',
+    justifyContent: 'center',
+  },
   slidePreviewContainer: {
     display: 'flex',
     flex: 1,
     flexDirection: 'row',
     overflowX: 'auto',
+    marginTop: 8,
   },
   icon: {
     color: indigo[700],
@@ -66,7 +76,7 @@ class TeacherHostPage extends React.Component {
     super(props);
 
     this.state = {
-      data: {
+      chartData: {
         labels: ["A", "B", "C", "D", "E"],
         datasets: [{
           label: 'Number of Votes',
@@ -88,20 +98,54 @@ class TeacherHostPage extends React.Component {
           borderWidth: 1
         }]
       },
-      options: {
+      chartOptions: {
         scales: {
           yAxes: [{
             ticks: {
-              beginAtZero:true
+              beginAtZero: true
             }
           }]
-        }
-      }
+        },
+        maintainAspectRatio: false,
+      },
+      chartWidth: 0,
+      chartHeight: 0,
     }
+  }
+
+  _updateDimensions() {
+    if (window.innerWidth < 360) {
+      this.setState({
+        chartWidth: 288,
+        chartHeight: 96,
+      })
+    } else if (window.innerWidth < 960) {
+      this.setState({
+        chartWidth: window.innerWidth - 48,
+        chartHeight: (window.innerWidth - 48) / 2.5,
+      })
+    } else {
+      let gridsize = window.innerWidth * .5;
+
+      this.setState({
+        chartWidth: gridsize - 48,
+        chartHeight: (gridsize - 48) * .84,
+      })
+    }
+  }
+
+  componentDidMount() {
+    this._updateDimensions();
+    window.addEventListener('resize', this._updateDimensions.bind(this));
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._updateDimensions.bind(this));
   }
 
   render() {
     const { classes } = this.props;
+    const { chartWidth, chartHeight, chartData, chartOptions } = this.state;
 
     return (
       <div className={classes.root}>
@@ -110,11 +154,10 @@ class TeacherHostPage extends React.Component {
         <Grid
           container
           className={classes.container}
-          direction="column"
-          align="center"
+          direction="row"
         >
 
-          <Grid item xs={12} md={9} lg={8}>
+          <Grid item xs={12} md={6}>
             <Card className={classes.currentSlideContainer}>
 
               <CardMedia>
@@ -136,9 +179,7 @@ class TeacherHostPage extends React.Component {
               </CardActions>
 
             </Card>
-          </Grid>
 
-          <Grid item xs={12} md={9} lg={8}>
             <div className={classes.slidePreviewContainer}>
 
               <SlidePreview />
@@ -154,17 +195,22 @@ class TeacherHostPage extends React.Component {
             </div>
           </Grid>
 
-          <Grid item xs={12}>
-
-            <Bar
-              data={this.state.data}
-              width={500}
-              height={250}
-              options={{
-                maintainAspectRatio: false
-              }}
-            />
-
+          <Grid item xs={12} md={6}>
+            <Card className={classes.chartContainer}>
+              <CardContent
+                className={classes.chart}
+                style={{
+                  width: chartWidth,
+                  height: chartHeight,
+                  minHeight: 96,
+                }}
+              >
+                <Bar
+                  data={chartData}
+                  options={chartOptions}
+                />
+              </CardContent>
+            </Card>
           </Grid>
 
         </Grid>

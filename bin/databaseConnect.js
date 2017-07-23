@@ -5,9 +5,10 @@
 * database for end user/admin specific actions.
 */
 
-var mysql = require('mysql');
+const mysql = require('mysql');
+const passwordUtil = require('./passwordUtility.js');
 
-var pool = mysql.createPool({
+let pool = mysql.createPool({
     connectionLimit : 10, //IMPORTANT
     host     : 'localhost',
     user     : 'root',
@@ -16,69 +17,104 @@ var pool = mysql.createPool({
     debug    :  false
 });
 
-// exports.getEmails = (_cb) => {
-//   var sql = "SELECT * FROM emails";
-//
-//   QUERY(sql, null, (err, data) => {
-//     if (!err) {
-//       if (data.length == 0) {
-//         _cb('', null);
-//       } else {
-//         _cb('', data[0]);
-//       }
-//     } else {
-//       _cb(err);
-//     }
-//
-//     return;
-//   })
-// }
+/**
+ * Adds a new user to the data base if possible.
+ * @param firstName users first name
+ * @param lastName users last name
+ * @param password users selected password
+ * @param _cb callback
+ */
+exports.createUser = (firstName,lastName,password, _cb) => {
+    console.log('Attempting to create user...');
+
+    // Sanatize inputs preemptive;
+    if(firstName === "")
+        _cb('ERR: must provide first name');
+    if(lastName === "")
+        _cb('ERR: must provide last name');
+    if(password === "")
+        _cb('ERR: must provide password');
+
+    let passwordData = passwordUtil.getSaltHashPassword(password);
+
+    let sql = "INSERT INTO users (firstName, lastName, password_salt, password_hash ) VALUES(?,?,?,?)";
+    let params = [firstName, lastName, passwordData.salt, passwordData.passwordHash];
+
+    QUERY(sql, params, (err, data) => {
+
+        if (err) {
+            _cb(err);
+        }
+
+        _cb(null, data[0]);
+
+    });
+};
+
+/**
+ * Attempts to login a user with the provided credentials.
+ * @param userName the users name
+ * @param password the users password
+ * @param _cb callback
+ */
+exports.loginUser = (userName,password, _cb) => {
+    console.log('Attempting login...');
+
+    if(userName === "" || password === "")
+        _cb('ERR: provide credentials');
+
+    let sql = "SELECT ? FROM users WHERE id_user = ?";
+    let params = [userName];
+
+    QUERY(sql, params, (err, data) => {
+
+        if (err)
+            _cb(err);
+
+        console.log('Login Result:' + data[0]);
+
+        let user = data[0];
+        let thisHash = passwordUtil.getPasswordHash(password, user.salt);
+
+        if(thisHash === user.passwordHash)
+            _cb(null, user);
+        else
+            _cb('passwordWrong');
+    });
+};
 
 exports.addNewMessage = (user, _cb) => {
-    var sql = "INSERT INTO emailMessages (name, email, text) VALUES (?, ?, ?)";
-    var params = [user.name, user.email, user.text];
+    let sql = "INSERT INTO emailMessages (name, email, text) VALUES (?, ?, ?)";
+    let params = [user.name, user.email, user.text];
 
-    if(parameters.name == "" || parameters.email == "" || parameters.text == ""){
+    if(params.name === "" || params.email === "" || params.text === ""){
         _cb("failed empty parameters");
     }
 
     QUERY(sql, params, (err, data) => {
-        if (!err) {
-            if (data.length == 0) {
-                _cb('', null);
-            } else {
-                _cb('', data[0]);
-            }
-        }
 
         if (err) {
             _cb(err);
-            return;
         }
+
+        _cb(null, data[0]);
     });
 };
 
 exports.addEmail = (email, _cb) => {
-    var sql = "INSERT INTO emails (email) VALUES (?)";
-    var parameters = [email];
+    let sql = "INSERT INTO emails (email) VALUES (?)";
+    let parameters = [email];
 
-    if(parameters.email == ""){
-        _cb("failed empty email");
+    if(parameters.email === ""){
+        _cb("emptyEmail");
     }
 
     QUERY(sql, parameters, (err, data) => {
 
-        if(!err) {
-            if(data.length == 0)
-            _cb("", null);
-            else
-            _cb("", data[0]);
-        }
-
-        if(err) {
+        if(err)
             _cb(err);
-            return;
-        }
+
+        _cb("", data[0]);
     });
 };
 
@@ -90,28 +126,26 @@ function QUERY(queryString, parametersArray, callback) {
             connection.release();
             callback(err);
             return;
-        };
+        }
 
         connection.query(queryString, parametersArray, function(err,data){
 
             connection.release();
             if(!err)
             {
-                callback("", data);
-            };
+                callback(null, data);
+            }
 
             if (err)
             {
                 callback(err);
-                return;
-            };
+            }
         });
 
         connection.on('error', function(err) {
 
             callback(err);
-            return;
         });
 
     });
-};
+}

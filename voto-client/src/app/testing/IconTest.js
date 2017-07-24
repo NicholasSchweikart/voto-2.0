@@ -16,12 +16,36 @@ import {
   Image
 } from 'material-ui-icons';
 
-const IconTest = (props) => {
-  return (
+class IconTest extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      width: 0,
+    }
+  }
+
+  _updateWidth() {
+    this.setState({
+      width: window.innerWidth,
+    })
+  }
+
+  componentDidMount() {
+    this._updateWidth();
+    window.addEventListener('resize', this._updateWidth.bind(this));
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._updateWidth.bind(this));
+  }
+
+  render() {
+    return (
     <Grid
       container
     >
-    <div style={{display: 'flex', width: 400}}>
+    <div style={{display: 'flex', width: this.state.width}}>
     <div style={{display: 'flex', flex: 1, overflowX: 'auto', flexDirection: 'row'}}>
       <Grid item xs={6} sm={4} md={3}>
         <Card>
@@ -161,7 +185,8 @@ const IconTest = (props) => {
       </div>
       </div>
     </Grid>
-  );
+    );
+  }
 }
 
 export default IconTest;

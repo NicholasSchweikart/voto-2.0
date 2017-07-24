@@ -6,12 +6,13 @@ import TeacherHostPage from './containers/TeacherHostPage';
 import TeacherEditPage from './containers/TeacherEditPage';
 
 import IconTest from './testing/IconTest';
+import StateTest from './testing/StateTest';
 
 export default class Root extends React.Component {
 
   render() {
     return (
-      <IconTest />
+      <StateTest />
     );
   }
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+
 import {
   withStyles,
   createStyleSheet
@@ -24,6 +25,7 @@ import {
   ArrowForward,
   PlayArrow,
 } from 'material-ui-icons'
+
 import { Bar } from 'react-chartjs-2';
 import VotoNavBar from '../components/VotoNavBar';
 import TeacherLandingPage from './TeacherLandingPage';
@@ -37,7 +39,6 @@ const styleSheet = createStyleSheet('TeacherHostPage', {
     flex: 1,
     backgroundColor: blueGrey[500],
     flexDirection: 'column',
-    justifyContent: 'center',
   },
   container: {
     flex: 1,
@@ -119,7 +120,7 @@ class TeacherHostPage extends React.Component {
         chartWidth: 288,
         chartHeight: 96,
       })
-    } else if (window.innerWidth < 960) {
+    } else if (window.innerWidth < 600) {
       this.setState({
         chartWidth: window.innerWidth - 48,
         chartHeight: (window.innerWidth - 48) / 2.5,
@@ -157,7 +158,7 @@ class TeacherHostPage extends React.Component {
           direction="row"
         >
 
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={6}>
             <Card className={classes.currentSlideContainer}>
 
               <CardMedia>
@@ -195,7 +196,7 @@ class TeacherHostPage extends React.Component {
             </div>
           </Grid>
 
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} sm={6}>
             <Card className={classes.chartContainer}>
               <CardContent
                 className={classes.chart}

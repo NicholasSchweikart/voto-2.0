@@ -69,6 +69,35 @@ const styleSheet = createStyleSheet('TeacherEditPage', {
 
 class TeacherEditPage extends React.Component {
 
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      width: 0,
+    }
+  }
+
+  _updateWidth() {
+    if (window.innerWidth >= 960) {
+      this.setState({
+        width: window.innerWidth / 2 - 16,
+      })
+    } else {
+      this.setState({
+        width: window.innerWidth - 16,
+      })
+    }
+  }
+
+  componentDidMount() {
+    this._updateWidth();
+    window.addEventListener('resize', this._updateWidth.bind(this));
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('resize', this._updateWidth.bind(this));
+  }
+
   render() {
 
     const { classes } = this.props;
@@ -90,7 +119,7 @@ class TeacherEditPage extends React.Component {
               direction="column"
             >
               <Grid item xs={12}>
-                <div className={classes.slidePreviewContainer}>
+                <div className={classes.slidePreviewContainer} style={{ width: this.state.width }}>
 
                   <EditSlidePreview />
                   <EditSlidePreview />

@@ -52,6 +52,12 @@ const styleSheet = createStyleSheet('EditSlidePreview', {
     flex: 1,
     flexDirection: 'row',
     justifyContent: 'space-between',
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  iconButton: {
+    width: '25%',
+    height: '100%',
   }
 });
 
@@ -66,23 +72,17 @@ const EditSlidePreview = (props) => {
           <img src={sampleslide} alt="Slide" className={classes.slide} />
         </CardMedia>
 
-        {/*<div className={classes.actionButtonsContainer} >*/}
-          {/*<IconButton>*/}
-            {/*<ArrowBack />*/}
-          {/*</IconButton>*/}
-          {/*<IconButton>*/}
-            {/*<Edit />*/}
-          {/*</IconButton>*/}
-          {/*<IconButton>*/}
-            {/*<ArrowForward />*/}
-          {/*</IconButton>*/}
-        {/*</div>*/}
-
-        {/*<div className={classes.actionButtonsContainer} >*/}
-          {/*<ArrowBack />*/}
-          {/*<Edit />*/}
-          {/*<ArrowForward />*/}
-        {/*</div>*/}
+        <div className={classes.actionButtonsContainer} >
+          <IconButton className={classes.iconButton}>
+            <ArrowBack />
+          </IconButton>
+          <IconButton className={classes.iconButton}>
+            <Edit />
+          </IconButton>
+          <IconButton className={classes.iconButton}>
+            <ArrowForward />
+          </IconButton>
+        </div>
       </Card>
 
     </Grid>

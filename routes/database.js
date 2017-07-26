@@ -26,7 +26,6 @@ router.post('/createUser',function(req,res,next){
 });
 
 
-
 router.post('/', function(req, res, next) {
 
   let data = req.body;
@@ -43,6 +42,20 @@ router.post('/', function(req, res, next) {
             res.json({status:"success"});
         }
     });
+});
+
+router.post('/testlogin', (req,res)=>{
+    console.log('test loging');
+    req.session.key = req.body.email;
+    res.end('done');
+});
+
+router.get('/test', (req,res)=>{
+    if(req.session.key){
+        res.send('yay!');
+    } else{
+        res.send('booo');
+    }
 });
 
 module.exports = router;

@@ -47,7 +47,6 @@ exports.createUser = (firstName,lastName,password, _cb) => {
         }
 
         _cb(null, data[0]);
-
     });
 };
 

@@ -673,7 +673,7 @@
           text: text,
         };
 
-        if(params.name == "" || params.email == "" || params.text == ""){
+        if(params.name === "" || params.email === "" || params.text === ""){
             alert("Please input all fields to submit");
         }else{
             $.post("http://voto.io/email", params)
@@ -695,7 +695,7 @@
           email: email,
         };
 
-        if(params.email == ""){
+        if(params.email === ""){
             alert("Please provide an email address!");
         }
         else

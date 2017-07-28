@@ -18,7 +18,7 @@ router.post('/',(req,res)=>{
     db.loginUser(userName, password,(err,user)=>{
 
         if(err){
-            console.log("Error on login: " + err);
+            console.error(new Error("failed to login: " + err));
             res.json({error:err});
         }else {
             req.session.userId = user.userId;
@@ -38,7 +38,7 @@ router.post('/logout',(req,res)=>{
     }else {
         req.session.destroy((err)=>{
             if(err) {
-                console.log("logout error:" + err);
+                console.error(new Error("logout failure: " + err));
                 res.json({error:err});
             }else{
                 res.json({status: "success"});

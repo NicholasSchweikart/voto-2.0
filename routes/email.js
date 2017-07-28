@@ -11,7 +11,7 @@ router.post('/addMessage', (req,res)=>{
 
   db.addNewMessage(newMessage, (err, data) => {
     if (err) {
-      console.log("Error adding new message: " + err);
+        console.error(new Error("adding new message: " + err));
       res.json({
         error: err,
       });
@@ -29,7 +29,7 @@ router.post('/addEmail', (req,res)=>{
     db.addEmail(data.email, (err) => {
 
         if (err) {
-            console.log("Error adding new email: " + err);
+            console.error(new Error("adding new email: " + err));
             res.json({'error': err});
         } else {
             res.json({status:"success"});

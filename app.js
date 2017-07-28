@@ -7,9 +7,10 @@ const express = require('express'),
     redis = require('redis'),
     session = require('express-session'),
     redisStore = require('connect-redis')(session),
-    dbRouter = require('./routes/database'),
+    dbRouter = require('./routes/users'),
     emailRouter = require('./routes/email'),
-    loginRouter = require('./routes/login');
+    loginRouter = require('./routes/login'),
+    sessionsRouter = require('./routes/sessions');
     app = express();
 
 // view engine setup
@@ -53,6 +54,7 @@ app.use(session(
 app.use('/database', dbRouter);
 app.use('/email', emailRouter);
 app.use('/login', loginRouter);
+app.use('/sessions',sessionsRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

@@ -86,6 +86,50 @@ exports.loginUser = (userName, password, _cb) => {
     }
 };
 
+exports.saveNewSession = (newSession, userId, _cb) => {
+
+    console.log('Attempting to save a session for USER: ' + userId);
+
+    if( !newSession || !newSession.title ){
+        _cb("failed one or more empty session parameters");
+    }else{
+
+        let sql = "INSERT INTO sessions (userId, title) VALUES (?, ?)";
+        let params = [userId, newSession.title];
+
+        query(sql, params, (err, data) => {
+
+            if (err) {
+                _cb(err);
+            }else{
+                _cb(null, data[0]);
+            }
+        });
+    }
+};
+
+exports.saveVote = (userResponse, userId, _cb) => {
+
+    console.log('Attempting to save a vote for USER: ' + userId);
+
+    if( !userResponse || !userResponse.answer ){
+        _cb("failed one or more empty userResponse parameters");
+    }else{
+
+        let sql = "INSERT INTO user_responses (userId, title) VALUES (?, ?)";
+        let params = [userId, newSession.title];
+
+        query(sql, params, (err, data) => {
+
+            if (err) {
+                _cb(err);
+            }else{
+                _cb(null, data[0]);
+            }
+        });
+    }
+};
+
 exports.addNewMessage = (newMessage, _cb) => {
 
     console.log('Attempting to add new message...');
@@ -94,7 +138,7 @@ exports.addNewMessage = (newMessage, _cb) => {
         _cb("failed one or more empty parameters");
     }else{
 
-        let sql = "INSERT INTO email_messages (email, name, message) VALUES (?, ?, ?)";
+        let sql = "INSERT INTO collected_messages (email, name, message) VALUES (?, ?, ?)";
         let params = [newMessage.email, newMessage.name, newMessage.text];
 
         query(sql, params, (err, data) => {

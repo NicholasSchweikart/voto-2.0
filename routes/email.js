@@ -1,27 +1,40 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express'),
+    router = express.Router(),
+    db = require('./../bin/databaseConnect');
 
-const db = require('./../bin/databaseConnect');
+router.post('/addMessage', (req,res)=>{
 
-router.post('/', function(req, res, next) {
+  let newMessage = req.body;
+  console.log("New email from client: " + newMessage.name);
+  console.log("Email: " + newMessage.email);
+  console.log("Text: " + newMessage.text);
 
-  var data = req.body;
-  console.log("New email from client: " + data.name);
-  console.log("Email: " + data.email);
-  console.log("Text: " + data.text);
-
-  db.addNewMessage(data, (err, data) => {
+  db.addNewMessage(newMessage, (err, data) => {
     if (err) {
-      console.log(err);
+      console.log("Error adding new message: " + err);
       res.json({
         error: err,
       });
     } else {
-      res.json({
-        status: 'sucess',
-      })
+      res.json({status: 'success'});
     }
   });
+});
+
+router.post('/addEmail', (req,res)=>{
+
+    let data = req.body;
+    console.log("Processing new email: " + data.email);
+
+    db.addEmail(data.email, (err) => {
+
+        if (err) {
+            console.log("Error adding new email: " + err);
+            res.json({'error': err});
+        } else {
+            res.json({status:"success"});
+        }
+    });
 });
 
 module.exports = router;

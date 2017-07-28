@@ -1,53 +1,52 @@
 /**
 * Provides a robust and secure interface to the MySql data base,
-* while implementing a user privelage type functionality. Basicaly,
+* while implementing a user privilege type functionality. Basically,
 * by requiring this file, an app thread will only have access to the
 * database for end user/admin specific actions.
 */
 
-const mysql = require('mysql');
-const passwordUtil = require('./passwordUtility.js');
+const mysql = require('mysql'),
+    passwordUtil = require('./passwordUtility.js');
 
 let pool = mysql.createPool({
-    connectionLimit : 10, //IMPORTANT
-    host     : 'localhost',
-    user     : 'root',
+    connectionLimit : 10,       //Max number of simultaneous connections
+    host     : 'localhost',     // Use DB on local interface
+    user     : 'voto',          // Operate as the voto user
     password : 'votouser',
-    database : 'voto',
+    database : 'votodb',          // Only use the voto DB
     debug    :  false
 });
 
 /**
  * Adds a new user to the data base if possible.
- * @param firstName users first name
- * @param lastName users last name
- * @param password users selected password
+ * @param newUser user object from post request
  * @param _cb callback
  */
-exports.createUser = (firstName,lastName,password, _cb) => {
+exports.createUser = (newUser, _cb) => {
+
     console.log('Attempting to create user...');
 
-    // Sanatize inputs preemptive;
-    if(firstName === "")
-        _cb('ERR: must provide first name');
-    if(lastName === "")
-        _cb('ERR: must provide last name');
-    if(password === "")
-        _cb('ERR: must provide password');
+    // Sanitize inputs preemptive;
+    if( !newUser.firstName || !newUser.lastName || !newUser.password || !newUser.userName){
+        _cb('must provide all new user credentials');
+    }
+    else{
 
-    let passwordData = passwordUtil.getSaltHashPassword(password);
+        // Get the hash and salt for the provided password
+        let passwordData = passwordUtil.getSaltHashPassword(newUser.password);
 
-    let sql = "INSERT INTO users (firstName, lastName, password_salt, password_hash ) VALUES(?,?,?,?)";
-    let params = [firstName, lastName, passwordData.salt, passwordData.passwordHash];
+        let sql = "INSERT INTO users (firstName, lastName, userName, passwordSalt, passwordHash ) VALUES(?,?,?,?,?)";
+        let params = [newUser.firstName, newUser.lastName, newUser.userName, passwordData.salt, passwordData.passwordHash];
 
-    QUERY(sql, params, (err, data) => {
+        query(sql, params, (err) => {
 
-        if (err) {
-            _cb(err);
-        }
-
-        _cb(null, data[0]);
-    });
+            if (err) {
+                _cb(err);
+            }else{
+                _cb(null, "user created");
+            }
+        });
+    }
 };
 
 /**
@@ -56,95 +55,110 @@ exports.createUser = (firstName,lastName,password, _cb) => {
  * @param password the users password
  * @param _cb callback
  */
-exports.loginUser = (userName,password, _cb) => {
-    console.log('Attempting login...');
+exports.loginUser = (userName, password, _cb) => {
 
-    if(userName === "" || password === "")
-        _cb('ERR: provide credentials');
+    console.log('Attempting login FOR: ' + userName + ' PASSWORD: ' + password);
 
-    let sql = "SELECT ? FROM users WHERE id_user = ?";
-    let params = [userName];
+    if( !userName || !password ){
+        _cb('must provide all credentials');
+    }else{
 
-    QUERY(sql, params, (err, data) => {
+        let sql = "SELECT * FROM users WHERE userName = ?";
+        let params = [userName];
 
-        if (err)
-            _cb(err);
+        query(sql, params, (err, data) => {
 
-        console.log('Login Result:' + data[0]);
+            if (err){
+                _cb(err);
+            }else{
+                console.log('Login Result:' + data[0].userName);
 
-        let user = data[0];
-        let thisHash = passwordUtil.getPasswordHash(password, user.salt);
+                let user = data[0];
+                let thisHash = passwordUtil.getPasswordHash(password, user.passwordSalt);
 
-        if(thisHash === user.passwordHash)
-            _cb(null, user);
-        else
-            _cb('passwordWrong');
-    });
+                if(thisHash === user.passwordHash){
+                    _cb(null, user);
+                } else{
+                    _cb('wrong password provided');
+                }
+            }
+        });
+    }
 };
 
-exports.addNewMessage = (user, _cb) => {
-    let sql = "INSERT INTO emailMessages (name, email, text) VALUES (?, ?, ?)";
-    let params = [user.name, user.email, user.text];
+exports.addNewMessage = (newMessage, _cb) => {
 
-    if(params.name === "" || params.email === "" || params.text === ""){
-        _cb("failed empty parameters");
+    console.log('Attempting to add new message...');
+
+    if( !newMessage.name || !newMessage.email || !newMessage.text ){
+        _cb("failed one or more empty parameters");
+    }else{
+
+        let sql = "INSERT INTO email_messages (email, name, message) VALUES (?, ?, ?)";
+        let params = [newMessage.email, newMessage.name, newMessage.text];
+
+        query(sql, params, (err, data) => {
+
+            if (err) {
+                _cb(err);
+            }else{
+                _cb(null, data[0]);
+            }
+        });
     }
-
-    QUERY(sql, params, (err, data) => {
-
-        if (err) {
-            _cb(err);
-        }
-
-        _cb(null, data[0]);
-    });
 };
 
 exports.addEmail = (email, _cb) => {
-    let sql = "INSERT INTO emails (email) VALUES (?)";
-    let parameters = [email];
 
-    if(parameters.email === ""){
+    console.log('Attempting to add new email...');
+
+    if( !email ){
         _cb("emptyEmail");
+    }else{
+
+        let sql = "INSERT INTO collected_emails (email) VALUES (?)";
+        let parameters = [email];
+
+        query(sql, parameters, (err, data) => {
+
+            if(err){
+                _cb(err);
+            }else{
+                _cb(null, data[0]);
+            }
+        });
     }
-
-    QUERY(sql, parameters, (err, data) => {
-
-        if(err)
-            _cb(err);
-
-        _cb("", data[0]);
-    });
 };
 
-function QUERY(queryString, parametersArray, callback) {
+/**
+ * Performs an SQL query on the DB using a connection from the pool.
+ * @param queryString the SQL query to perform
+ * @param parametersArray the parameters to insert into the values() expression
+ * @param callback the callback to call on err or success
+ */
+function query(queryString, parametersArray, callback) {
     pool.getConnection(function(err, connection) {
 
         if (err)
         {
             connection.release();
             callback(err);
-            return;
-        }
+        }else{
 
-        connection.query(queryString, parametersArray, function(err,data){
+            connection.query(queryString, parametersArray, function(err,data){
 
-            connection.release();
-            if(!err)
-            {
-                callback(null, data);
-            }
+                connection.release();
+                if(!err)
+                {
+                    callback(null, data);
+                }else{
+                    callback(err);
+                }
+            });
 
-            if (err)
-            {
+            connection.on('error', function(err) {
                 callback(err);
-            }
-        });
-
-        connection.on('error', function(err) {
-
-            callback(err);
-        });
-
+            });
+        }
     });
 }

@@ -13,7 +13,7 @@ router.post('/', function(req, res, next) {
         if (err) {
             console.log(err)
             res.json({
-                'error': err
+                error: err
             });
         } else {
             res.json({status:"success"});

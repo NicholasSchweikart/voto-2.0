@@ -676,7 +676,7 @@
         if(params.name == "" || params.email == "" || params.text == ""){
             alert("Please input all fields to submit");
         }else{
-            $.post("http://voto.io/email", params)
+            $.post("/email", params)
             .done((response) => {
               console.log(response);
             })
@@ -700,7 +700,7 @@
         }
         else
         {
-            $.post("http://voto.io/database", params)
+            $.post("/database", params)
             .done((response) => {
               console.log(response);
               $('#myModal').modal('show')

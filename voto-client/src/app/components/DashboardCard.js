@@ -36,6 +36,7 @@ const styleSheet = createStyleSheet('DashboardCard', {
     flexDirection: 'column',
     alignItems: 'center',
     borderRadius: 0,
+    boxShadow: 'none',
   },
   moreVert: {
     alignSelf: 'flex-end',
@@ -59,7 +60,7 @@ const DashboardCard = (props) => {
   const { classes, name } = props;
 
   return (
-    <Grid item xs={6} sm={4} md={3} lg={2}>
+    <Grid item xs={6} sm={6} md={4} lg={3}>
       <Card className={classes.card}>
 
         <CardHeader className={classes.header}

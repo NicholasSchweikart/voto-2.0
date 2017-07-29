@@ -1,0 +1,23 @@
+.no-padding {
+    padding: 0 !important;
+}
+
+.nav-bar-app {
+
+}
+
+.nav-bar-side-nav-header {
+    width: 16rem;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #3185db;
+}
+
+.nav-bar-side-nav-header-text {
+    color: #fff;
+    font-weight: 600;
+    font-size: 3rem;
+    letter-spacing: 0.0625rem;
+}

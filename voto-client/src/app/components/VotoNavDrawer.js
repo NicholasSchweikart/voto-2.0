@@ -1,13 +1,8 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import {
-  withStyles,
-  createStyleSheet
-} from 'material-ui/styles';
 import {
   Drawer,
   Button,
-  Divider
+  Divider,
 } from 'material-ui';
 import List, {
   ListItem,
@@ -15,53 +10,23 @@ import List, {
   ListItemText
 } from 'material-ui/List';
 import {
-  TrendingUp,
-  Autorenew
+  Home as HomeIcon,
+  DataUsage,
+  Folder as FolderIcon,
+  FolderOpen as FolderOpenIcon,
+  FolderSpecial,
 } from 'material-ui-icons';
 
-
-const styleSheet = createStyleSheet('VotoNavDrawer', {
-
-});
-
-class VotoNavDrawer extends React.Component {
-
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      open: this.props.open,
-    }
-  }
-
-  componentWillReceiveProps(nextProps) {
-    this.setState({
-      open: nextProps.open,
-    })
-  }
-
-  closeDrawer = () => {
-    this.setState({
-      open: false,
-    });
-  };
+export default class VotoNavDrawer extends React.Component {
 
   render() {
-    const { classes } = this.props;
-
     const listItems = (
       <div>
         <ListItem button>
           <ListItemIcon>
-            <TrendingUp />
+            <HomeIcon />
           </ListItemIcon>
-          <ListItemText primary="Display Graph"/>
-        </ListItem>
-        <ListItem button>
-          <ListItemIcon>
-            <Autorenew />
-          </ListItemIcon>
-          <ListItemText primary="Refresh"/>
+          <ListItemText primary="Dashboard" />
         </ListItem>
       </div>
     );
@@ -70,15 +35,11 @@ class VotoNavDrawer extends React.Component {
       <div>
         <Drawer
           anchor="left"
-          open={this.state.open}
-          onRequestClose={this.closeDrawer}
-          onClick={this.closeDrawer}
+          {...this.props}
         >
           {listItems}
         </Drawer>
       </div>
-    )
+    );
   }
 }
-
-export default withStyles(styleSheet)(VotoNavDrawer);

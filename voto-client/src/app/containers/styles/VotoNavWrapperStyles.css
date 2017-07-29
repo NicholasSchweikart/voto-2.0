@@ -1,0 +1,11 @@
+.nav-wrapper {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
+.nav-bottom-wrapper {
+    display: flex;
+    flex: 1;
+    flex-direction: row;
+}

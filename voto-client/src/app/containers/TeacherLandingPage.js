@@ -22,7 +22,7 @@ import logo from '../images/logo.png'
 const styleSheet = createStyleSheet('TeacherLandingPage', {
   root: {
     flex: 1,
-    backgroundColor: blueGrey[500],
+    backgroundColor: '#eee',
   },
   cardContainer: {
     padding: 8,
@@ -66,7 +66,7 @@ class TeacherLandingPage extends React.Component {
 
     return (
       <div className={classes.root}>
-        <VotoNavBar />
+        {/*<VotoNavBar />*/}
         <Grid container className={classes.cardContainer}>
 
           {cards.map((name, i) => (

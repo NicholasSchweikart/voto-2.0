@@ -1,9 +1,4 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import {
-  withStyles,
-  createStyleSheet
-} from 'material-ui/styles';
 import {
   AppBar,
   Toolbar,
@@ -11,63 +6,70 @@ import {
   Button,
   IconButton,
 } from 'material-ui';
-import MenuIcon from 'material-ui-icons/Menu';
 import {
-  indigo
-} from 'material-ui/colors';
+  Menu as MenuIcon,
+} from 'material-ui-icons';
 import VotoNavDrawer from './VotoNavDrawer';
 
-const styleSheet = createStyleSheet('VotoNavBar', {
-  root: {
-    flex: 1,
-  },
-  flex: {
-    flex: 1,
-  },
-  indigo: {
-    backgroundColor: indigo[500],
-  }
-});
+import './styles/VotoNavBarStyles.css';
 
-class VotoNavBar extends React.Component {
+export default class VotoNavBar extends React.Component {
+
   constructor(props) {
     super(props);
 
     this.state = {
-      drawerOpen: false,
+      open: false,
+      drawNavHeader: this.props.drawNavHeader,
     };
   }
 
-  openDrawer = () => {
+  componentWillReceiveProps(nextProps) {
+    this.setState(nextProps);
+  }
+
+  _handleDrawerOpen() {
     this.setState({
-      drawerOpen: true,
+      open: true,
+    });
+  }
+
+  _handleDrawerClose() {
+    this.setState({
+      open: false,
     })
-  };
+  }
 
   render() {
-    const { classes } = this.props;
+    const { drawNavHeader } = this.state;
 
     return (
-      <div className={classes.root}>
-        <AppBar position="static" className={classes.indigo}>
-          <Toolbar>
-            <IconButton color="contrast" aria-label="Menu" onClick={this.openDrawer}>
-              <MenuIcon />
-            </IconButton>
-            <Typography type="title" color="inherit" align="center" className={classes.flex}>
-              Voto
-            </Typography>
-            <Button color="contrast">Login</Button>
+      <div className="nav-bar-container">
+        <AppBar
+          position="static"
+          className="nav-bar-app"
+        >
+          <Toolbar className="no-padding">
+            {drawNavHeader &&
+              <div className="nav-bar-side-nav-header">
+                <span className="nav-bar-side-nav-header-text">
+                  voto
+                </span>
+              </div>
+            }
+            {!drawNavHeader &&
+              <IconButton onClick={this._handleDrawerOpen.bind(this)}>
+                <MenuIcon />
+              </IconButton>
+            }
           </Toolbar>
         </AppBar>
-        <VotoNavDrawer open={this.state.drawerOpen}/>
+        <VotoNavDrawer
+          open={this.state.open}
+          onRequestClose={this._handleDrawerClose.bind(this)}
+          onClick={this._handleDrawerClose.bind(this)}
+        />
       </div>
     );
   }
-};
-
-VotoNavBar.propTypes = {
-  classes: PropTypes.object.isRequired,
-};
-
-export default withStyles(styleSheet)(VotoNavBar);
+}

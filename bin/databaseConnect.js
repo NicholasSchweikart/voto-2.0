@@ -36,13 +36,13 @@ var pool = mysql.createPool({
 
 exports.addNewMessage = (user, _cb) => {
     var sql = "INSERT INTO emailMessages (name, email, text) VALUES (?, ?, ?)";
-    var params = [user.name, user.email, user.text];
+    var parameters = [user.name, user.email, user.text];
 
     if(parameters.name == "" || parameters.email == "" || parameters.text == ""){
         _cb("failed empty parameters");
     }
 
-    QUERY(sql, params, (err, data) => {
+    QUERY(sql, parameters, (err, data) => {
         if (!err) {
             if (data.length == 0) {
                 _cb('', null);

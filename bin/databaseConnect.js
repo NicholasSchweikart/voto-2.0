@@ -68,6 +68,11 @@ exports.loginUser = (userName, password, _cb) => {
 
         query(sql, params, (err, data) => {
 
+            if (data.length === 0) {
+              _cb('No user found with this name!');
+              return;
+            }
+
             if (err){
                 _cb(err);
             }else{

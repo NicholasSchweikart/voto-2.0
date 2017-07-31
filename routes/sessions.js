@@ -87,7 +87,7 @@ router.post('/uploadMedia', (req, res) => {
         filePaths.push(newFileName);
 
         // Rename file to a UUID to avoid collions in file system, also append extension.
-        fs.rename(file.path, newName, (err)=>{
+        fs.rename(file.path, newPathName, (err)=>{
             if(err)
                 console.error(new Error("file rename: " + err));
         });

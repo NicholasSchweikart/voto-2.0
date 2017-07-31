@@ -102,7 +102,8 @@ exports.saveNewSession = (newSession, userId, _cb) => {
             if (err) {
                 _cb(err);
             }else{
-                _cb(null, data[0]);
+                // Return the ID of the new session to the user.
+                _cb(null, data.insertId);
             }
         });
     }

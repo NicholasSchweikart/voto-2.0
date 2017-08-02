@@ -14,7 +14,6 @@ router.post('/',(req,res)=>{
 
     let password = req.body.password;
     let userName = req.body.userName;
-
     db.loginUser(userName, password,(err,user)=>{
 
         if(err){

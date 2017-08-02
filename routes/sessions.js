@@ -87,6 +87,16 @@ router.post('/saveSessionQuestions', (req, res)=>{
 
 });
 
+
+router.post("/activateSession", (req, res)=>{
+    if (!req.session.userId) {
+        res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
+        return;
+    }
+
+    db.activateSession();
+});
+
 /**
  * POST route to upload new media for a specific session. Under beta right now, but will at some point need to have
  * access to a sessionId.

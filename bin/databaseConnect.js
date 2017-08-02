@@ -59,7 +59,7 @@ exports.loginUser = (userName, password, _cb) => {
     console.log('Attempting login FOR: ' + userName + ' PASSWORD: ' + password);
 
     if (!userName || !password) {
-        _cb('must provide all credentials');
+        _cb('ER_LOGIN_FAILED');
         return;
     }
 
@@ -69,7 +69,7 @@ exports.loginUser = (userName, password, _cb) => {
     query(sql, params, (err, data) => {
 
         if (err) {
-            _cb(err);
+            _cb(err.code);
             return;
         }
 
@@ -84,7 +84,7 @@ exports.loginUser = (userName, password, _cb) => {
         if (thisHash === user.passwordHash) {
             _cb(null, user);
         } else {
-            _cb('wrong password provided');
+            _cb('ERR_LOGIN_FAILED');
         }
 
     });
@@ -106,7 +106,7 @@ exports.saveNewSession = (newSession, userId, _cb) => {
     query(sql, params, (err, data) => {
 
         if (err) {
-            _cb(err);
+            _cb(err.code);
         } else {
             // Return the ID of the new session to the user.
             _cb(null, data.insertId);
@@ -132,10 +132,10 @@ exports.updateSession = (sessionUpdate, _cb) =>{
     let sql = "UPDATE sessions SET title = ?, group = ?, totalQuestions = ? WHERE sessionID = ?";
     let params = sessionUpdate.fields;
 
-    query(sql, params, (err, data) => {
+    query(sql, params, (err) => {
 
         if (err) {
-            _cb(err);
+            _cb(err.code);
         } else {
             // Return the ID of the new session to the user.
             _cb(null, "success");
@@ -158,7 +158,7 @@ exports.getAllSessions = (userId, _cb) =>{
     query(sql, params, (err, sessions) => {
 
         if (err) {
-            _cb(err);
+            _cb(err.code);
             return;
         }
 
@@ -188,7 +188,7 @@ exports.getSessionQuestions = (sessionId, _cb) =>{
     query(sql, params, (err, questions) => {
 
         if (err) {
-            _cb(err);
+            _cb(err.code);
             return;
         }
 
@@ -197,7 +197,7 @@ exports.getSessionQuestions = (sessionId, _cb) =>{
             return;
         }
 
-        // Return the ID of the new session to the user.
+        // Return the
         _cb(null, questions);
 
     });
@@ -218,7 +218,7 @@ exports.saveNewQuestion = (question, _cb) =>{
     query(sql, params, (err, status) => {
 
         if (err) {
-            _cb(err);
+            _cb(err.code);
             return;
         }
 

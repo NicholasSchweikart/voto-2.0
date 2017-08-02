@@ -14,44 +14,52 @@ const express = require('express'),
 router.post('/saveNewSession', (req, res) => {
 
     if (!req.session.userId) {
-        res.json({error: "not logged in!"});
-    } else {
-        let newSession = req.body;
-
-        db.saveNewSession(newSession, req.session.userId, (err, sessionId) => {
-            if (err) {
-                console.error(new Error("saving new session: " + err));
-                res.json({error: err});
-            } else {
-                res.json({sessionId: sessionId});
-            }
-        });
+        res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
+        return;
     }
+
+    let newSession = req.body;
+
+    db.saveNewSession(newSession, req.session.userId, (err, sessionId) => {
+        if (err) {
+            console.error(new Error("saving new session: " + err));
+            res.status(500).json({error:err});
+        } else {
+            res.json({sessionId: sessionId});
+        }
+    });
 });
 
 router.post('/saveSessionQuestions', (req, res)=>{
+
    if(!req.session.userId){
-       res.json({error: "not logged in!"});
-   } else{
-        let questions = req.body.questions;
-        async.each(questions, (question, _cb)=>{
-            db.saveNewQuestion(question,(err)=>{
-               if(err){
-                   _cb(err);
-                   return;
-               }
-
-               question.saved = true;
-            });
-        }, (err)=>{
-            if(err){
-                res.json(err);
-                return;
-            }
-            res.json({questions:questions});
-        });
-
+       res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
+       return;
    }
+
+    let questions = req.body.questions;
+    async.each(questions, (question, _cb)=>{
+
+        db.saveNewQuestion(question,(err)=>{
+           if(err){
+               _cb(err);
+               return;
+           }
+
+            question.saved = true;
+            _cb(null);
+        });
+    }, (err)=>{
+
+        if(err){
+            res.status(500).json({error:err});
+            return;
+        }
+
+        console.log('saved successfully');
+        res.json({questions:questions});
+    });
+
 });
 
 /**
@@ -113,11 +121,19 @@ router.post('/uploadMedia', (req, res) => {
 });
 
 router.get('/allSessions', (req, res)=>{
-    if(req.session.userId){
-        res.json({error: "not logged in!"});
-    } else{
 
+    if (!req.session.userId) {
+        res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
+        return;
     }
+
+    db.getAllSessions(req.session.userId, (err,sessions)=>{
+        if(err){
+            res.status(500).json({error:err});
+            return;
+        }
+        res.json({sessions:sessions});
+    });
 });
 
 module.exports = router;

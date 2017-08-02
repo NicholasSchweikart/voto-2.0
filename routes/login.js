@@ -4,7 +4,8 @@
  */
 const express = require('express'),
     router = express.Router(),
-    db = require('./../bin/databaseConnect');
+    db = require('./../bin/databaseConnect'),
+    async = require('async');
 
 /**
  * Handles login for the entire API. Please post a json login object @ voto.io/database/login
@@ -14,16 +15,18 @@ router.post('/',(req,res)=>{
 
     let password = req.body.password;
     let userName = req.body.userName;
+    let response = {};
 
     db.loginUser(userName, password,(err,user)=>{
 
         if(err){
             console.error(new Error("failed to login: " + err));
             res.status(401).json({error:err});
-        }else {
-            req.session.userId = user.userId;
-            res.json({status:"logged in"});
+            return;
         }
+
+        req.session.userId = user.userId;
+        res.json({status:"logged in"});
     });
 });
 
@@ -34,31 +37,18 @@ router.post('/',(req,res)=>{
 router.post('/logout',(req,res)=>{
 
     if(!req.session.userId){
-        res.json({error:"Error can't logout someone who isnt logged in!"});
-    }else {
-        req.session.destroy((err)=>{
-            if(err) {
-                console.error(new Error("logout failure: " + err));
-                res.json({error:err});
-            }else{
-                res.json({status: "success"});
-            }
-        });
+        res.status(401).json({error:err});
+        return;
     }
 
-});
-
-/**
- * Test POST method to verify that a session is active.
- */
-router.post('/testSession', (req,res)=>{
-
-    if(req.session.userId){
-        console.log('Session Good For: ' + req.session.userId);
-        res.json({status:"session good!"});
-    } else{
-        res.json({error:'sorry no session'});
-    }
+    req.session.destroy((err)=>{
+        if(err) {
+            console.error(new Error("logout failure: " + err));
+            res.status(500).json({error:err});
+        }else{
+            res.json({status: "success"});
+        }
+    });
 });
 
 module.exports = router;

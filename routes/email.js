@@ -9,15 +9,15 @@ router.post('/addMessage', (req,res)=>{
   console.log("Email: " + newMessage.email);
   console.log("Text: " + newMessage.text);
 
-  db.addNewMessage(newMessage, (err, data) => {
+  db.addNewMessage(newMessage, (err) => {
+
     if (err) {
         console.error(new Error("adding new message: " + err));
-      res.json({
-        error: err,
-      });
-    } else {
-      res.json({status: 'success'});
+        res.status(500).json({error:err});
+        return;
     }
+
+    res.json({status: 'success'});
   });
 });
 
@@ -30,10 +30,11 @@ router.post('/addEmail', (req,res)=>{
 
         if (err) {
             console.error(new Error("adding new email: " + err));
-            res.json({'error': err});
-        } else {
-            res.json({status:"success"});
+            res.status(500).json({error:err});
+            return;
         }
+
+        res.json({status:"success"});
     });
 });
 

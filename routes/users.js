@@ -16,11 +16,13 @@ router.post('/createUser',(req,res)=>{
     db.createUser(newUser,(err,user)=>{
         if(err){
             console.error(new Error("creating new user: " + err));
-            res.json({error:err});
-        }else{
-            res.json({user:user});
+            res.status(500).json({error:err});
+            return;
         }
+
+        res.json({user:user});
     });
 });
+
 
 module.exports = router;

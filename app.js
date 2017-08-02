@@ -1,7 +1,6 @@
 const express = require('express'),
     path = require('path'),
     favicon = require('serve-favicon'),
-    logger = require('morgan'),
     cookieParser = require('cookie-parser'),
     bodyParser = require('body-parser'),
     redis = require('redis'),
@@ -11,9 +10,7 @@ const express = require('express'),
     emailRouter = require('./routes/email'),
     loginRouter = require('./routes/login'),
     sessionsRouter = require('./routes/sessions'),
-    sharedSession = require('express-socket.io-session')
-    cookie = require('cookie');
-
+    cookie = require('cookie'),
     app = express();
 
 // view engine setup
@@ -22,21 +19,21 @@ app.set('view engine', 'hbs');
 
 // Create the redis client
 let redisClient = redis.createClient();
-// uncomment after placing your favicon in /public
-//app.use(favicon(path.join(__dirname, 'public', 'favicon.ico')));
-//app.use(logger('dev')); // Uncomment to get back logging for all posts gets etc.
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Setup session persistence with redis
 app.use(cookieParser('#$%9095854Hg22erTuxxVVI058938?'));
+
 let store = new redisStore({
     host: 'localhost',
     port: 6379,
     client: redisClient,
     ttl: 60 * 60
 });
+
 app.use(session(
     {
         secret: '#$%9095854Hg22erTuxxVVI058938?',
@@ -59,35 +56,21 @@ const
     server = http.createServer(),
     io = require('socket.io').listen(server);
 
-// io.use(sharedSession(session({
-//     secret: '#$%9095854Hg22erTuxxVVI058938?',
-//     store: new redisStore({
-//         host: 'localhost',
-//         port: 6379,
-//         client: redisClient,
-//         ttl: 60 * 60
-//     }),
-//     saveUninitialized: true,
-//     resave: false,
-//     cookie: {
-//         path: "/",
-//         maxAge: 1800000,    // 30 min max cookie life
-//         httpOnly: true,     // Hide from JavaScript
-//         //secure: true      //TODO Require an HTTPS connection
-//     },
-//     name: 'id'              // Change cookie name to obscure inner workings
-// })));
-
 io.set('authorization', function (handshakeData, accept) {
     let cookies = cookie.parse(handshakeData.headers.cookie);
     let cookieSessionId = cookieParser.signedCookie(cookies['id'],'#$%9095854Hg22erTuxxVVI058938?');
     store.get(cookieSessionId,(err,data)=>{
-        let userId = data.userId;
+        if(err){
+            return accept("ER_NOT_LOGGED_IN");
+        }
+        if(!data){
+            return accept("ER_NOT_LOGGED_IN");
+        }
         if(data.userId){
+            let userId = data.userId;
             console.log('User: ' + userId + ' authorized on socket');
             return accept(null, true);
         }
-        return accept('ER_NOT_LOGGED_IN', false);
     });
 });
 

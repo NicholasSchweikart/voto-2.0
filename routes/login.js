@@ -19,7 +19,7 @@ router.post('/',(req,res)=>{
 
         if(err){
             console.error(new Error("failed to login: " + err));
-            res.json({error:err});
+            res.status(401).json({error:err});
         }else {
             req.session.userId = user.userId;
             res.json({status:"logged in"});

@@ -8,7 +8,8 @@ const express = require('express'),
     formidable = require('formidable'),
     fs = require('fs'),
     uuidv4 = require('uuid/v4'),
-    path = require('path');
+    path = require('path'),
+    async = require('async');
 
 router.post('/saveNewSession', (req, res) => {
 
@@ -28,28 +29,29 @@ router.post('/saveNewSession', (req, res) => {
     }
 });
 
-router.post('/updateTitle', (req, res)=>{
-   if(req.session.userId){
+router.post('/saveSessionQuestions', (req, res)=>{
+   if(!req.session.userId){
        res.json({error: "not logged in!"});
    } else{
+        let questions = req.body.questions;
+        async.each(questions, (question, _cb)=>{
+            db.saveNewQuestion(question,(err)=>{
+               if(err){
+                   _cb(err);
+                   return;
+               }
+
+               question.saved = true;
+            });
+        }, (err)=>{
+            if(err){
+                res.json(err);
+                return;
+            }
+            res.json({questions:questions});
+        });
 
    }
-});
-
-router.post('/updateGroup', (req, res)=>{
-    if(req.session.userId){
-        res.json({error: "not logged in!"});
-    } else{
-
-    }
-});
-
-router.post('/deleteSession', (req, res)=>{
-    if(req.session.userId){
-        res.json({error: "not logged in!"});
-    } else{
-
-    }
 });
 
 /**

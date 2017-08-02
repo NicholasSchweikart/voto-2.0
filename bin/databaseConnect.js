@@ -115,6 +115,117 @@ exports.saveNewSession = (newSession, userId, _cb) => {
 
 };
 
+/**
+ *
+ * @param sessionUpdate '{fields:[sessionId,...]}'
+ * @param _cb
+ */
+exports.updateSession = (sessionUpdate, _cb) =>{
+
+    if (!sessionUpdate) {
+        _cb("failed one or more empty session parameters");
+        return;
+    }
+
+    console.log('Attempting to update sessionId: ' + sessionUpdate.sessionId);
+
+    let sql = "UPDATE sessions SET title = ?, group = ?, totalQuestions = ? WHERE sessionID = ?";
+    let params = sessionUpdate.fields;
+
+    query(sql, params, (err, data) => {
+
+        if (err) {
+            _cb(err);
+        } else {
+            // Return the ID of the new session to the user.
+            _cb(null, "success");
+        }
+    });
+};
+
+exports.getAllSessions = (userId, _cb) =>{
+
+    if (!userId) {
+        _cb("failed one or more empty session parameters");
+        return;
+    }
+
+    console.log('Retrieving all sessions for user: ' + userId);
+
+    let sql = "SELECT * FROM sessions WHERE userId = ?";
+    let params = [userId];
+
+    query(sql, params, (err, sessions) => {
+
+        if (err) {
+            _cb(err);
+            return;
+        }
+
+        if(sessions.length === 0){
+            _cb("no sessions for this userId");
+            return;
+        }
+
+        // Return the records.
+        _cb(null, sessions);
+
+    });
+};
+
+exports.getSessionQuestions = (sessionId, _cb) =>{
+
+    if (!sessionId) {
+        _cb("failed need sessionId");
+        return;
+    }
+
+    console.log('Retrieving all questions for sessionId: ' + sessionId);
+
+    let sql = "SELECT * FROM questions WHERE sessionID = ?";
+    let params = [sessionId];
+
+    query(sql, params, (err, questions) => {
+
+        if (err) {
+            _cb(err);
+            return;
+        }
+
+        if(questions.length === 0){
+            _cb("no questions for this session");
+            return;
+        }
+
+        // Return the ID of the new session to the user.
+        _cb(null, questions);
+
+    });
+};
+
+exports.saveNewQuestion = (question, _cb) =>{
+
+    if (!question) {
+        _cb("failed need newQuestion obj");
+        return;
+    }
+
+    console.log('Saving question for sessionId: ' + question.sessionId);
+
+    let sql = "INSERT INTO questions (sessionId, imgFilePath, question, correctAnswer) VALUES (?, ?, ?, ?)";
+    let params = [question.sessionId, question.imgFilePath, question.question, question.correctAnswer];
+
+    query(sql, params, (err, status) => {
+
+        if (err) {
+            _cb(err);
+            return;
+        }
+
+        _cb(null, status);
+    });
+};
+
 exports.saveVote = (userResponse, userId, _cb) => {
 
     console.log('Attempting to save a vote for USER: ' + userId);
@@ -214,3 +325,4 @@ function query(queryString, parametersArray, callback) {
         }
     });
 }
+

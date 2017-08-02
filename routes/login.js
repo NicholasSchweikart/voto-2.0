@@ -4,8 +4,7 @@
  */
 const express = require('express'),
     router = express.Router(),
-    db = require('./../bin/databaseConnect'),
-    async = require('async');
+    db = require('./../bin/databaseConnect');
 
 /**
  * Handles login for the entire API. Please post a json login object @ voto.io/database/login
@@ -15,7 +14,6 @@ router.post('/',(req,res)=>{
 
     let password = req.body.password;
     let userName = req.body.userName;
-    let response = {};
 
     db.loginUser(userName, password,(err,user)=>{
 
@@ -37,7 +35,7 @@ router.post('/',(req,res)=>{
 router.post('/logout',(req,res)=>{
 
     if(!req.session.userId){
-        res.status(401).json({error:err});
+        res.status(500).json({error:"ER_NOT_LOGGED_IN"});
         return;
     }
 

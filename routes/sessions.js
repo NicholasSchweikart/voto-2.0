@@ -30,6 +30,31 @@ router.post('/saveNewSession', (req, res) => {
     });
 });
 
+/**
+ * POST to update an existing session. Refer to db.updateSession() for details.
+ */
+router.post('/updateSession', (req, res) => {
+
+    if (!req.session.userId) {
+        res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
+        return;
+    }
+
+    let sessionUpdate = req.body;
+
+    db.updateSession(sessionUpdate, (err) => {
+        if (err) {
+            console.error(new Error("saving new session: " + err));
+            res.status(500).json({error:err});
+        } else {
+            res.json({status: "success"});
+        }
+    });
+});
+
+/**
+ * POST to save an array of new questions for a session.
+ */
 router.post('/saveSessionQuestions', (req, res)=>{
 
    if(!req.session.userId){
@@ -120,7 +145,10 @@ router.post('/uploadMedia', (req, res) => {
 
 });
 
-router.get('/allSessions', (req, res)=>{
+/**
+ * GET method to retrieve all sessions for a userId. no URL modification need because userId is in the cookie.
+ */
+router.get('/', (req, res)=>{
 
     if (!req.session.userId) {
         res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
@@ -132,7 +160,28 @@ router.get('/allSessions', (req, res)=>{
             res.status(500).json({error:err});
             return;
         }
+
         res.json({sessions:sessions});
+    });
+});
+
+/**
+ * GET method to return all questions for a specific session. URL:"/sessionQuestions?sessionId=xxxx".
+ */
+router.get('/sessionQuestions', (req, res)=>{
+
+    if (!req.session.userId) {
+        res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
+        return;
+    }
+
+    db.getSessionQuestions(req.query.sessionId, (err,questions)=>{
+        if(err){
+            res.status(500).json({error:err});
+            return;
+        }
+
+        res.json(questions);
     });
 });
 

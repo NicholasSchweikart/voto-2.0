@@ -91,6 +91,12 @@ exports.loginUser = (userName, password, _cb) => {
 
 };
 
+/**
+ * Saves a new session in the DB for a user.
+ * @param newSession the sessions object to save: '{title:"here"}'
+ * @param userId the userId for this session
+ * @param _cb callback function
+ */
 exports.saveNewSession = (newSession, userId, _cb) => {
 
     console.log('Attempting to save a session for USER: ' + userId);
@@ -116,9 +122,9 @@ exports.saveNewSession = (newSession, userId, _cb) => {
 };
 
 /**
- *
- * @param sessionUpdate '{fields:[sessionId,...]}'
- * @param _cb
+ * Updates a sessions that already exists.
+ * @param sessionUpdate '{updateArray:["title":"","group":"","totalQuestions":"","sessionId":""]}'
+ * @param _cb callback
  */
 exports.updateSession = (sessionUpdate, _cb) =>{
 
@@ -130,7 +136,7 @@ exports.updateSession = (sessionUpdate, _cb) =>{
     console.log('Attempting to update sessionId: ' + sessionUpdate.sessionId);
 
     let sql = "UPDATE sessions SET title = ?, group = ?, totalQuestions = ? WHERE sessionID = ?";
-    let params = sessionUpdate.fields;
+    let params = sessionUpdate.updateArray;
 
     query(sql, params, (err) => {
 
@@ -143,6 +149,11 @@ exports.updateSession = (sessionUpdate, _cb) =>{
     });
 };
 
+/**
+ * Returns an array of all sessions associated with a user.
+ * @param userId the userId to get sessions for
+ * @param _cb callback
+ */
 exports.getAllSessions = (userId, _cb) =>{
 
     if (!userId) {
@@ -173,10 +184,15 @@ exports.getAllSessions = (userId, _cb) =>{
     });
 };
 
+/**
+ * Gets all questions associated with a sessionId.
+ * @param sessionId id of the session to get questions for.
+ * @param _cb callback
+ */
 exports.getSessionQuestions = (sessionId, _cb) =>{
 
     if (!sessionId) {
-        _cb("failed need sessionId");
+        _cb("ER_NO_SESSION_ID");
         return;
     }
 
@@ -193,7 +209,7 @@ exports.getSessionQuestions = (sessionId, _cb) =>{
         }
 
         if(questions.length === 0){
-            _cb("no questions for this session");
+            _cb("ER_NO_QUESTIONS_FOR_SESSIONID");
             return;
         }
 

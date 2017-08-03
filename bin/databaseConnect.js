@@ -101,12 +101,12 @@ exports.saveNewSession = (newSession, userId, _cb) => {
 
     console.log('Attempting to save a session for USER: ' + userId);
 
-    if (!newSession || !newSession.title) {
+    if (!newSession || !newSession.title || !newSession.className || !newSession.description) {
         _cb("failed one or more empty session parameters");
         return;
     }
 
-    let sql = "INSERT INTO sessions (userId, title) VALUES (?, ?)";
+    let sql = "INSERT INTO sessions (userId, title, className, description) VALUES (?, ?, ?, ?)";
     let params = [userId, newSession.title];
 
     query(sql, params, (err, data) => {
@@ -239,6 +239,33 @@ exports.saveNewQuestion = (question, _cb) =>{
         }
 
         _cb(null, status);
+    });
+};
+
+exports.isUserAuthorized = (userId, sessionId, _cb) => {
+
+    if (!userId || !sessionId) {
+        _cb("ER_NEED_SESSION_AND_USER_IDS");
+        return;
+    }
+
+    console.log('Checking authorization for userId %d on sessionId %d', userId, sessionId);
+
+    let sql = "SELECT * FROM authorized_users WHERE userId = ? AND sessionId=?";
+    let params = [userId,sessionId];
+
+    query(sql, params, (err, data) => {
+
+        if (err) {
+            _cb(err.code);
+            return;
+        }
+
+        if(data.length ===0){
+            return _cb(null, false)
+        }
+
+        return _cb(null, true);
     });
 };
 

@@ -1,13 +1,45 @@
+const cookieParser = require('cookie-parser'),
+    cookie = require('cookie'),
+    serverConfig = require('./serverConfig.json');
 
-module.exports = (io)=>{
+module.exports = (io, store) => {
     API = {};
 
-    io.on('connection', (socket)=>{
+    io.set('authorization', function (handshake, accept) {
 
-        console.log('Client Connected! ' + socket);
+        getUserId(handshake, (err, data) => {
+            if (err) {
+                return accept(err);
+            }
+            if (!data) {
+                return accept(err);
+            }
 
-        socket.on('room',(sessionId)=>{
-            socket.join(sessionId);
+            return accept(null, true);
+        });
+    });
+
+    io.on('connection', (socket) => {
+
+        console.log('Client Connected! ');
+
+        socket.on('join room', (sessionId) => {
+
+            // Authorize user for this room.
+            getUserId(socket.handshake,(err,userId)=>{
+                if(err){
+                    return;
+                }
+                db.isUserAuthorized(userId,(err,yes)=>{
+                    if(err){
+                        console.error(new Error("userId %d not authorized: %s", userId, err));
+                        return;
+                    }
+                    if(yes){
+                        socket.join(sessionId);
+                    }
+                })
+            });
         });
     });
 
@@ -17,14 +49,14 @@ module.exports = (io)=>{
      * @param msg the message for the room
      * @param _cb callback
      */
-    API.emitToRoom = (sessionId,msg,_cb)=>{
+    API.emitToRoom = (sessionId, msg, _cb) => {
 
-        if(!sessionId){
+        if (!sessionId) {
             _cb("ER_NO_SESSION_ID");
             return;
         }
 
-        if(!msg){
+        if (!msg) {
             _cb("ER_NO_SESSION_ID");
             return;
         }
@@ -32,5 +64,26 @@ module.exports = (io)=>{
         console.log('Emitting to room: ' + sessionId + " Message: " + msg);
         io.sockets.in(sessionId).emit(msg);
     };
+
+    let getUserId = (handshake,_cb)=>{
+
+        let cookies = cookie.parse(handshake.headers.cookie);
+        let cookieSessionId = cookieParser.signedCookie(cookies['id'], serverConfig.secret);
+
+        store.get(cookieSessionId, (err, data) => {
+            if (err) {
+                return _cb("ER_NOT_LOGGED_IN");
+            }
+            if (!data) {
+                return _cb("ER_NOT_LOGGED_IN");
+            }
+            if (data.userId) {
+                let userId = data.userId;
+                console.log('User: ' + userId + ' authorized on socket');
+                return _cb(null, userId);
+            }
+        });
+    };
+
     return API;
 };

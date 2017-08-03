@@ -11,6 +11,7 @@ const express = require('express'),
     loginRouter = require('./routes/login'),
     sessionsRouter = require('./routes/sessions'),
     cookie = require('cookie'),
+    serverConfig = require('./serverConfig.json'),
     app = express();
 
 // view engine setup
@@ -25,7 +26,7 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Setup session persistence with redis
-app.use(cookieParser('#$%9095854Hg22erTuxxVVI058938?'));
+app.use(cookieParser(serverConfig.secret));
 
 let store = new redisStore({
     host: 'localhost',
@@ -36,7 +37,7 @@ let store = new redisStore({
 
 app.use(session(
     {
-        secret: '#$%9095854Hg22erTuxxVVI058938?',
+        secret: serverConfig.secret,
         store: store,
         saveUninitialized: true,
         resave: false,
@@ -56,25 +57,7 @@ const
     server = http.createServer(),
     io = require('socket.io').listen(server);
 
-io.set('authorization', function (handshakeData, accept) {
-    let cookies = cookie.parse(handshakeData.headers.cookie);
-    let cookieSessionId = cookieParser.signedCookie(cookies['id'],'#$%9095854Hg22erTuxxVVI058938?');
-    store.get(cookieSessionId,(err,data)=>{
-        if(err){
-            return accept("ER_NOT_LOGGED_IN");
-        }
-        if(!data){
-            return accept("ER_NOT_LOGGED_IN");
-        }
-        if(data.userId){
-            let userId = data.userId;
-            console.log('User: ' + userId + ' authorized on socket');
-            return accept(null, true);
-        }
-    });
-});
-
-const socketAPI = require('./socketAPI')(io);
+const socketAPI = require('./socketAPI')(io,store);
 
 server.listen(1212);
 

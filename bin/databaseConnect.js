@@ -163,7 +163,7 @@ exports.getAllSessions = (userId, _cb) =>{
 
     console.log('Retrieving all sessions for user: ' + userId);
 
-    let sql = "SELECT * FROM sessions WHERE userId = ?";
+    let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE userId = ?";
     let params = [userId];
 
     query(sql, params, (err, sessions) => {
@@ -174,7 +174,7 @@ exports.getAllSessions = (userId, _cb) =>{
         }
 
         if(sessions.length === 0){
-            _cb("no sessions for this userId");
+            _cb("No Sessions for this ID");
             return;
         }
 
@@ -341,4 +341,3 @@ function query(queryString, parametersArray, callback) {
         }
     });
 }
-

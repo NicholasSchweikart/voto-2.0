@@ -166,7 +166,7 @@ router.get('/', (req, res)=>{
     }
 
     db.getAllSessions(req.session.userId, (err,sessions)=>{
-        if(err){
+        if(err) {
             res.status(500).json({error:err});
             return;
         }

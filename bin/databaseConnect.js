@@ -163,7 +163,7 @@ exports.getAllSessions = (userId, _cb) =>{
 
     console.log('Retrieving all sessions for user: ' + userId);
 
-    let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE userId = ?";
+    let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE userId = ? ORDER BY timeStamp DESC";
     let params = [userId];
 
     query(sql, params, (err, sessions) => {

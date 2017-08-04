@@ -4,7 +4,7 @@
  */
 const express = require('express'),
     router = express.Router(),
-    db = require('./../bin/databaseConnect');
+    db = require('../bin/userDB');
 
 /**
  * Creates a new user in the voto system. Post json {firstName:xxx, lastName:xxx, userName:xxx, password:xxx}

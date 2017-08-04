@@ -4,7 +4,7 @@
  */
 const express = require('express'),
     router = express.Router(),
-    db = require('./../bin/databaseConnect');
+    db = require('../bin/userDB');
 
 /**
  * Handles login for the entire API. Please post a json login object @ voto.io/database/login
@@ -23,6 +23,8 @@ router.post('/',(req,res)=>{
         }
 
         req.session.userId = user.userId;
+        req.session.authorizedSessionId = null;
+
         res.json({status:"logged in"});
     });
 });

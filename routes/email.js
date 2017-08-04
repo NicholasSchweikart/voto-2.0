@@ -1,6 +1,6 @@
 const express = require('express'),
     router = express.Router(),
-    db = require('./../bin/databaseConnect');
+    db = require('../bin/emailDB');
 
 router.post('/addMessage', (req,res)=>{
 

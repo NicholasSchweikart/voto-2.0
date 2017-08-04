@@ -45,13 +45,13 @@ app.use(session(
             path: "/",
             maxAge: 1800000,    // 30 min max cookie life
             httpOnly: true,     // Hide from JavaScript
-            //secure: true      //TODO Require an HTTPS connection
+            //secure: true      //TODO Require an HTTPS connection by uncommenting here
         },
         name: 'id'              // Change cookie name to obscure inner workings
     }
 ));
 
-// Set up Socket IO
+// Set up Socket IO ready on port 1212.
 const
     http = require('http'),
     server = http.createServer(),

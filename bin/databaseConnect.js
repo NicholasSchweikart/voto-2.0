@@ -219,6 +219,11 @@ exports.getSessionQuestions = (sessionId, _cb) =>{
     });
 };
 
+/**
+ * Saves a question to the DB for a session.
+ * @param question the question data to save '{sessionId, imgFilePath, question, correctAnswer}'
+ * @param _cb callback
+ */
 exports.saveNewQuestion = (question, _cb) =>{
 
     if (!question) {
@@ -242,6 +247,12 @@ exports.saveNewQuestion = (question, _cb) =>{
     });
 };
 
+/**
+ * Determines if a userId is authorized to access an active session.
+ * @param userId the userId for the check
+ * @param sessionId the sessionId for the check
+ * @param _cb callback(err, yes) yes = true if authorised
+ */
 exports.isUserAuthorized = (userId, sessionId, _cb) => {
 
     if (!userId || !sessionId) {
@@ -269,7 +280,13 @@ exports.isUserAuthorized = (userId, sessionId, _cb) => {
     });
 };
 
-exports.saveVote = (userResponse, userId, _cb) => {
+/**
+ * Saves a users response to a session question.
+ * @param userResponse the response to save
+ * @param userId the userId associated with the response
+ * @param _cb callback(err, success)
+ */
+exports.saveUserResponse = (userResponse, userId, _cb) => {
 
     console.log('Attempting to save a vote for USER: ' + userId);
 
@@ -292,6 +309,11 @@ exports.saveVote = (userResponse, userId, _cb) => {
 
 };
 
+/**
+ * Saves a new message to the DB from the main voto website.
+ * @param newMessage the message to save '{name,email,text}'
+ * @param _cb callback(err, success)
+ */
 exports.addNewMessage = (newMessage, _cb) => {
 
     console.log('Attempting to add new message...');
@@ -315,6 +337,11 @@ exports.addNewMessage = (newMessage, _cb) => {
 
 };
 
+/**
+ * Saves a new email to our collected emails table.
+ * @param email the email address to save. In plain text
+ * @param _cb callback()
+ */
 exports.addEmail = (email, _cb) => {
 
     console.log('Attempting to add new email...');

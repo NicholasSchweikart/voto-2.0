@@ -107,7 +107,7 @@ exports.saveNewSession = (newSession, userId, _cb) => {
     }
 
     let sql = "INSERT INTO sessions (userId, title, className, description) VALUES (?, ?, ?, ?)";
-    let params = [userId, newSession.title];
+    let params = [userId, newSession.title, newSession.className, newSession.description];
 
     query(sql, params, (err, data) => {
 

@@ -13,7 +13,7 @@ const express = require('express'),
     AWS = require('aws-sdk'),
     zlib = require('zlib');
 
-AWS.config.loadFromPath('./../bin/awsConfig.json');
+AWS.config.region = "us-east-2";
 
 const s3 = new AWS.S3({
     signatureVersion: 'v4'

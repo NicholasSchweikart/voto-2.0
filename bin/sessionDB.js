@@ -23,11 +23,24 @@ exports.saveNewSession = (newSession, userId, _cb) => {
         if (err) {
             _cb(err.code);
         } else {
-            // Return the ID of the new session to the user.
-            _cb(null, data.insertId);
+
+            let sql2 = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp from sessions WHERE sessionId = ?";
+            let params2 = [data.insertId];
+
+            mySQL.query(sql2, params2, (err, data) => {
+
+              if (err) {
+                _cb(err.code);
+              } else {
+                if (data.length === 0) {
+                  _cb('SOMETHING WHEN WRONG ON INSERT');
+                }
+
+              _cb(null, data[0]);
+            }
+          })
         }
     });
-
 };
 
 /**
@@ -144,10 +157,10 @@ exports.getSessionQuestions = (sessionId, _cb) =>{
             return;
         }
 
-        if(questions.length === 0){
-            _cb("ER_NO_QUESTIONS_FOR_SESSION_ID");
-            return;
-        }
+        // if(questions.length === 0){
+        //     _cb("ER_NO_QUESTIONS_FOR_SESSION_ID");
+        //     return;
+        // }
 
         // Return the
         _cb(null, questions);

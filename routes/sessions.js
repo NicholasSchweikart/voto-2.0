@@ -28,12 +28,12 @@ router.post('/saveNewSession', (req, res) => {
 
     let newSession = req.body;
 
-    db.saveNewSession(newSession, req.session.userId, (err, sessionId) => {
+    db.saveNewSession(newSession, req.session.userId, (err, newSession) => {
         if (err) {
             console.error(new Error("saving new session: " + err));
             res.status(500).json({error:err});
         } else {
-            res.json({sessionId: sessionId});
+            res.json(newSession);
         }
     });
 });

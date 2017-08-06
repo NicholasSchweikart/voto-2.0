@@ -21,7 +21,7 @@ app.set('view engine', 'hbs');
 // Create the redis client
 let redisClient = redis.createClient();
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '100mb' }));
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(express.static(path.join(__dirname, 'public')));
 

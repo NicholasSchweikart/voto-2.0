@@ -69,15 +69,13 @@ router.post('/saveSessionQuestions', (req, res) => {
         res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
         return;
     }
-
     let questions = req.body.questions;
     let uploadErrors = [];
     let dbErrors = [];
 
     async.each(questions, (question, _cb) => {
-
         // Check if its a new question
-        if (question.questionId === "") {
+        if (!question.questionId) {
 
             //Upload img base64 to S3
             let newFileName = uuidv4();
@@ -279,7 +277,8 @@ router.get('/sessionQuestions', (req, res) => {
  */
 router.get('/questionImageURL', (req, res) => {
 
-    if (!req.session.userId || !req.session.authorizedSessionId) {
+    // || !req.session.authorizedSessionId
+    if (!req.session.userId ) {
         res.status(401).json({error: "ERR_NOT_LOGGED_IN_OR_AUTHORIZED"});
         return;
     }

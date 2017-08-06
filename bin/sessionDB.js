@@ -144,7 +144,7 @@ exports.saveNewQuestion = (question, _cb) =>{
 
     console.log('Saving question for sessionId: ' + question.sessionId);
 
-    let sql = "INSERT INTO questions (sessionId, imgFilePath, question, orderNum, correctAnswer) VALUES (?, ?, ?, ?, ?)";
+    let sql = "INSERT INTO questions (sessionId, imgFileName, question, orderNum, correctAnswer) VALUES (?, ?, ?, ?, ?)";
     let params = [
         question.sessionId,
         question.imgFileName,
@@ -183,7 +183,8 @@ exports.updateQuestion = (question, _cb) =>{
         question.imgFileName,
         question.question,
         question.orderNum,
-        question.correctAnswer
+        question.correctAnswer,
+        question.questionId,
     ];
 
     mySQL.query(sql, params, (err, status) => {

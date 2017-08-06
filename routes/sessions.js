@@ -50,12 +50,12 @@ router.post('/updateSession', (req, res) => {
 
     let sessionUpdate = req.body;
 
-    db.updateSession(sessionUpdate, (err) => {
+    db.updateSession(sessionUpdate, (err, updated) => {
         if (err) {
-            console.error(new Error("saving new session: " + err));
+            console.error(new Error("Updating session: " + err));
             res.status(500).json({error:err});
         } else {
-            res.json({status: "success"});
+            res.json(updated);
         }
     });
 });

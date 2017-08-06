@@ -50,6 +50,8 @@ exports.saveNewSession = (newSession, userId, _cb) => {
  */
 exports.updateSession = (sessionUpdate, _cb) =>{
 
+    console.log(sessionUpdate);
+
     if (!sessionUpdate) {
         _cb("failed one or more empty session parameters");
         return;
@@ -57,16 +59,38 @@ exports.updateSession = (sessionUpdate, _cb) =>{
 
     console.log('Attempting to update sessionId: ' + sessionUpdate.sessionId);
 
-    let sql = "UPDATE sessions SET title = ?, group = ?, totalQuestions = ? WHERE sessionID = ?";
-    let params = sessionUpdate.updateArray;
+    let sql = "UPDATE sessions SET className = ?, title = ?, totalQuestions = ?, description = ? WHERE sessionID = ?";
+    let params = [
+      sessionUpdate.className,
+      sessionUpdate.title,
+      //(!sessionUpdate.group ? '' : sessionUpdate.group),
+      sessionUpdate.totalQuestions,
+      sessionUpdate.description,
+      sessionUpdate.sessionId,
+    ];//sessionUpdate.updateArray;
+    console.log(params);
 
     mySQL.query(sql, params, (err) => {
 
         if (err) {
             _cb(err.code);
         } else {
-            // Return the ID of the new session to the user.
-            _cb(null, "success");
+
+          let sql2 = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp from sessions WHERE sessionId = ?";
+          let params2 = [sessionUpdate.sessionId];
+
+          mySQL.query(sql2, params2, (err, data) => {
+
+            if (err) {
+              _cb(err.code);
+            } else {
+              if (data.length === 0) {
+                _cb('SOMETHING WHEN WRONG ON UPDATE');
+              }
+
+            _cb(null, data[0]);
+            }
+          })
         }
     });
 };

@@ -177,8 +177,7 @@ exports.getSessionQuestions = (sessionId, _cb) =>{
     mySQL.query(sql, params, (err, questions) => {
 
         if (err) {
-            _cb(err.code);
-            return;
+            return _cb(err.code);
         }
 
         // if(questions.length === 0){

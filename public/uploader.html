@@ -5,7 +5,7 @@
     <title>Title</title>
 </head>
 <body>
-<input id="upload-input" type="file" name="uploads[]" multiple="multiple">
+<input id="upload-input" type="file" name="uploads[]" >
 <input type="hidden" name="fileIds" >
 <br>
 <button id="upload-button" type="button">Upload File</button>
@@ -13,6 +13,17 @@
 <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
 <script>
 
+    let cred = {userName:"NicholasSchweikart",password:"finAmelia"};
+    $.post('http://localhost:8080/api/login', cred)
+        .done((response) => {
+
+            console.log(response);
+        })
+        .fail((xhr, status, err) => {
+            console.log(xhr);
+            console.log(status);
+            console.log(err);
+        });
 
     $('#upload-input').on('change', function(){
 
@@ -35,7 +46,7 @@
             formData.append('fileIds', JSON.stringify(ids));
 
             $.ajax({
-                url: 'http://localhost:8080/sessions/uploadMedia',
+                url: 'http://localhost:8080/api/sessions/uploadImageFile',
                 type: 'POST',
                 data: formData,
                 processData: false,

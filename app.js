@@ -62,10 +62,10 @@ const socketAPI = require('./socketAPI')(io,store);
 server.listen(1212);
 
 // Attach paths to router files
-app.use('/database', dbRouter);
-app.use('/email', emailRouter);
-app.use('/login', loginRouter);
-app.use('/sessions',sessionsRouter);
+app.use('/api/database', dbRouter);
+app.use('/api/email', emailRouter);
+app.use('/api/login', loginRouter);
+app.use('/api/sessions',sessionsRouter);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

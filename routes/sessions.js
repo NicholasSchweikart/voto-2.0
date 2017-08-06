@@ -22,7 +22,7 @@ const s3 = new AWS.S3({
 router.post('/saveNewSession', (req, res) => {
 
     if (!req.session.userId) {
-        res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
+        res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
         return;
     }
 
@@ -31,7 +31,7 @@ router.post('/saveNewSession', (req, res) => {
     db.saveNewSession(newSession, req.session.userId, (err, newSession) => {
         if (err) {
             console.error(new Error("saving new session: " + err));
-            res.status(500).json({error:err});
+            res.status(500).json({error: err});
         } else {
             res.json(newSession);
         }
@@ -44,7 +44,7 @@ router.post('/saveNewSession', (req, res) => {
 router.post('/updateSession', (req, res) => {
 
     if (!req.session.userId) {
-        res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
+        res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
         return;
     }
 
@@ -53,7 +53,7 @@ router.post('/updateSession', (req, res) => {
     db.updateSession(sessionUpdate, (err, updated) => {
         if (err) {
             console.error(new Error("Updating session: " + err));
-            res.status(500).json({error:err});
+            res.status(500).json({error: err});
         } else {
             res.json(updated);
         }
@@ -63,53 +63,99 @@ router.post('/updateSession', (req, res) => {
 /**
  * POST to save an array of new questions for a session.
  */
-router.post('/saveSessionQuestions', (req, res)=>{
+router.post('/saveSessionQuestions', (req, res) => {
 
-   if(!req.session.userId){
-       res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
-       return;
-   }
+    if (!req.session.userId) {
+        res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
+        return;
+    }
 
     let questions = req.body.questions;
-    async.each(questions, (question, _cb)=>{
+    let uploadErrors = [];
+    let dbErrors = [];
 
-        db.saveNewQuestion(question,(err)=>{
-           if(err){
-               _cb(err);
-               return;
-           }
+    async.each(questions, (question, _cb) => {
 
-            question.saved = true;
-            _cb(null);
-        });
-    }, (err)=>{
+        // Check if its a new question
+        if (question.questionId === "") {
 
-        if(err){
-            res.status(500).json({error:err});
+            //Upload img base64 to S3
+            let newFileName = uuidv4();
+
+            //TODO integrate amazon S3 upload here.
+            let params = {
+                Bucket: 'voto-question-images',
+                Key: newFileName,
+                Body: question.uri,
+                ContentEncoding: 'base64',
+                ContentType: 'image/jpeg'
+            };
+
+            s3.putObject(params, (err, data) => {
+
+                if (err) {
+                    console.error(new Error("uploading URI: " + err));
+                    uploadErrors.push(question);
+                    return _cb(null);
+                }
+
+                console.log("S3 Upload Success");
+
+                question.imgFileName = newFileName;
+
+                // Save the new question to DB
+                db.saveNewQuestion(question, (err) => {
+                    if (err) {
+                        console.error(new Error("saving question to DB: " + err));
+                        dbErrors.push(question);
+                    }
+                    _cb(null);
+                });
+            });
+
+        } else {
+
+            // Update the question in the DB
+            db.updateQuestion(question, (err) => {
+                if (err) {
+                    console.error(new Error("updating question: " + err));
+                    dbErrors.push(question);
+                }
+                _cb(null);
+            });
+        }
+
+    }, () => {
+
+        if (uploadErrors.length || dbErrors.length) {
+            res.status(500).json({
+                uploadErrors: uploadErrors,
+                dbErrors:dbErrors
+            });
             return;
         }
 
         console.log('saved successfully');
-        res.json({questions:questions});
+        res.json({status: "success"});
     });
 
 });
 
-router.post("/activateSession", (req, res)=>{
+router.post("/activateSession", (req, res) => {
 
     if (!req.session.userId) {
-        res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
+        res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
         return;
     }
 
     db.activateSession(req.session.userId, req.body.sessionId, (err, activated) => {
 
-        if(err || !activated){
-            res.status(500).json({error:err});
+        if (err || !activated) {
+            res.status(500).json({error: err});
             return;
         }
 
-        res.json({status:"activated"});
+        res.json({status: "activated"});
     });
 });
 
@@ -120,12 +166,12 @@ router.post("/activateSession", (req, res)=>{
 router.post('/accessSession', (req, res) => {
 
     if (!req.session.userId) {
-        res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
+        res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
         return;
     }
 
-    if(!req.body.sessionId){
-        res.status(401).json({error:"ERR_NO_SESSION_ID"});
+    if (!req.body.sessionId) {
+        res.status(401).json({error: "ERR_NO_SESSION_ID"});
         return;
     }
 
@@ -133,17 +179,18 @@ router.post('/accessSession', (req, res) => {
         sessionId = req.body.sessionId;
 
     console.log('Authorizing userId %d for sessionId %d', userId, sessionId);
+
     //TODO check that session is active.
-    userDb.isUserAuthorized(userId,sessionId,(err,yes)=>{
+    userDb.isUserAuthorized(userId, sessionId, (err, yes) => {
         if (err) {
             console.error(new Error("authorizing user for session: " + err));
-            res.status(500).json({error:err});
+            res.status(500).json({error: err});
             return;
         }
 
-        if(!yes){
+        if (!yes) {
             console.error(new Error("authorizing user for session: " + err));
-            res.status(401).json({error:err});
+            res.status(401).json({error: err});
             return;
         }
 
@@ -161,7 +208,7 @@ router.post('/uploadImageFile', (req, res) => {
     console.log('Attempting to receive new media uploads...');
 
     if (!req.session.userId) {
-        res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
+        res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
         return;
     }
 
@@ -172,33 +219,9 @@ router.post('/uploadImageFile', (req, res) => {
     form.uploadDir = path.join(__dirname, '../uploads');
 
     // every time a file has been uploaded successfully
-    form.on('file',  (field, file)=>{
+    form.on('file', (field, file) => {
 
-        let newFileName = uuidv4()+'_'+file.name;
-        let fileStream = fs.createReadStream(file.path);
-        fileStream.on('error', function(err) {
-            console.error(new Error("file stream error: " + err));
-        });
 
-        //TODO integrate amazon S3 upload here.
-        let params = {
-            Bucket:'voto-question-images',
-            Key: newFileName,
-            Body: fileStream
-        };
-
-        s3.putObject(params,(err, data)=> {
-
-            if(err){
-                console.error(new Error("generating signed image URL: " + err));
-                res.status(500).json({error:1});
-            }else{
-                res.json({fileName:newFileName});
-            }
-
-            console.log("S3 Upload Success");
-            fs.unlink(file.path);
-        });
     });
 
     // log any errors that occur
@@ -214,36 +237,36 @@ router.post('/uploadImageFile', (req, res) => {
 /**
  * GET method to retrieve all sessions for a userId. no URL modification need because userId is in the cookie.
  */
-router.get('/', (req, res)=>{
+router.get('/', (req, res) => {
 
     if (!req.session.userId) {
-        res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
+        res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
         return;
     }
 
-    db.getAllSessions(req.session.userId, (err,sessions)=>{
-        if(err) {
-            res.status(500).json({error:err});
+    db.getAllSessions(req.session.userId, (err, sessions) => {
+        if (err) {
+            res.status(500).json({error: err});
             return;
         }
 
-        res.json({sessions:sessions});
+        res.json({sessions: sessions});
     });
 });
 
 /**
  * GET method to return all questions for a specific session. URL:"/sessionQuestions?sessionId=xxxx".
  */
-router.get('/sessionQuestions', (req, res)=>{
+router.get('/sessionQuestions', (req, res) => {
 
     if (!req.session.userId) {
-        res.status(401).json({error:"ERR_NOT_LOGGED_IN"});
+        res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
         return;
     }
 
-    db.getSessionQuestions(req.query.sessionId, (err,questions)=>{
-        if(err){
-            res.status(500).json({error:err});
+    db.getSessionQuestions(req.query.sessionId, (err, questions) => {
+        if (err) {
+            res.status(500).json({error: err});
             return;
         }
 
@@ -254,29 +277,29 @@ router.get('/sessionQuestions', (req, res)=>{
 /**
  * GET method to return a one time URL to view a question image slide. URL:"/sessionQuestions?sessionId=xxxx.ext".
  */
-router.get('/questionImageURL', (req, res)=>{
+router.get('/questionImageURL', (req, res) => {
 
     if (!req.session.userId || !req.session.authorizedSessionId) {
-        res.status(401).json({error:"ERR_NOT_LOGGED_IN_OR_AUTHORIZED"});
+        res.status(401).json({error: "ERR_NOT_LOGGED_IN_OR_AUTHORIZED"});
         return;
     }
 
-    if(!req.query.imgFileName){
-        res.status(500).json({error:"ER_NO_FILENAME"});
+    if (!req.query.imgFileName) {
+        res.status(500).json({error: "ER_NO_FILENAME"});
     }
 
     let imgFileName = req.query.imgFileName;
-    let params = {Bucket:'voto-question-images', Key:imgFileName, Expires:30};
+    let params = {Bucket: 'voto-question-images', Key: imgFileName, Expires: 30};
 
-    s3.getSignedUrl('getObject', params,(err, url)=> {
+    s3.getSignedUrl('getObject', params, (err, url) => {
 
-        if(err){
+        if (err) {
             console.error(new Error("generating signed image URL: " + err));
             return;
         }
 
         console.log("The URL is", url);
-        res.json({url:url});
+        res.json({url: url});
     });
 
 });

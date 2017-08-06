@@ -130,6 +130,73 @@ exports.getAllSessions = (userId, _cb) =>{
     });
 };
 
+/**
+ * Saves a question to the DB for a session.
+ * @param question the question data to save '{sessionId, imgFileName, question, correctAnswer}'
+ * @param _cb callback
+ */
+exports.saveNewQuestion = (question, _cb) =>{
+
+    if (!question) {
+        _cb("failed need newQuestion obj");
+        return;
+    }
+
+    console.log('Saving question for sessionId: ' + question.sessionId);
+
+    let sql = "INSERT INTO questions (sessionId, imgFilePath, question, orderNum, correctAnswer) VALUES (?, ?, ?, ?, ?)";
+    let params = [
+        question.sessionId,
+        question.imgFileName,
+        question.question,
+        question.orderNum,
+        question.correctAnswer
+    ];
+
+    mySQL.query(sql, params, (err, status) => {
+
+        if (err) {
+            _cb(err.code);
+            return;
+        }
+
+        _cb(null, status);
+    });
+};
+
+/**
+ * Saves a question to the DB for a session.
+ * @param question the question data to save '{sessionId, imgFileName, question, correctAnswer}'
+ * @param _cb callback
+ */
+exports.updateQuestion = (question, _cb) =>{
+
+    if (!question) {
+        _cb("failed need question obj");
+        return;
+    }
+
+    console.log('Updating questionId: ' + question.questionId);
+
+    let sql = "UPDATE questions SET imgFileName = ?, question = ?, orderNum = ?, correctAnswer = ? WHERE questionId = ?";
+    let params = [
+        question.imgFileName,
+        question.question,
+        question.orderNum,
+        question.correctAnswer
+    ];
+
+    mySQL.query(sql, params, (err, status) => {
+
+        if (err) {
+            _cb(err.code);
+            return;
+        }
+
+        _cb(null, status);
+    });
+};
+
 exports.activateSession = (userId,sessionId, _cb) =>{
 
     if (!userId || !sessionId) {

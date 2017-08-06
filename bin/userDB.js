@@ -75,36 +75,6 @@ exports.loginUser = (userName, password, _cb) => {
 
 };
 
-
-
-/**
- * Saves a question to the DB for a session.
- * @param question the question data to save '{sessionId, imgFileName, question, correctAnswer}'
- * @param _cb callback
- */
-exports.saveNewQuestion = (question, _cb) =>{
-
-    if (!question) {
-        _cb("failed need newQuestion obj");
-        return;
-    }
-
-    console.log('Saving question for sessionId: ' + question.sessionId);
-
-    let sql = "INSERT INTO questions (sessionId, imgFilePath, question, correctAnswer) VALUES (?, ?, ?, ?)";
-    let params = [question.sessionId, question.imgFileName, question.question, question.correctAnswer];
-
-    mySQL.query(sql, params, (err, status) => {
-
-        if (err) {
-            _cb(err.code);
-            return;
-        }
-
-        _cb(null, status);
-    });
-};
-
 /**
  * Determines if a userId is authorized to access an active session.
  * @param userId the userId for the check

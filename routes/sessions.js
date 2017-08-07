@@ -134,7 +134,7 @@ router.post('/saveSessionQuestions', (req, res) => {
         }
 
         console.log('saved successfully');
-        res.json({status: "success"});
+        res.json({questions: questions});
     });
 
 });
@@ -219,7 +219,31 @@ router.post('/uploadImageFile', (req, res) => {
     // every time a file has been uploaded successfully
     form.on('file', (field, file) => {
 
+        let newFileName = uuidv4()+'_'+file.name;
+        let fileStream = fs.createReadStream(file.path);
+        fileStream.on('error', function(err) {
+            console.error(new Error("file stream error: " + err));
+        });
 
+        //TODO integrate amazon S3 upload here.
+        let params = {
+            Bucket:'voto-question-images',
+            Key: newFileName,
+            Body: fileStream
+        };
+
+        s3.putObject(params,(err, data)=> {
+
+            if(err){
+                console.error(new Error("uploading new image file: " + err));
+                res.status(500).json({error:1});
+            }else{
+                res.json({fileName:newFileName});
+            }
+
+            console.log("S3 Upload Success");
+            fs.unlink(file.path);
+        });
     });
 
     // log any errors that occur

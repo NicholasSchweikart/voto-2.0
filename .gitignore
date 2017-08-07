@@ -33,3 +33,4 @@ chrome-user-data
 *.swo
 *react*min*.js
 voto-client/.env.development
+uploads/

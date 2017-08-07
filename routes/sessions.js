@@ -243,7 +243,7 @@ router.post('/uploadImageFile', (req, res) => {
             fs.unlink(file.path);
 
             //TODO generate signed URL for return.
-            params = {Bucket: 'voto-question-images', Key: imgFileName, Expires: 10*60}; //10 minutes
+            params = {Bucket: 'voto-question-images', Key: newFileName, Expires: 10*60}; //10 minutes
 
             s3.getSignedUrl('getObject', params, (err, url) => {
 

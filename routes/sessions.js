@@ -78,28 +78,28 @@ router.post('/saveSessionQuestions', (req, res) => {
         if (!question.questionId) {
 
             //Upload img base64 to S3
-            let newFileName = uuidv4();
+            //let newFileName = uuidv4();
 
             //TODO integrate amazon S3 upload here.
-            let params = {
-                Bucket: 'voto-question-images',
-                Key: newFileName,
-                Body: question.uri,
-                ContentEncoding: 'base64',
-                ContentType: 'image/jpeg'
-            };
+            // let params = {
+            //     Bucket: 'voto-question-images',
+            //     Key: newFileName,
+            //     Body: question.uri,
+            //     ContentEncoding: 'base64',
+            //     ContentType: 'image/jpeg'
+            // };
 
-            s3.putObject(params, (err, data) => {
-
-                if (err) {
-                    console.error(new Error("uploading URI: " + err));
-                    uploadErrors.push(question);
-                    return _cb(null);
-                }
-
-                console.log("S3 Upload Success");
-
-                question.imgFileName = newFileName;
+            // s3.putObject(params, (err, data) => {
+            //
+            //     if (err) {
+            //         console.error(new Error("uploading URI: " + err));
+            //         uploadErrors.push(question);
+            //         return _cb(null);
+            //     }
+            //
+            //     console.log("S3 Upload Success");
+            //
+            //     question.imgFileName = newFileName;
 
                 // Save the new question to DB
                 db.saveNewQuestion(question, (err) => {
@@ -109,7 +109,6 @@ router.post('/saveSessionQuestions', (req, res) => {
                     }
                     _cb(null);
                 });
-            });
 
         } else {
 
@@ -327,7 +326,7 @@ router.get('/questionImageURL', (req, res) => {
     }
 
     let imgFileName = req.query.imgFileName;
-    let params = {Bucket: 'voto-question-images', Key: imgFileName, Expires: 30};
+    let params = {Bucket: 'voto-question-images', Key: imgFileName, Expires: 10*60};
 
     s3.getSignedUrl('getObject', params, (err, url) => {
 
@@ -337,7 +336,9 @@ router.get('/questionImageURL', (req, res) => {
         }
 
         console.log("The URL is", url);
-        res.json({url: url});
+        res.json({
+            url: url,
+        });
     });
 
 });

@@ -225,7 +225,6 @@ router.post('/uploadImageFile', (req, res) => {
             console.error(new Error("file stream error: " + err));
         });
 
-        //TODO integrate amazon S3 upload here.
         let params = {
             Bucket:'voto-question-images',
             Key: newFileName,
@@ -237,12 +236,28 @@ router.post('/uploadImageFile', (req, res) => {
             if(err){
                 console.error(new Error("uploading new image file: " + err));
                 res.status(500).json({error:1});
-            }else{
-                res.json({fileName:newFileName});
+                return;
             }
 
             console.log("S3 Upload Success");
             fs.unlink(file.path);
+
+            //TODO generate signed URL for return.
+            params = {Bucket: 'voto-question-images', Key: imgFileName, Expires: 10*60}; //10 minutes
+
+            s3.getSignedUrl('getObject', params, (err, url) => {
+
+                if (err) {
+                    console.error(new Error("generating signed image URL: " + err));
+                    return;
+                }
+
+                console.log("The URL is", url);
+                res.json({
+                    url: url,
+                    imgFileName: newFileName
+                });
+            });
         });
     });
 

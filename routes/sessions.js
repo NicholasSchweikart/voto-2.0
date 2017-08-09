@@ -77,30 +77,6 @@ router.post('/saveSessionQuestions', (req, res) => {
         // Check if its a new question
         if (!question.questionId) {
 
-            //Upload img base64 to S3
-            //let newFileName = uuidv4();
-
-            //TODO integrate amazon S3 upload here.
-            // let params = {
-            //     Bucket: 'voto-question-images',
-            //     Key: newFileName,
-            //     Body: question.uri,
-            //     ContentEncoding: 'base64',
-            //     ContentType: 'image/jpeg'
-            // };
-
-            // s3.putObject(params, (err, data) => {
-            //
-            //     if (err) {
-            //         console.error(new Error("uploading URI: " + err));
-            //         uploadErrors.push(question);
-            //         return _cb(null);
-            //     }
-            //
-            //     console.log("S3 Upload Success");
-            //
-            //     question.imgFileName = newFileName;
-
                 // Save the new question to DB
                 db.saveNewQuestion(question, (err) => {
                     if (err) {
@@ -268,6 +244,58 @@ router.post('/uploadImageFile', (req, res) => {
 
     // parse the incoming request containing the form data
     form.parse(req);
+});
+
+/**
+ * DELETE route to remove a question from the DB. URL: /deleteQuestion?questionId=x&imgFileName=x
+ */
+router.delete('/deleteQuestion', (req,res)=>{
+
+    if (!req.session.userId) {
+        res.status(401).json({error: "ER_NOT_LOGGED_IN"});
+        return;
+    }
+
+    let removeImage = (imgFileName) => {
+
+        let params = {
+            Bucket:'voto-question-images',
+            Key: imgFileName
+        };
+        s3.deleteObject(params, (err, data) => {
+            if (err){
+                console.error(new Error("ER_S3_DELETE"));
+                res.status(500).json({error:"ER_S3_DELETE"});
+                return;
+            }
+
+            res.json({status:"success"});
+        });
+    };
+
+
+    if(req.query.questionId){
+
+        // Delete this questionId from the DB.
+        db.deleteQuestion(req.query.questionId, (err)=>{
+
+            if(err){
+                console.error(new Error(err));
+                res.status(500).json({error:err});
+                return;
+            }
+
+            if(req.query.imgFileName){
+                removeImage(req.query.imgFileName);
+            }else{
+                res.json({status:"success"});
+            }
+        });
+
+    }else if(req.query.imgFileName){
+        removeImage(req.query.imgFileName);
+    }
+
 });
 
 /**

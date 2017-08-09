@@ -198,6 +198,34 @@ exports.updateQuestion = (question, _cb) =>{
     });
 };
 
+/**
+ * Removes a question from the data base.
+ * @param questionId the question ID to delete
+ * @param _cb callback()
+ */
+exports.deleteQuestion = (questionId, _cb) =>{
+
+    if (!questionId) {
+        _cb("ER_NEED_QUESTION_ID");
+        return;
+    }
+
+    console.log('Deleting questionId %d' + questionId);
+
+    let sql = "DELETE FROM questions WHERE questionId = ?";
+    let params = [questionId];
+
+    mySQL.query(sql, params, (err, status) => {
+
+        if (err) {
+            _cb(err.code);
+            return;
+        }
+
+        _cb(null, status);
+    });
+};
+
 exports.activateSession = (userId,sessionId, _cb) =>{
 
     if (!userId || !sessionId) {

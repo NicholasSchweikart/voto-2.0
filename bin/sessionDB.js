@@ -289,7 +289,7 @@ exports.activateSession = (userId,sessionId, _cb) =>{
 };
 
 /**
- * Gets all questions associated with a sessionId. //TODO add order column
+ * Gets all questions associated with a sessionId.
  * @param sessionId id of the session to get questions for.
  * @param _cb callback
  */
@@ -302,8 +302,42 @@ exports.getSessionQuestions = (sessionId, _cb) =>{
 
     console.log('Retrieving all questions for sessionId: ' + sessionId);
 
-    let sql = "SELECT * FROM questions WHERE sessionID = ?";
+    let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE sessionId = ? ORDER BY orderNumber DESC";
     let params = [sessionId];
+
+    mySQL.query(sql, params, (err, questions) => {
+
+        if (err) {
+            return _cb(err.code);
+        }
+
+        // if(questions.length === 0){
+        //     _cb("ER_NO_QUESTIONS_FOR_SESSION_ID");
+        //     return;
+        // }
+
+        // Return the
+        _cb(null, questions);
+
+    });
+};
+
+/**
+ * Gets all questions associated with a sessionId.
+ * @param questionId id of the session to get questions for.
+ * @param _cb callback
+ */
+exports.getQuestion = (questionId, _cb) =>{
+
+    if (!questionId) {
+        _cb("ER_NO_QUESTION_ID");
+        return;
+    }
+
+    console.log('Retrieving questionId: ' + questionId);
+
+    let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE questionId = ?";
+    let params = [questionId];
 
     mySQL.query(sql, params, (err, questions) => {
 

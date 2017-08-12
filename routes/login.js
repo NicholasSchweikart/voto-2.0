@@ -30,8 +30,7 @@ router.post('/',(req,res)=>{
 });
 
 /**
- * Handles login for the entire API. Please post a json login object @ voto.io/database/login
- * Form {userName:xxxx, password:xxxx}
+ * POST logs a user out of the system by destroying there session.
  */
 router.post('/logout',(req,res)=>{
 
@@ -47,48 +46,6 @@ router.post('/logout',(req,res)=>{
         }else{
             res.json({status: "success"});
         }
-    });
-});
-
-/**
- * Handles login for the entire API. Please post a json login object @ voto.io/database/login
- * Form {userName:xxxx, password:xxxx}
- */
-router.post('/updatePassword',(req,res)=>{
-
-    if(!req.session.userId){
-        res.status(401).json({error:"ER_NOT_LOGGED_IN"});
-        return;
-    }
-
-
-});
-
-/**
- * POST to delete a user from the system.
- */
-router.post('/delete',(req,res)=>{
-
-    if(!req.session.userId){
-        res.status(401).json({error:"ER_NOT_LOGGED_IN"});
-        return;
-    }
-
-    db.deleteUser(req.session.userId, (err)=>{
-
-        if(err){
-            res.status(500).json({error:err});
-            return;
-        }
-
-        req.session.destroy((err)=>{
-            if(err) {
-                console.error(new Error("logout failure: " + err));
-                res.status(500).json({error:err});
-            }else{
-                res.json({status: "successful delete"});
-            }
-        });
     });
 });
 

@@ -203,7 +203,7 @@ exports.updateQuestion = (question, _cb) =>{
  * @param questionId the question ID to delete
  * @param _cb callback()
  */
-exports.deleteQuestion = (questionId, _cb) =>{
+exports.deleteQuestion = (questionId, _cb) =>{ 
 
     if (!questionId) {
         _cb("ER_NEED_QUESTION_ID");

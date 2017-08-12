@@ -33,6 +33,33 @@ exports.createUser = (newUser, _cb) => {
 };
 
 /**
+ * Deletes a userId from the data base.
+ * @param userId the id of the user to remove
+ * @param _cb callback
+ */
+exports.deleteUser = (userId, _cb) =>{
+
+    console.log("Deleting userId [%d]", userId);
+
+    if (!userId) {
+        _cb('ER_NO_USER_ID');
+        return;
+    }
+
+    let sql = "DELETE FROM users WHERE userId = ?";
+    let params = [userId];
+
+    mySQL.query(sql, params, (err) => {
+
+        if (err) {
+            _cb(err);
+        } else {
+            _cb(null, "USER_DELETED");
+        }
+    });
+};
+
+/**
  * Attempts to login a user with the provided credentials.
  * @param userName the users name
  * @param password the users password
@@ -73,6 +100,63 @@ exports.loginUser = (userName, password, _cb) => {
 
     });
 
+};
+
+/**
+ * Changes a users password for login.
+ * @param userId the users userId
+ * @param currentPassword the current password for login
+ * @param newPassword the new password
+ * @param _cb callback
+ */
+exports.changeUserPassword = (userId, currentPassword, newPassword, _cb) => {
+
+    if (!userId || !currentPassword || !newPassword) {
+        return _cb('ER_EMPTY_FIELDS');
+    }
+
+    console.log('Changing password for userId [%d] from %s -> %s',userId, currentPassword, newPassword);
+
+    let sql = "SELECT * FROM users WHERE userId = ?";
+    let params = [userId];
+
+    mySQL.query(sql, params, (err, data) => {
+
+        if (err) {
+            _cb(err.code);
+            return;
+        }
+
+        if (data.length === 0) {
+            _cb('ER_NO_USER');
+            return;
+        }
+
+        let user = data[0];
+        let thisHash = passwordUtil.getPasswordHash(currentPassword, user.passwordSalt);
+
+        if (thisHash === user.passwordHash) {
+
+            // User has double authenticated themselves, go ahead and change password.
+            // Get the hash and salt for the provided password
+            let passwordData = passwordUtil.getSaltHashPassword(newPassword);
+
+            mySQL.query("UPDATE users SET passwordSalt = ?, passwordHash = ? WHERE userId = ?",
+                [passwordData.salt,passwordData.passwordHash,userId],
+                (err) => {
+
+                if(err){
+                    _cb('ER_FAILED_TO_SAVE_NEW_PASSWORD');
+                    return;
+                }
+
+                _cb('SUCCESS');
+            });
+
+        } else {
+            _cb('ERR_LOGIN_FAILED');
+        }
+    });
 };
 
 /**

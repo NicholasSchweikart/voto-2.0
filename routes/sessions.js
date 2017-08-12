@@ -117,6 +117,9 @@ router.post('/saveSessionQuestions', (req, res) => {
 
 });
 
+/**
+ * POST to put a specifc session into the active state.
+ */
 router.post("/activateSession", (req, res) => {
 
     if (!req.session.userId) {
@@ -299,6 +302,27 @@ router.delete('/deleteQuestion', (req,res)=>{
         removeImage(req.query.imgFileName);
     }
 
+});
+
+/**
+ * DELETE route to remove a session from the DB. URL "/deleteSession?sessionId=xx"
+ */
+router.delete('/deleteSession', (req,res)=>{
+
+    if (!req.session.userId) {
+        res.status(401).json({error: "ER_NOT_LOGGED_IN"});
+        return;
+    }
+
+    db.deleteSession(req.query.sessionId, (err)=>{
+
+        if(err){
+            res.status(500).json({error:err});
+            return;
+        }
+
+        res.json({status:"success"});
+    });
 });
 
 /**

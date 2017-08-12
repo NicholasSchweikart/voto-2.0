@@ -166,6 +166,35 @@ exports.getSession = (sessionId, _cb) =>{
 };
 
 /**
+ * Deletes a single session associated with a sessionId.
+ * @param sessionId the sessionId to delete
+ * @param _cb callback
+ */
+exports.deleteSession = (sessionId, _cb) => {
+
+    if (!sessionId) {
+        _cb("ER_NO_SESSION_ID");
+        return;
+    }
+
+    console.log('Retrieving sessionId: [%d]', sessionId);
+
+    let sql = "DELETE FROM sessions WHERE sessionId = ? ";
+    let params = [sessionId];
+
+    mySQL.query(sql, params, (err) => {
+
+        if (err) {
+            _cb(err.code);
+            return;
+        }
+
+        // Return the records.
+        _cb(null, "DELETE_SUCCESSFUL");
+    });
+};
+
+/**
  * Saves a question to the DB for a session.
  * @param question the question data to save '{sessionId, imgFileName, question, correctAnswer}'
  * @param _cb callback

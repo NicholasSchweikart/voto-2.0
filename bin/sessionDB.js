@@ -38,7 +38,7 @@ exports.saveNewSession = (newSession, userId, _cb) => {
 
               _cb(null, data[0]);
             }
-          })
+          });
         }
     });
 };
@@ -121,6 +121,41 @@ exports.getAllSessions = (userId, _cb) =>{
 
         if(sessions.length === 0){
             _cb("No Sessions for this ID");
+            return;
+        }
+
+        // Return the records.
+        _cb(null, sessions);
+
+    });
+};
+
+/**
+ * Returns an array of all sessions associated with a user.
+ * @param sessionId the userId to get sessions for
+ * @param _cb callback
+ */
+exports.getSession = (sessionId, _cb) =>{
+
+    if (!sessionId) {
+        _cb("failed one or more empty session parameters");
+        return;
+    }
+
+    console.log('Retrieving all sessions for user: ' + sessionId);
+
+    let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE sessionId = ? ";
+    let params = [sessionId];
+
+    mySQL.query(sql, params, (err, sessions) => {
+
+        if (err) {
+            _cb(err.code);
+            return;
+        }
+
+        if(sessions.length === 0){
+            _cb("No Sessions for this sessionId");
             return;
         }
 

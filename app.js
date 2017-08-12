@@ -1,6 +1,5 @@
 const express = require('express'),
     path = require('path'),
-    favicon = require('serve-favicon'),
     cookieParser = require('cookie-parser'),
     bodyParser = require('body-parser'),
     redis = require('redis'),
@@ -10,7 +9,6 @@ const express = require('express'),
     emailRouter = require('./routes/email'),
     loginRouter = require('./routes/login'),
     sessionsRouter = require('./routes/sessions'),
-    cookie = require('cookie'),
     serverConfig = require('./serverConfig.json'),
     app = express();
 

@@ -19,6 +19,9 @@ const s3 = new AWS.S3({
     signatureVersion: 'v4'
 });
 
+/**
+ * POST to save a new session for a user.
+ */
 router.post('/saveNewSession', (req, res) => {
 
     if (!req.session.userId) {
@@ -319,9 +322,55 @@ router.get('/', (req, res) => {
 });
 
 /**
+ * GET method to retrieve all sessions for a userId. URL "/session?sessionId=xx"
+ */
+router.get('/session', (req, res) => {
+
+    if (!req.session.userId) {
+        res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
+        return;
+    }
+
+    if(!req.query.sessionId){
+        res.status(500).json({error: "ERR_NO_SESSION_ID"});
+        return;
+    }
+
+    db.getSession(req.query.sessionId, (err, sessions) => {
+
+        if (err) {
+            res.status(500).json({error: err});
+            return;
+        }
+
+        res.json({session: sessions});
+    });
+});
+
+/**
  * GET method to return all questions for a specific session. URL:"/sessionQuestions?sessionId=xxxx".
  */
 router.get('/sessionQuestions', (req, res) => {
+
+    if (!req.session.userId) {
+        res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
+        return;
+    }
+
+    db.getSessionQuestions(req.query.sessionId, (err, questions) => {
+        if (err) {
+            res.status(500).json({error: err});
+            return;
+        }
+
+        res.json(questions);
+    });
+});
+
+/**
+ * GET method to return all questions for a specific session. URL:"/sessionQuestions?sessionId=xxxx".
+ */
+router.get('/sessionQuestion', (req, res) => {
 
     if (!req.session.userId) {
         res.status(401).json({error: "ERR_NOT_LOGGED_IN"});

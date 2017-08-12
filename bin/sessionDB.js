@@ -131,18 +131,18 @@ exports.getAllSessions = (userId, _cb) =>{
 };
 
 /**
- * Returns an array of all sessions associated with a user.
- * @param sessionId the userId to get sessions for
+ * Returns a single session associated with a sessionId.
+ * @param sessionId the sessionId to get
  * @param _cb callback
  */
 exports.getSession = (sessionId, _cb) =>{
 
     if (!sessionId) {
-        _cb("failed one or more empty session parameters");
+        _cb("ER_NO_SESSION_ID");
         return;
     }
 
-    console.log('Retrieving all sessions for user: ' + sessionId);
+    console.log('Retrieving sessionId: [%d]', sessionId);
 
     let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE sessionId = ? ";
     let params = [sessionId];
@@ -323,8 +323,8 @@ exports.getSessionQuestions = (sessionId, _cb) =>{
 };
 
 /**
- * Gets all questions associated with a sessionId.
- * @param questionId id of the session to get questions for.
+ * Get a question associated with a questionId.
+ * @param questionId id of the question to get.
  * @param _cb callback
  */
 exports.getQuestion = (questionId, _cb) =>{

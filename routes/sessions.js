@@ -368,27 +368,7 @@ router.get('/sessionQuestions', (req, res) => {
 });
 
 /**
- * GET method to return all questions for a specific session. URL:"/sessionQuestions?sessionId=xxxx".
- */
-router.get('/sessionQuestions', (req, res) => {
-
-    if (!req.session.userId) {
-        res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
-        return;
-    }
-
-    db.getSessionQuestions(req.query.sessionId, (err, questions) => {
-        if (err) {
-            res.status(500).json({error: err});
-            return;
-        }
-
-        res.json(questions);
-    });
-});
-
-/**
- * GET method to return all questions for a specific session. URL:"/question?questionId=xxxx".
+ * GET method to return a single question. URL:"/question?questionId=xxxx".
  */
 router.get('/question', (req, res) => {
 

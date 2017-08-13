@@ -75,13 +75,14 @@ router.post('/saveSessionQuestions', (req, res) => {
     let questions = req.body.questions;
     let uploadErrors = [];
     let dbErrors = [];
+    let userId = req.session.userId;
 
     async.each(questions, (question, _cb) => {
         // Check if its a new question
         if (!question.questionId) {
 
                 // Save the new question to DB
-                db.saveNewQuestion(question, (err) => {
+                db.saveNewQuestion(question,userId, (err) => {
                     if (err) {
                         console.error(new Error("saving question to DB: " + err));
                         dbErrors.push(question);

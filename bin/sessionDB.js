@@ -135,7 +135,7 @@ exports.getAllSessions = (userId, _cb) =>{
  * @param sessionId the sessionId to get
  * @param _cb callback
  */
-exports.getSession = (sessionId, _cb) =>{
+exports.getSession = (sessionId, userId, _cb) =>{
 
     if (!sessionId) {
         _cb("ER_NO_SESSION_ID");
@@ -168,6 +168,7 @@ exports.getSession = (sessionId, _cb) =>{
 /**
  * Deletes a single session associated with a sessionId.
  * @param sessionId the sessionId to delete
+ * @param userId the userId for the owner of the session
  * @param _cb callback
  */
 exports.deleteSession = (userId, sessionId, _cb) => {
@@ -197,19 +198,21 @@ exports.deleteSession = (userId, sessionId, _cb) => {
 /**
  * Saves a question to the DB for a session.
  * @param question the question data to save '{sessionId, imgFileName, question, correctAnswer}'
+ * @param userId the userId for the session owner
  * @param _cb callback
  */
-exports.saveNewQuestion = (question, _cb) =>{
+exports.saveNewQuestion = (question, userId, _cb) =>{
 
-    if (!question) {
-        _cb("failed need newQuestion obj");
+    if (!question || !userId) {
+        _cb("ER_NO_USER_ID_OR_QUESTION");
         return;
     }
 
-    console.log('Saving question for sessionId: ' + question.sessionId);
+    console.log('Saving question for sessionId [%d] userId [%d] ',question.sessionId, userId);
 
-    let sql = "INSERT INTO questions (sessionId, imgFileName, question, orderNumber, correctAnswer) VALUES (?, ?, ?, ?, ?)";
+    let sql = "CALL save_new_question(?,?,?,?,?,?)";
     let params = [
+        userId,
         question.sessionId,
         question.imgFileName,
         question.question,
@@ -217,14 +220,14 @@ exports.saveNewQuestion = (question, _cb) =>{
         question.correctAnswer
     ];
 
-    mySQL.query(sql, params, (err, status) => {
+    mySQL.query(sql, params, (err, row) => {
 
         if (err) {
             _cb(err.code);
             return;
         }
 
-        _cb(null, status);
+        _cb(null, row);
     });
 };
 

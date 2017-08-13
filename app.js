@@ -41,7 +41,7 @@ app.use(session(
         resave: false,
         cookie: {
             path: "/",
-            maxAge: 2*1800000,    // 60 min max cookie life
+            maxAge: 2*1800000,   // 60 min max cookie life
             httpOnly: true,     // Hide from JavaScript
             //secure: true      //TODO Require an HTTPS connection by uncommenting here
         },

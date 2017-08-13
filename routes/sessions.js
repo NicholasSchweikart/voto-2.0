@@ -255,7 +255,7 @@ router.post('/uploadImageFile', (req, res) => {
 /**
  * DELETE route to remove a question from the DB. URL: /deleteQuestion?questionId=x&imgFileName=x
  */
-router.delete('/deleteQuestion', (req,res)=>{
+router.delete('/:questionId/image/:imgFileName', (req,res)=>{
 
     if (!req.session.userId) {
         res.status(401).json({error: "ER_NOT_LOGGED_IN"});
@@ -280,10 +280,10 @@ router.delete('/deleteQuestion', (req,res)=>{
     };
 
 
-    if(req.query.questionId){
+    if(req.params.questionId){
 
         // Delete this questionId from the DB.
-        db.deleteQuestion(req.query.questionId, (err)=>{
+        db.deleteQuestion(req.params.questionId, (err)=>{
 
             if(err){
                 console.error(new Error(err));
@@ -291,15 +291,15 @@ router.delete('/deleteQuestion', (req,res)=>{
                 return;
             }
 
-            if(req.query.imgFileName){
-                removeImage(req.query.imgFileName);
+            if(req.params.imgFileName){
+                removeImage(req.params.imgFileName);
             }else{
                 res.json({status:"success"});
             }
         });
 
-    }else if(req.query.imgFileName){
-        removeImage(req.query.imgFileName);
+    }else if(req.params.imgFileName){
+        removeImage(req.params.imgFileName);
     }
 
 });
@@ -314,7 +314,7 @@ router.delete('/deleteSession', (req,res)=>{
         return;
     }
 
-    db.deleteSession(req.query.sessionId, (err)=>{
+    db.deleteSession(req.query.sessionId, req.session.userId, (err)=>{
 
         if(err){
             res.status(500).json({error:err});

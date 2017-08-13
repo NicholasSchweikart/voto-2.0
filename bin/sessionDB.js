@@ -208,12 +208,12 @@ exports.saveNewQuestion = (question, _cb) =>{
 
     console.log('Saving question for sessionId: ' + question.sessionId);
 
-    let sql = "INSERT INTO questions (sessionId, imgFileName, question, orderNum, correctAnswer) VALUES (?, ?, ?, ?, ?)";
+    let sql = "INSERT INTO questions (sessionId, imgFileName, question, orderNumber, correctAnswer) VALUES (?, ?, ?, ?, ?)";
     let params = [
         question.sessionId,
         question.imgFileName,
         question.question,
-        question.orderNum,
+        question.orderNumber,
         question.correctAnswer
     ];
 

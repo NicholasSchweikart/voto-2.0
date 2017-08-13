@@ -5,7 +5,7 @@ const express = require('express'),
     redis = require('redis'),
     session = require('express-session'),
     redisStore = require('connect-redis')(session),
-    dbRouter = require('./routes/users'),
+    userRouter = require('./routes/users'),
     emailRouter = require('./routes/email'),
     loginRouter = require('./routes/login'),
     sessionsRouter = require('./routes/sessions'),
@@ -60,7 +60,7 @@ const socketAPI = require('./socketAPI')(io,store);
 server.listen(1212);
 
 // Attach paths to router files
-app.use('/api/database', dbRouter);
+app.use('/api/users', userRouter);
 app.use('/api/email', emailRouter);
 app.use('/api/login', loginRouter);
 app.use('/api/sessions',sessionsRouter);

@@ -170,17 +170,17 @@ exports.getSession = (sessionId, _cb) =>{
  * @param sessionId the sessionId to delete
  * @param _cb callback
  */
-exports.deleteSession = (sessionId, _cb) => {
+exports.deleteSession = (userId, sessionId, _cb) => {
 
-    if (!sessionId) {
-        _cb("ER_NO_SESSION_ID");
+    if (!sessionId || !userId) {
+        _cb("ER_NO_SESSION_OR_USER_ID");
         return;
     }
 
-    console.log('Retrieving sessionId: [%d]', sessionId);
+    console.log('Retrieving sessionId [%d] for userId [%d]', sessionId,userId);
 
-    let sql = "DELETE FROM sessions WHERE sessionId = ? ";
-    let params = [sessionId];
+    let sql = "DELETE FROM sessions WHERE sessionId = ? AND userId = ?";
+    let params = [sessionId, userId];
 
     mySQL.query(sql, params, (err) => {
 

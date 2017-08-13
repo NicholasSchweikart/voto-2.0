@@ -444,4 +444,10 @@ router.get('/questionImageURL', (req, res) => {
 
 });
 
+router.get('/activeSessions', (req,res)=>{
+
+
+
+});
+
 module.exports = router;

@@ -242,11 +242,11 @@ exports.updateQuestion = (question, _cb) =>{
 
     console.log('Updating questionId: ' + question.questionId);
 
-    let sql = "UPDATE questions SET imgFileName = ?, question = ?, orderNum = ?, correctAnswer = ? WHERE questionId = ?";
+    let sql = "UPDATE questions SET imgFileName = ?, question = ?, orderNumber = ?, correctAnswer = ? WHERE questionId = ?";
     let params = [
         question.imgFileName,
         question.question,
-        question.orderNum,
+        question.orderNumber,
         question.correctAnswer,
         question.questionId,
     ];
@@ -267,7 +267,7 @@ exports.updateQuestion = (question, _cb) =>{
  * @param questionId the question ID to delete
  * @param _cb callback()
  */
-exports.deleteQuestion = (questionId, _cb) =>{ 
+exports.deleteQuestion = (questionId, _cb) =>{
 
     if (!questionId) {
         _cb("ER_NEED_QUESTION_ID");
@@ -331,7 +331,7 @@ exports.getSessionQuestions = (sessionId, _cb) =>{
 
     console.log('Retrieving all questions for sessionId: ' + sessionId);
 
-    let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE sessionId = ? ORDER BY orderNumber DESC";
+    let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE sessionId = ? ORDER BY orderNumber ASC";
     let params = [sessionId];
 
     mySQL.query(sql, params, (err, questions) => {

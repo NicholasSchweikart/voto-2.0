@@ -1,5 +1,5 @@
-const mySQL = require('./mySqlUtility'),
-passwordUtil = require('./passwordUtility');
+const mySQL = require("./mySqlUtility"),
+  passwordUtil = require("./passwordUtility");
 
 /**
  * Adds a new user to the data base if possible.
@@ -7,29 +7,27 @@ passwordUtil = require('./passwordUtility');
  * @param _cb callback
  */
 exports.createUser = (newUser, _cb) => {
+  console.log("Attempting to create user...");
 
-    console.log('Attempting to create user...');
+  // Sanitize inputs preemptive;
+  if (!newUser.firstName || !newUser.lastName || !newUser.password || !newUser.userName) {
+    _cb("must provide all new user credentials");
+    return;
+  }
 
-    // Sanitize inputs preemptive;
-    if (!newUser.firstName || !newUser.lastName || !newUser.password || !newUser.userName) {
-        _cb('must provide all new user credentials');
-        return;
+  // Get the hash and salt for the provided password
+  const passwordData = passwordUtil.getSaltHashPassword(newUser.password);
+
+  const sql = "INSERT INTO users (firstName, lastName, userName, passwordSalt, passwordHash ) VALUES(?,?,?,?,?)";
+  const params = [newUser.firstName, newUser.lastName, newUser.userName, passwordData.salt, passwordData.passwordHash];
+
+  mySQL.query(sql, params, (err) => {
+    if (err) {
+      _cb(err);
+    } else {
+      _cb(null, "user created");
     }
-
-    // Get the hash and salt for the provided password
-    let passwordData = passwordUtil.getSaltHashPassword(newUser.password);
-
-    let sql = "INSERT INTO users (firstName, lastName, userName, passwordSalt, passwordHash ) VALUES(?,?,?,?,?)";
-    let params = [newUser.firstName, newUser.lastName, newUser.userName, passwordData.salt, passwordData.passwordHash];
-
-    mySQL.query(sql, params, (err) => {
-
-        if (err) {
-            _cb(err);
-        } else {
-            _cb(null, "user created");
-        }
-    });
+  });
 };
 
 /**
@@ -37,26 +35,24 @@ exports.createUser = (newUser, _cb) => {
  * @param userId the id of the user to remove
  * @param _cb callback
  */
-exports.deleteUser = (userId, _cb) =>{
+exports.deleteUser = (userId, _cb) => {
+  console.log("Deleting userId [%d]", userId);
 
-    console.log("Deleting userId [%d]", userId);
+  if (!userId) {
+    _cb("ER_NO_USER_ID");
+    return;
+  }
 
-    if (!userId) {
-        _cb('ER_NO_USER_ID');
-        return;
+  const sql = "DELETE FROM users WHERE userId = ?";
+  const params = [userId];
+
+  mySQL.query(sql, params, (err) => {
+    if (err) {
+      _cb(err);
+    } else {
+      _cb(null, "USER_DELETED");
     }
-
-    let sql = "DELETE FROM users WHERE userId = ?";
-    let params = [userId];
-
-    mySQL.query(sql, params, (err) => {
-
-        if (err) {
-            _cb(err);
-        } else {
-            _cb(null, "USER_DELETED");
-        }
-    });
+  });
 };
 
 /**
@@ -66,40 +62,36 @@ exports.deleteUser = (userId, _cb) =>{
  * @param _cb callback
  */
 exports.loginUser = (userName, password, _cb) => {
+  console.log(`Attempting login FOR: ${userName} PASSWORD: ${password}`);
 
-    console.log('Attempting login FOR: ' + userName + ' PASSWORD: ' + password);
+  if (!userName || !password) {
+    _cb("ER_LOGIN_FAILED");
+    return;
+  }
 
-    if (!userName || !password) {
-        _cb('ER_LOGIN_FAILED');
-        return;
+  const sql = "SELECT * FROM users WHERE userName = ?";
+  const params = [userName];
+
+  mySQL.query(sql, params, (err, data) => {
+    if (err) {
+      _cb(err.code);
+      return;
     }
 
-    let sql = "SELECT * FROM users WHERE userName = ?";
-    let params = [userName];
+    if (data.length === 0) {
+      _cb("No user found with this name!");
+      return;
+    }
 
-    mySQL.query(sql, params, (err, data) => {
+    const user = data[0];
+    const thisHash = passwordUtil.getPasswordHash(password, user.passwordSalt);
 
-        if (err) {
-            _cb(err.code);
-            return;
-        }
-
-        if (data.length === 0) {
-            _cb('No user found with this name!');
-            return;
-        }
-
-        let user = data[0];
-        let thisHash = passwordUtil.getPasswordHash(password, user.passwordSalt);
-
-        if (thisHash === user.passwordHash) {
-            _cb(null, user);
-        } else {
-            _cb('ERR_LOGIN_FAILED');
-        }
-
-    });
-
+    if (thisHash === user.passwordHash) {
+      _cb(null, user);
+    } else {
+      _cb("ERR_LOGIN_FAILED");
+    }
+  });
 };
 
 /**
@@ -110,53 +102,48 @@ exports.loginUser = (userName, password, _cb) => {
  * @param _cb callback
  */
 exports.changeUserPassword = (userId, currentPassword, newPassword, _cb) => {
+  if (!userId || !currentPassword || !newPassword) {
+    return _cb("ER_EMPTY_FIELDS");
+  }
 
-    if (!userId || !currentPassword || !newPassword) {
-        return _cb('ER_EMPTY_FIELDS');
+  console.log("Changing password for userId [%d] from %s -> %s", userId, currentPassword, newPassword);
+
+  const sql = "SELECT * FROM users WHERE userId = ?";
+  const params = [userId];
+
+  mySQL.query(sql, params, (err, data) => {
+    if (err) {
+      _cb(err.code);
+      return;
     }
 
-    console.log('Changing password for userId [%d] from %s -> %s',userId, currentPassword, newPassword);
+    if (data.length === 0) {
+      _cb("ER_NO_USER");
+      return;
+    }
 
-    let sql = "SELECT * FROM users WHERE userId = ?";
-    let params = [userId];
+    const user = data[0];
+    const thisHash = passwordUtil.getPasswordHash(currentPassword, user.passwordSalt);
 
-    mySQL.query(sql, params, (err, data) => {
+    if (thisHash === user.passwordHash) {
+      // User has double authenticated themselves, go ahead and change password.
+      // Get the hash and salt for the provided password
+      const passwordData = passwordUtil.getSaltHashPassword(newPassword);
 
-        if (err) {
-            _cb(err.code);
+      mySQL.query("UPDATE users SET passwordSalt = ?, passwordHash = ? WHERE userId = ?",
+        [passwordData.salt, passwordData.passwordHash, userId],
+        (err) => {
+          if (err) {
+            _cb("ER_FAILED_TO_SAVE_NEW_PASSWORD");
             return;
-        }
+          }
 
-        if (data.length === 0) {
-            _cb('ER_NO_USER');
-            return;
-        }
-
-        let user = data[0];
-        let thisHash = passwordUtil.getPasswordHash(currentPassword, user.passwordSalt);
-
-        if (thisHash === user.passwordHash) {
-
-            // User has double authenticated themselves, go ahead and change password.
-            // Get the hash and salt for the provided password
-            let passwordData = passwordUtil.getSaltHashPassword(newPassword);
-
-            mySQL.query("UPDATE users SET passwordSalt = ?, passwordHash = ? WHERE userId = ?",
-                [passwordData.salt,passwordData.passwordHash,userId],
-                (err) => {
-
-                if(err){
-                    _cb('ER_FAILED_TO_SAVE_NEW_PASSWORD');
-                    return;
-                }
-
-                _cb('SUCCESS');
-            });
-
-        } else {
-            _cb('ERR_LOGIN_FAILED');
-        }
-    });
+          _cb("SUCCESS");
+        });
+    } else {
+      _cb("ERR_LOGIN_FAILED");
+    }
+  });
 };
 
 /**
@@ -166,30 +153,28 @@ exports.changeUserPassword = (userId, currentPassword, newPassword, _cb) => {
  * @param _cb callback(err, yes) yes = true if authorised
  */
 exports.isUserAuthorized = (userId, sessionId, _cb) => {
+  if (!userId || !sessionId) {
+    _cb("ER_NEED_SESSION_AND_USER_IDS");
+    return;
+  }
 
-    if (!userId || !sessionId) {
-        _cb("ER_NEED_SESSION_AND_USER_IDS");
-        return;
+  console.log("Checking authorization for userId %d on sessionId %d", userId, sessionId);
+
+  const sql = "SELECT * FROM authorized_users WHERE userId = ? AND sessionId=?";
+  const params = [userId, sessionId];
+
+  mySQL.query(sql, params, (err, data) => {
+    if (err) {
+      _cb(err.code);
+      return;
     }
 
-    console.log('Checking authorization for userId %d on sessionId %d', userId, sessionId);
+    if (data.length === 0) {
+      return _cb(null, false);
+    }
 
-    let sql = "SELECT * FROM authorized_users WHERE userId = ? AND sessionId=?";
-    let params = [userId,sessionId];
-
-    mySQL.query(sql, params, (err, data) => {
-
-        if (err) {
-            _cb(err.code);
-            return;
-        }
-
-        if(data.length ===0){
-            return _cb(null, false)
-        }
-
-        return _cb(null, true);
-    });
+    return _cb(null, true);
+  });
 };
 
 /**
@@ -199,27 +184,22 @@ exports.isUserAuthorized = (userId, sessionId, _cb) => {
  * @param _cb callback(err, success)
  */
 exports.saveUserResponse = (userResponse, userId, _cb) => {
+  console.log(`Attempting to save a vote for USER: ${userId}`);
 
-    console.log('Attempting to save a vote for USER: ' + userId);
+  if (!userResponse || !userResponse.answer) {
+    _cb("failed one or more empty userResponse parameters");
+    return;
+  }
 
-    if (!userResponse || !userResponse.answer) {
-        _cb("failed one or more empty userResponse parameters");
-        return;
+  const sql = "INSERT INTO user_responses (userId, title) VALUES (?, ?)";
+  const params = [userId, newSession.title];
+
+  mySQL.query(sql, params, (err, data) => {
+    if (err) {
+      _cb(err);
+    } else {
+      _cb(null, data[0]);
     }
-
-    let sql = "INSERT INTO user_responses (userId, title) VALUES (?, ?)";
-    let params = [userId, newSession.title];
-
-    mySQL.query(sql, params, (err, data) => {
-
-        if (err) {
-            _cb(err);
-        } else {
-            _cb(null, data[0]);
-        }
-    });
+  });
 };
-
-
-
 

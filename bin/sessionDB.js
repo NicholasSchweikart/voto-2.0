@@ -1,4 +1,4 @@
-const mySQL = require('./mySqlUtility');
+const mySQL = require("./mySqlUtility");
 
 /**
  * Saves a new session in the DB for a user.
@@ -7,40 +7,36 @@ const mySQL = require('./mySqlUtility');
  * @param _cb callback function
  */
 exports.saveNewSession = (newSession, userId, _cb) => {
+  console.log(`Attempting to save a session for USER: ${userId}`);
 
-    console.log('Attempting to save a session for USER: ' + userId);
+  if (!newSession || !newSession.title || !newSession.className || !newSession.description) {
+    _cb("failed one or more empty session parameters");
+    return;
+  }
 
-    if (!newSession || !newSession.title || !newSession.className || !newSession.description) {
-        _cb("failed one or more empty session parameters");
-        return;
-    }
+  const sql = "INSERT INTO sessions (userId, title, className, description) VALUES (?, ?, ?, ?)";
+  const params = [userId, newSession.title, newSession.className, newSession.description];
 
-    let sql = "INSERT INTO sessions (userId, title, className, description) VALUES (?, ?, ?, ?)";
-    let params = [userId, newSession.title, newSession.className, newSession.description];
+  mySQL.query(sql, params, (err, data) => {
+    if (err) {
+      _cb(err.code);
+    } else {
+      const sql2 = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp from sessions WHERE sessionId = ?";
+      const params2 = [data.insertId];
 
-    mySQL.query(sql, params, (err, data) => {
-
+      mySQL.query(sql2, params2, (err, data) => {
         if (err) {
-            _cb(err.code);
+          _cb(err.code);
         } else {
+          if (data.length === 0) {
+            _cb("SOMETHING WHEN WRONG ON INSERT");
+          }
 
-            let sql2 = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp from sessions WHERE sessionId = ?";
-            let params2 = [data.insertId];
-
-            mySQL.query(sql2, params2, (err, data) => {
-
-              if (err) {
-                _cb(err.code);
-              } else {
-                if (data.length === 0) {
-                  _cb('SOMETHING WHEN WRONG ON INSERT');
-                }
-
-              _cb(null, data[0]);
-            }
-          });
+          _cb(null, data[0]);
         }
-    });
+      });
+    }
+  });
 };
 
 /**
@@ -49,39 +45,37 @@ exports.saveNewSession = (newSession, userId, _cb) => {
  * @param userId the id for the user to authorize this transaction
  * @param _cb callback
  */
-exports.updateSession = (sessionUpdate, userId, _cb) =>{
+exports.updateSession = (sessionUpdate, userId, _cb) => {
+  console.log(sessionUpdate);
 
-    console.log(sessionUpdate);
+  if (!sessionUpdate) {
+    _cb("failed one or more empty session parameters");
+    return;
+  }
 
-    if (!sessionUpdate) {
-        _cb("failed one or more empty session parameters");
-        return;
+  console.log("Attempting to update sessionId [%d] for userId [%d]", sessionUpdate.sessionId, userId);
+
+  const sql = "CALL update_session(?,?,?,?,?,?)";
+  const params = [
+    userId,
+    sessionUpdate.sessionId,
+    sessionUpdate.className,
+    sessionUpdate.title,
+    sessionUpdate.totalQuestions,
+    sessionUpdate.description,
+  ];
+
+  mySQL.query(sql, params, (err, data) => {
+    if (err) {
+      _cb(err.code);
+    } else {
+      if (data.length === 0) {
+        _cb("SOMETHING WHEN WRONG ON UPDATE");
+      }
+
+      _cb(null, data[0]);
     }
-
-    console.log('Attempting to update sessionId [%d] for userId [%d]',sessionUpdate.sessionId, userId);
-
-    let sql = "CALL update_session(?,?,?,?,?,?)";
-    let params = [
-        userId,
-        sessionUpdate.sessionId,
-        sessionUpdate.className,
-        sessionUpdate.title,
-        sessionUpdate.totalQuestions,
-        sessionUpdate.description
-    ];
-
-    mySQL.query(sql, params, (err, data) => {
-
-        if (err) {
-            _cb(err.code);
-        } else {
-            if (data.length === 0) {
-                _cb('SOMETHING WHEN WRONG ON UPDATE');
-            }
-
-            _cb(null, data[0]);
-        }
-    });
+  });
 };
 
 /**
@@ -89,34 +83,31 @@ exports.updateSession = (sessionUpdate, userId, _cb) =>{
  * @param userId the userId to get sessions for
  * @param _cb callback
  */
-exports.getAllSessions = (userId, _cb) =>{
+exports.getAllSessions = (userId, _cb) => {
+  if (!userId) {
+    _cb("failed one or more empty session parameters");
+    return;
+  }
 
-    if (!userId) {
-        _cb("failed one or more empty session parameters");
-        return;
+  console.log(`Retrieving all sessions for user: ${userId}`);
+
+  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE userId = ? ORDER BY timeStamp DESC";
+  const params = [userId];
+
+  mySQL.query(sql, params, (err, sessions) => {
+    if (err) {
+      _cb(err.code);
+      return;
     }
 
-    console.log('Retrieving all sessions for user: ' + userId);
+    if (sessions.length === 0) {
+      _cb("No Sessions for this ID");
+      return;
+    }
 
-    let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE userId = ? ORDER BY timeStamp DESC";
-    let params = [userId];
-
-    mySQL.query(sql, params, (err, sessions) => {
-
-        if (err) {
-            _cb(err.code);
-            return;
-        }
-
-        if(sessions.length === 0){
-            _cb("No Sessions for this ID");
-            return;
-        }
-
-        // Return the records.
-        _cb(null, sessions);
-
-    });
+    // Return the records.
+    _cb(null, sessions);
+  });
 };
 
 /**
@@ -125,34 +116,31 @@ exports.getAllSessions = (userId, _cb) =>{
  * @param userId the id of the user for authorization
  * @param _cb callback
  */
-exports.getSession = (sessionId, userId, _cb) =>{
+exports.getSession = (sessionId, userId, _cb) => {
+  if (!sessionId) {
+    _cb("ER_NO_SESSION_ID");
+    return;
+  }
 
-    if (!sessionId) {
-        _cb("ER_NO_SESSION_ID");
-        return;
+  console.log("Retrieving sessionId: [%d]", sessionId);
+
+  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE sessionId = ? AND userId = ?";
+  const params = [sessionId, userId];
+
+  mySQL.query(sql, params, (err, sessions) => {
+    if (err) {
+      _cb(err.code);
+      return;
     }
 
-    console.log('Retrieving sessionId: [%d]', sessionId);
+    if (sessions.length === 0) {
+      _cb("No Sessions for this sessionId");
+      return;
+    }
 
-    let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE sessionId = ? AND userId = ?";
-    let params = [sessionId, userId];
-
-    mySQL.query(sql, params, (err, sessions) => {
-
-        if (err) {
-            _cb(err.code);
-            return;
-        }
-
-        if(sessions.length === 0){
-            _cb("No Sessions for this sessionId");
-            return;
-        }
-
-        // Return the records.
-        _cb(null, sessions);
-
-    });
+    // Return the records.
+    _cb(null, sessions);
+  });
 };
 
 /**
@@ -162,27 +150,25 @@ exports.getSession = (sessionId, userId, _cb) =>{
  * @param _cb callback
  */
 exports.deleteSession = (userId, sessionId, _cb) => {
+  if (!sessionId || !userId) {
+    _cb("ER_NO_SESSION_OR_USER_ID");
+    return;
+  }
 
-    if (!sessionId || !userId) {
-        _cb("ER_NO_SESSION_OR_USER_ID");
-        return;
+  console.log("Retrieving sessionId [%d] for userId [%d]", sessionId, userId);
+
+  const sql = "DELETE FROM sessions WHERE sessionId = ? AND userId = ?";
+  const params = [sessionId, userId];
+
+  mySQL.query(sql, params, (err) => {
+    if (err) {
+      _cb(err.code);
+      return;
     }
 
-    console.log('Retrieving sessionId [%d] for userId [%d]', sessionId,userId);
-
-    let sql = "DELETE FROM sessions WHERE sessionId = ? AND userId = ?";
-    let params = [sessionId, userId];
-
-    mySQL.query(sql, params, (err) => {
-
-        if (err) {
-            _cb(err.code);
-            return;
-        }
-
-        // Return the records.
-        _cb(null, "DELETE_SUCCESSFUL");
-    });
+    // Return the records.
+    _cb(null, "DELETE_SUCCESSFUL");
+  });
 };
 
 /**
@@ -191,34 +177,32 @@ exports.deleteSession = (userId, sessionId, _cb) => {
  * @param userId the userId for the session owner
  * @param _cb callback
  */
-exports.saveNewQuestion = (question, userId, _cb) =>{
+exports.saveNewQuestion = (question, userId, _cb) => {
+  if (!question || !userId) {
+    _cb("ER_NO_USER_ID_OR_QUESTION");
+    return;
+  }
 
-    if (!question || !userId) {
-        _cb("ER_NO_USER_ID_OR_QUESTION");
-        return;
+  console.log("Saving question for sessionId [%d] userId [%d] ", question.sessionId, userId);
+
+  const sql = "CALL save_new_question(?,?,?,?,?,?)";
+  const params = [
+    userId,
+    question.sessionId,
+    question.imgFileName,
+    question.question,
+    question.orderNumber,
+    question.correctAnswer,
+  ];
+
+  mySQL.query(sql, params, (err, row) => {
+    if (err) {
+      _cb(err.code);
+      return;
     }
 
-    console.log('Saving question for sessionId [%d] userId [%d] ',question.sessionId, userId);
-
-    let sql = "CALL save_new_question(?,?,?,?,?,?)";
-    let params = [
-        userId,
-        question.sessionId,
-        question.imgFileName,
-        question.question,
-        question.orderNumber,
-        question.correctAnswer
-    ];
-
-    mySQL.query(sql, params, (err, row) => {
-
-        if (err) {
-            _cb(err.code);
-            return;
-        }
-
-        _cb(null, row);
-    });
+    _cb(null, row);
+  });
 };
 
 /**
@@ -227,35 +211,33 @@ exports.saveNewQuestion = (question, userId, _cb) =>{
  * @param userId the user id for authorization
  * @param _cb callback
  */
-exports.updateQuestion = (question, userId, _cb) =>{
+exports.updateQuestion = (question, userId, _cb) => {
+  if (!question) {
+    _cb("failed need question obj");
+    return;
+  }
 
-    if (!question) {
-        _cb("failed need question obj");
-        return;
+  console.log(`Updating questionId: ${question.questionId}`);
+
+  const sql = "CALL update_question(?,?,?,?,?,?,?,?)";
+  const params = [
+    userId,
+    question.sessionId,
+    question.questionId,
+    question.imgFileName,
+    question.question,
+    question.orderNumber,
+    question.correctAnswer,
+  ];
+
+  mySQL.query(sql, params, (err, status) => {
+    if (err) {
+      _cb(err.code);
+      return;
     }
 
-    console.log('Updating questionId: ' + question.questionId);
-
-    let sql = "CALL update_question(?,?,?,?,?,?,?,?)";
-    let params = [
-        userId,
-        question.sessionId,
-        question.questionId,
-        question.imgFileName,
-        question.question,
-        question.orderNumber,
-        question.correctAnswer,
-    ];
-
-    mySQL.query(sql, params, (err, status) => {
-
-        if (err) {
-            _cb(err.code);
-            return;
-        }
-
-        _cb(null, status);
-    });
+    _cb(null, status);
+  });
 };
 
 /**
@@ -263,54 +245,50 @@ exports.updateQuestion = (question, userId, _cb) =>{
  * @param questionId the question ID to delete
  * @param _cb callback()
  */
-exports.deleteQuestion = (questionId, _cb) =>{
+exports.deleteQuestion = (questionId, _cb) => {
+  if (!questionId) {
+    _cb("ER_NEED_QUESTION_ID");
+    return;
+  }
 
-    if (!questionId) {
-        _cb("ER_NEED_QUESTION_ID");
-        return;
+  console.log(`Deleting questionId %d${questionId}`);
+
+  const sql = "DELETE FROM questions WHERE questionId = ?";
+  const params = [questionId];
+
+  mySQL.query(sql, params, (err, status) => {
+    if (err) {
+      _cb(err.code);
+      return;
     }
 
-    console.log('Deleting questionId %d' + questionId);
-
-    let sql = "DELETE FROM questions WHERE questionId = ?";
-    let params = [questionId];
-
-    mySQL.query(sql, params, (err, status) => {
-
-        if (err) {
-            _cb(err.code);
-            return;
-        }
-
-        _cb(null, status);
-    });
+    _cb(null, status);
+  });
 };
 
-exports.activateSession = (userId,sessionId, _cb) =>{
+exports.activateSession = (userId, sessionId, _cb) => {
+  if (!userId || !sessionId) {
+    _cb("ER_NEED_SESSION_AND_USER_IDS");
+    return;
+  }
 
-    if (!userId || !sessionId) {
-        _cb("ER_NEED_SESSION_AND_USER_IDS");
-        return;
+  console.log("Activating sessionId %d", sessionId);
+
+  const sql = "UPDATE sessions SET isActive = true WHERE userId = ? AND sessionId = ?";
+  const params = [userId, sessionId];
+
+  mySQL.query(sql, params, (err, data) => {
+    if (err) {
+      _cb(err.code);
+      return;
     }
 
-    console.log('Activating sessionId %d', sessionId);
+    if (data.length === 0) {
+      return _cb(null, false);
+    }
 
-    let sql = "UPDATE sessions SET isActive = true WHERE userId = ? AND sessionId = ?";
-    let params = [userId,sessionId];
-
-    mySQL.query(sql, params, (err, data) => {
-
-        if (err) {
-            _cb(err.code);
-            return;
-        }
-
-        if(data.length ===0){
-            return _cb(null, false)
-        }
-
-        return _cb(null, true);
-    });
+    return _cb(null, true);
+  });
 };
 
 /**
@@ -318,33 +296,30 @@ exports.activateSession = (userId,sessionId, _cb) =>{
  * @param sessionId id of the session to get questions for.
  * @param _cb callback
  */
-exports.getSessionQuestions = (sessionId, _cb) =>{
+exports.getSessionQuestions = (sessionId, _cb) => {
+  if (!sessionId) {
+    _cb("ER_NO_SESSION_ID");
+    return;
+  }
 
-    if (!sessionId) {
-        _cb("ER_NO_SESSION_ID");
-        return;
+  console.log(`Retrieving all questions for sessionId: ${sessionId}`);
+
+  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE sessionId = ? ORDER BY orderNumber ASC";
+  const params = [sessionId];
+
+  mySQL.query(sql, params, (err, questions) => {
+    if (err) {
+      return _cb(err.code);
     }
 
-    console.log('Retrieving all questions for sessionId: ' + sessionId);
+    // if(questions.length === 0){
+    //     _cb("ER_NO_QUESTIONS_FOR_SESSION_ID");
+    //     return;
+    // }
 
-    let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE sessionId = ? ORDER BY orderNumber ASC";
-    let params = [sessionId];
-
-    mySQL.query(sql, params, (err, questions) => {
-
-        if (err) {
-            return _cb(err.code);
-        }
-
-        // if(questions.length === 0){
-        //     _cb("ER_NO_QUESTIONS_FOR_SESSION_ID");
-        //     return;
-        // }
-
-        // Return the
-        _cb(null, questions);
-
-    });
+    // Return the
+    _cb(null, questions);
+  });
 };
 
 /**
@@ -352,31 +327,28 @@ exports.getSessionQuestions = (sessionId, _cb) =>{
  * @param questionId id of the question to get.
  * @param _cb callback
  */
-exports.getQuestion = (questionId, _cb) =>{
+exports.getQuestion = (questionId, _cb) => {
+  if (!questionId) {
+    _cb("ER_NO_QUESTION_ID");
+    return;
+  }
 
-    if (!questionId) {
-        _cb("ER_NO_QUESTION_ID");
-        return;
+  console.log(`Retrieving questionId: ${questionId}`);
+
+  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE questionId = ?";
+  const params = [questionId];
+
+  mySQL.query(sql, params, (err, questions) => {
+    if (err) {
+      return _cb(err.code);
     }
 
-    console.log('Retrieving questionId: ' + questionId);
+    // if(questions.length === 0){
+    //     _cb("ER_NO_QUESTIONS_FOR_SESSION_ID");
+    //     return;
+    // }
 
-    let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE questionId = ?";
-    let params = [questionId];
-
-    mySQL.query(sql, params, (err, questions) => {
-
-        if (err) {
-            return _cb(err.code);
-        }
-
-        // if(questions.length === 0){
-        //     _cb("ER_NO_QUESTIONS_FOR_SESSION_ID");
-        //     return;
-        // }
-
-        // Return the
-        _cb(null, questions);
-
-    });
+    // Return the
+    _cb(null, questions);
+  });
 };

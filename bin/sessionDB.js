@@ -59,7 +59,7 @@ exports.updateSession = (sessionUpdate, _cb) =>{
 
     console.log('Attempting to update sessionId: ' + sessionUpdate.sessionId);
 
-    let sql = "UPDATE sessions SET className = ?, title = ?, totalQuestions = ?, description = ? WHERE sessionID = ?";
+    let sql = "UPDATE sessions SET className = ?, title = ?, totalQuestions = ?, description = ? WHERE sessionID = ? AND userId=?";
     let params = [
       sessionUpdate.className,
       sessionUpdate.title,
@@ -67,6 +67,7 @@ exports.updateSession = (sessionUpdate, _cb) =>{
       sessionUpdate.totalQuestions,
       sessionUpdate.description,
       sessionUpdate.sessionId,
+        userId
     ];//sessionUpdate.updateArray;
     console.log(params);
 

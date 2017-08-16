@@ -375,14 +375,14 @@ router.get('/session', (req, res) => {
 /**
  * GET method to return all questions for a specific session. URL:"/sessionQuestions?sessionId=xxxx".
  */
-router.get('/sessionQuestions', (req, res) => {
+router.get('/sessionQuestions/:sessionId', (req, res) => {
 
     if (!req.session.userId) {
         res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
         return;
     }
 
-    db.getSessionQuestions(req.query.sessionId, (err, questions) => {
+    db.getSessionQuestions(req.params.sessionId, (err, questions) => {
         if (err) {
             res.status(500).json({error: err});
             return;

@@ -46,9 +46,10 @@ exports.saveNewSession = (newSession, userId, _cb) => {
 /**
  * Updates a sessions that already exists.
  * @param sessionUpdate '{updateArray:["title":"","group":"","totalQuestions":"","sessionId":""]}'
+ * @param userId the id for the user to authorize this transaction
  * @param _cb callback
  */
-exports.updateSession = (sessionUpdate, _cb) =>{
+exports.updateSession = (sessionUpdate, userId, _cb) =>{
 
     console.log(sessionUpdate);
 
@@ -57,41 +58,28 @@ exports.updateSession = (sessionUpdate, _cb) =>{
         return;
     }
 
-    console.log('Attempting to update sessionId: ' + sessionUpdate.sessionId);
+    console.log('Attempting to update sessionId [%d] for userId [%d]',sessionUpdate.sessionId, userId);
 
-    let sql = "UPDATE sessions SET className = ?, title = ?, totalQuestions = ?, description = ? WHERE sessionID = ? AND userId=?";
+    let sql = "CALL update_session(?,?,?,?,?,?)";
     let params = [
-      sessionUpdate.className,
-      sessionUpdate.title,
-      //(!sessionUpdate.group ? '' : sessionUpdate.group),
-      sessionUpdate.totalQuestions,
-      sessionUpdate.description,
-      sessionUpdate.sessionId,
-        userId
-    ];//sessionUpdate.updateArray;
-    console.log(params);
+        userId,
+        sessionUpdate.sessionId,
+        sessionUpdate.className,
+        sessionUpdate.title,
+        sessionUpdate.totalQuestions,
+        sessionUpdate.description
+    ];
 
-    mySQL.query(sql, params, (err) => {
+    mySQL.query(sql, params, (err, data) => {
 
         if (err) {
             _cb(err.code);
         } else {
-
-          let sql2 = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp from sessions WHERE sessionId = ?";
-          let params2 = [sessionUpdate.sessionId];
-
-          mySQL.query(sql2, params2, (err, data) => {
-
-            if (err) {
-              _cb(err.code);
-            } else {
-              if (data.length === 0) {
+            if (data.length === 0) {
                 _cb('SOMETHING WHEN WRONG ON UPDATE');
-              }
+            }
 
             _cb(null, data[0]);
-            }
-          })
         }
     });
 };
@@ -134,6 +122,7 @@ exports.getAllSessions = (userId, _cb) =>{
 /**
  * Returns a single session associated with a sessionId.
  * @param sessionId the sessionId to get
+ * @param userId the id of the user for authorization
  * @param _cb callback
  */
 exports.getSession = (sessionId, userId, _cb) =>{
@@ -145,8 +134,8 @@ exports.getSession = (sessionId, userId, _cb) =>{
 
     console.log('Retrieving sessionId: [%d]', sessionId);
 
-    let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE sessionId = ? ";
-    let params = [sessionId];
+    let sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE sessionId = ? AND userId = ?";
+    let params = [sessionId, userId];
 
     mySQL.query(sql, params, (err, sessions) => {
 

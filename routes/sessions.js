@@ -53,7 +53,7 @@ router.post('/updateSession', (req, res) => {
 
     let sessionUpdate = req.body;
 
-    db.updateSession(sessionUpdate, userId, (err, updated) => {
+    db.updateSession(sessionUpdate, req.session.userId, (err, updated) => {
         if (err) {
             console.error(new Error("Updating session: " + err));
             res.status(500).json({error: err});
@@ -93,7 +93,7 @@ router.post('/saveSessionQuestions', (req, res) => {
         } else {
 
             // Update the question in the DB
-            db.updateQuestion(question, (err) => {
+            db.updateQuestion(question,userId, (err) => {
                 if (err) {
                     console.error(new Error("updating question: " + err));
                     dbErrors.push(question);
@@ -361,7 +361,7 @@ router.get('/session', (req, res) => {
         return;
     }
 
-    db.getSession(req.query.sessionId, (err, sessions) => {
+    db.getSession(req.query.sessionId, req.session.userId, (err, sessions) => {
 
         if (err) {
             res.status(500).json({error: err});

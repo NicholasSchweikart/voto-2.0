@@ -224,9 +224,10 @@ exports.saveNewQuestion = (question, userId, _cb) =>{
 /**
  * Saves a question to the DB for a session.
  * @param question the question data to save '{sessionId, imgFileName, question, correctAnswer}'
+ * @param userId the user id for authorization
  * @param _cb callback
  */
-exports.updateQuestion = (question, _cb) =>{
+exports.updateQuestion = (question, userId, _cb) =>{
 
     if (!question) {
         _cb("failed need question obj");
@@ -235,13 +236,15 @@ exports.updateQuestion = (question, _cb) =>{
 
     console.log('Updating questionId: ' + question.questionId);
 
-    let sql = "UPDATE questions SET imgFileName = ?, question = ?, orderNumber = ?, correctAnswer = ? WHERE questionId = ?";
+    let sql = "CALL update_question(?,?,?,?,?,?,?,?)";
     let params = [
+        userId,
+        question.sessionId,
+        question.questionId,
         question.imgFileName,
         question.question,
         question.orderNumber,
         question.correctAnswer,
-        question.questionId,
     ];
 
     mySQL.query(sql, params, (err, status) => {

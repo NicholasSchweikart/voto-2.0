@@ -281,7 +281,7 @@ router.delete('/:questionId/image/:imgFileName', (req,res)=>{
     };
 
 
-    if(req.params.questionId){
+    if(req.params.questionId > 0){
 
         // Delete this questionId from the DB.
         db.deleteQuestion(req.params.questionId, (err)=>{

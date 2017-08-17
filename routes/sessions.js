@@ -19,14 +19,18 @@ const s3 = new AWS.S3({
   signatureVersion: "v4",
 });
 
+router.all('/*',(req,res,next)=>{
+    if (!req.session.userId) {
+        res.status(401).json({ error: "ERR_NOT_LOGGED_IN" });
+        return;
+    }
+  next();
+});
+
 /**
  * POST to save a new session for a user.
  */
 router.post("/saveNewSession", (req, res) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ERR_NOT_LOGGED_IN" });
-    return;
-  }
 
   const newSession = req.body;
 
@@ -44,10 +48,6 @@ router.post("/saveNewSession", (req, res) => {
  * POST to update an existing session. Refer to db.updateSession() for details.
  */
 router.post("/updateSession", (req, res) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ERR_NOT_LOGGED_IN" });
-    return;
-  }
 
   const sessionUpdate = req.body;
 
@@ -65,10 +65,7 @@ router.post("/updateSession", (req, res) => {
  * POST to save an array of new questions for a session.
  */
 router.post("/saveSessionQuestions", (req, res) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ERR_NOT_LOGGED_IN" });
-    return;
-  }
+
   const questions = req.body.questions;
   const uploadErrors = [];
   const dbErrors = [];
@@ -113,10 +110,6 @@ router.post("/saveSessionQuestions", (req, res) => {
  * POST to put a specifc session into the active state.
  */
 router.post("/activateSession", (req, res) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ERR_NOT_LOGGED_IN" });
-    return;
-  }
 
   db.activateSession(req.session.userId, req.body.sessionId, (err, activated) => {
     if (err || !activated) {
@@ -133,10 +126,6 @@ router.post("/activateSession", (req, res) => {
  * access to a sessionId.
  */
 router.post("/accessSession", (req, res) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ERR_NOT_LOGGED_IN" });
-    return;
-  }
 
   if (!req.body.sessionId) {
     res.status(401).json({ error: "ERR_NO_SESSION_ID" });
@@ -172,12 +161,6 @@ router.post("/accessSession", (req, res) => {
  * access to a sessionId.
  */
 router.post("/uploadImageFile", (req, res) => {
-  console.log("Attempting to receive new media uploads...");
-
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ERR_NOT_LOGGED_IN" });
-    return;
-  }
 
   // create an incoming form object
   const form = new formidable.IncomingForm();
@@ -241,10 +224,6 @@ router.post("/uploadImageFile", (req, res) => {
  * DELETE route to remove a question from the DB. URL: /deleteQuestion?questionId=x&imgFileName=x
  */
 router.delete("/:questionId/image/:imgFileName", (req, res) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ER_NOT_LOGGED_IN" });
-    return;
-  }
 
   console.log(`Deleting object ${req.params.imgFileName}`);
 
@@ -289,10 +268,6 @@ router.delete("/:questionId/image/:imgFileName", (req, res) => {
  * DELETE route to remove a session from the DB. URL "/deleteSession?sessionId=xx"
  */
 router.delete("/deleteSession", (req, res) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ER_NOT_LOGGED_IN" });
-    return;
-  }
 
   db.deleteSession(req.query.sessionId, req.session.userId, (err) => {
     if (err) {
@@ -308,10 +283,6 @@ router.delete("/deleteSession", (req, res) => {
  * GET method to retrieve all sessions for a userId. no URL modification need because userId is in the cookie.
  */
 router.get("/", (req, res) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ERR_NOT_LOGGED_IN" });
-    return;
-  }
 
   db.getAllSessions(req.session.userId, (err, sessions) => {
     if (err) {
@@ -327,10 +298,6 @@ router.get("/", (req, res) => {
  * GET method to retrieve all sessions for a userId. URL "/session?sessionId=xx"
  */
 router.get("/session", (req, res) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ERR_NOT_LOGGED_IN" });
-    return;
-  }
 
   if (!req.query.sessionId) {
     res.status(500).json({ error: "ERR_NO_SESSION_ID" });
@@ -351,10 +318,6 @@ router.get("/session", (req, res) => {
  * GET method to return all questions for a specific session. URL:"/sessionQuestions?sessionId=xxxx".
  */
 router.get("/sessionQuestions/:sessionId", (req, res) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ERR_NOT_LOGGED_IN" });
-    return;
-  }
 
   db.getSessionQuestions(req.params.sessionId, (err, questions) => {
     if (err) {
@@ -370,10 +333,6 @@ router.get("/sessionQuestions/:sessionId", (req, res) => {
  * GET method to return a single question. URL:"/question?questionId=xxxx".
  */
 router.get("/question", (req, res) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ERR_NOT_LOGGED_IN" });
-    return;
-  }
 
   db.getQuestion(req.query.questionId, (err, question) => {
     if (err) {
@@ -389,11 +348,6 @@ router.get("/question", (req, res) => {
  * GET method to return a one time URL to view a question image slide. URL:"/sessionQuestions?sessionId=xxxx.ext".
  */
 router.get("/questionImageURL", (req, res) => {
-  // || !req.session.authorizedSessionId
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ERR_NOT_LOGGED_IN_OR_AUTHORIZED" });
-    return;
-  }
 
   if (!req.query.imgFileName) {
     res.status(500).json({ error: "ER_NO_FILENAME" });

@@ -10,7 +10,7 @@ const cookieParser = require("cookie-parser"),
  */
 module.exports = (io, store) => {
   // API object to return after import.
-  API = {};
+  const API = {};
 
   /**
      * Set up socket authorization for all new connections.

@@ -23,7 +23,9 @@ router.post("/", (req, res) => {
     req.session.userId = user.userId;
     req.session.authorizedSessionId = null;
 
-    res.json({ status: "logged in" });
+    const { passwordHash, passwordSalt, ...response } = user;
+
+    res.json(response);
   });
 });
 

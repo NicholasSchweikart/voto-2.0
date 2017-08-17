@@ -46,7 +46,7 @@ app.use(session(
       // secure: true      //TODO Require an HTTPS connection by uncommenting here
     },
     name: "id", // Change cookie name to obscure inner workings
-  },
+  }
 ));
 
 // Set up Socket IO ready on port 1212.

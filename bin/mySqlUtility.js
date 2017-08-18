@@ -2,7 +2,7 @@ const mysql = require("mysql");
 
 const pool = mysql.createPool({
   connectionLimit: 10, // Max number of simultaneous connections
-  host: "localhost", // Use DB on local interface
+  host: process.env.VOTO_MYSQL_SERVER_URL, // Use DB on local interface
   user: "voto", // Operate as the voto user
   password: "votouser",
   database: "votodb", // Only use the voto DB

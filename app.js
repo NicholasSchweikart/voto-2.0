@@ -38,7 +38,8 @@ app.use(session(
     secret: serverConfig.secret,
     store,
     saveUninitialized: true,
-    resave: false,
+    resave: true,
+    rolling:true,
     cookie: {
       path: "/",
       maxAge: 2 * 1800000, // 60 min max cookie life

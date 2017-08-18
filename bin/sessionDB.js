@@ -7,6 +7,7 @@ const mySQL = require("./mySqlUtility");
  * @param _cb callback function
  */
 exports.saveNewSession = (newSession, userId, _cb) => {
+
   console.log(`Attempting to save a session for USER: ${userId}`);
 
   if (!newSession || !newSession.title || !newSession.className || !newSession.description) {
@@ -14,27 +15,19 @@ exports.saveNewSession = (newSession, userId, _cb) => {
     return;
   }
 
-  const sql = "INSERT INTO sessions (userId, title, className, description) VALUES (?, ?, ?, ?)";
+  const sql = "CALL save_new_session(?, ?, ?, ?)";
   const params = [userId, newSession.title, newSession.className, newSession.description];
 
   mySQL.query(sql, params, (err, data) => {
     if (err) {
       _cb(err.code);
     } else {
-      const sql2 = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp from sessions WHERE sessionId = ?";
-      const params2 = [data.insertId];
 
-      mySQL.query(sql2, params2, (err, data) => {
-        if (err) {
-          _cb(err.code);
-        } else {
-          if (data.length === 0) {
-            _cb("SOMETHING WHEN WRONG ON INSERT");
-          }
+      if (data.length === 0) {
+        _cb("ER_FAILED_TO_SAVE_SESSION");
+      }
 
-          _cb(null, data[0]);
-        }
-      });
+      _cb(null, data[0]);
     }
   });
 };

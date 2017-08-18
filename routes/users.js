@@ -11,6 +11,7 @@ const express = require("express"),
  * @ voto.io/database/createUser
  */
 router.post("/createUser", (req, res) => {
+
   const newUser = req.body;
   db.createUser(newUser, (err, user) => {
     if (err) {

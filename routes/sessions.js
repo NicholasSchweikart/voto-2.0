@@ -19,6 +19,9 @@ const s3 = new AWS.S3({
   signatureVersion: "v4",
 });
 
+/**
+ * Preforms userId session authorization on all incoming requests.
+ */
 router.all('/*',(req,res,next)=>{
     if (!req.session.userId) {
         res.status(401).json({ error: "ERR_NOT_LOGGED_IN" });

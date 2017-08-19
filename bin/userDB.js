@@ -10,7 +10,14 @@ exports.createUser = (newUser, _cb) => {
   console.log("Attempting to create user...");
 
   // Sanitize inputs preemptive;
-  if (!newUser.firstName || !newUser.lastName || !newUser.password || !newUser.userName) {
+  if (
+    !newUser.firstName ||
+    !newUser.lastName ||
+    !newUser.password ||
+    !newUser.userName ||
+    !newUser.type ||
+    !newUser.email
+  ) {
     _cb("must provide all new user credentials");
     return;
   }
@@ -18,14 +25,38 @@ exports.createUser = (newUser, _cb) => {
   // Get the hash and salt for the provided password
   const passwordData = passwordUtil.getSaltHashPassword(newUser.password);
 
-  const sql = "INSERT INTO users (firstName, lastName, userName, passwordSalt, passwordHash ) VALUES(?,?,?,?,?)";
-  const params = [newUser.firstName, newUser.lastName, newUser.userName, passwordData.salt, passwordData.passwordHash];
+  const sql =
+    "INSERT INTO users (firstName, lastName, userName, passwordSalt, passwordHash, email, type ) VALUES(?,?,?,?,?,?,?)";
+  const params = [
+    newUser.firstName,
+    newUser.lastName,
+    newUser.userName,
+    passwordData.salt,
+    passwordData.passwordHash,
+    newUser.email,
+    newUser.type,
+  ];
 
-  mySQL.query(sql, params, (err) => {
+  mySQL.query(sql, params, err => {
     if (err) {
       _cb(err);
     } else {
-      _cb(null, "user created");
+      const returnSql = "SELECT * FROM users where userName=?";
+      const returnParams = [newUser.userName];
+
+      mySQL.query(returnSql, returnParams, (err2, users) => {
+        if (err2) {
+          _cb(err2.code);
+          return;
+        }
+
+        if (users.length === 0) {
+          _cb("Something when wrong on fetching user from table!");
+          return;
+        }
+
+        _cb(null, users[0]);
+      })
     }
   });
 };
@@ -46,7 +77,7 @@ exports.deleteUser = (userId, _cb) => {
   const sql = "DELETE FROM users WHERE userId = ?";
   const params = [userId];
 
-  mySQL.query(sql, params, (err) => {
+  mySQL.query(sql, params, err => {
     if (err) {
       _cb(err);
     } else {
@@ -106,7 +137,12 @@ exports.changeUserPassword = (userId, currentPassword, newPassword, _cb) => {
     return _cb("ER_EMPTY_FIELDS");
   }
 
-  console.log("Changing password for userId [%d] from %s -> %s", userId, currentPassword, newPassword);
+  console.log(
+    "Changing password for userId [%d] from %s -> %s",
+    userId,
+    currentPassword,
+    newPassword
+  );
 
   const sql = "SELECT * FROM users WHERE userId = ?";
   const params = [userId];
@@ -123,23 +159,28 @@ exports.changeUserPassword = (userId, currentPassword, newPassword, _cb) => {
     }
 
     const user = data[0];
-    const thisHash = passwordUtil.getPasswordHash(currentPassword, user.passwordSalt);
+    const thisHash = passwordUtil.getPasswordHash(
+      currentPassword,
+      user.passwordSalt
+    );
 
     if (thisHash === user.passwordHash) {
       // User has double authenticated themselves, go ahead and change password.
       // Get the hash and salt for the provided password
       const passwordData = passwordUtil.getSaltHashPassword(newPassword);
 
-      mySQL.query("UPDATE users SET passwordSalt = ?, passwordHash = ? WHERE userId = ?",
+      mySQL.query(
+        "UPDATE users SET passwordSalt = ?, passwordHash = ? WHERE userId = ?",
         [passwordData.salt, passwordData.passwordHash, userId],
-        (err) => {
+        err => {
           if (err) {
             _cb("ER_FAILED_TO_SAVE_NEW_PASSWORD");
             return;
           }
 
           _cb("SUCCESS");
-        });
+        }
+      );
     } else {
       _cb("ERR_LOGIN_FAILED");
     }
@@ -158,7 +199,11 @@ exports.isUserAuthorized = (userId, sessionId, _cb) => {
     return;
   }
 
-  console.log("Checking authorization for userId %d on sessionId %d", userId, sessionId);
+  console.log(
+    "Checking authorization for userId %d on sessionId %d",
+    userId,
+    sessionId
+  );
 
   const sql = "SELECT * FROM authorized_users WHERE userId = ? AND sessionId=?";
   const params = [userId, sessionId];
@@ -202,4 +247,3 @@ exports.saveUserResponse = (userResponse, userId, _cb) => {
     }
   });
 };
-

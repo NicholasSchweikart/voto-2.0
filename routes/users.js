@@ -20,7 +20,9 @@ router.post("/createUser", (req, res) => {
       return;
     }
 
-    res.json({ user });
+    const { passwordHash, passwordSalt, ...response } = user;
+
+    res.json(response);
   });
 });
 

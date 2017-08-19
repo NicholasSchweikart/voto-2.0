@@ -104,6 +104,25 @@ exports.getAllSessions = (userId, _cb) => {
 };
 
 /**
+* Returns the active sessions
+* @param _cb callback
+*/
+exports.activeSessions = (_cb) => {
+  console.log("Retrieving all actie sessions");
+
+  const sql = "SELECT * FROM sessions WHERE isActive = true";
+
+  mySQL.query(sql, [], (err, sessions) => {
+    if (err) {
+      _cb(err.code);
+      return;
+    }
+
+    _cb(null, sessions);
+  });
+}
+
+/**
  * Returns a single session associated with a sessionId.
  * @param sessionId the sessionId to get
  * @param userId the id of the user for authorization

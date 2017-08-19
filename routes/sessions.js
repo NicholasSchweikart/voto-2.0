@@ -125,6 +125,20 @@ router.post("/activateSession", (req, res) => {
 });
 
 /**
+* GET all the active sessions
+*/
+router.get("/active", (req, res) => {
+  db.activeSessions((err, sessions) => {
+    if (err) {
+      res.status(500).json({ error: err });
+      return;
+    }
+
+    res.json(sessions);
+  })
+})
+
+/**
  * POST route to upload new media for a specific session. Under beta right now, but will at some point need to have
  * access to a sessionId.
  */

@@ -7,22 +7,30 @@ const mySQL = require("./mySqlUtility");
  * @param _cb callback function
  */
 exports.saveNewSession = (newSession, userId, _cb) => {
-
   console.log(`Attempting to save a session for USER: ${userId}`);
 
-  if (!newSession || !newSession.title || !newSession.className || !newSession.description) {
+  if (
+    !newSession ||
+    !newSession.title ||
+    !newSession.className ||
+    !newSession.description
+  ) {
     _cb("failed one or more empty session parameters");
     return;
   }
 
   const sql = "CALL save_new_session(?, ?, ?, ?)";
-  const params = [userId, newSession.title, newSession.className, newSession.description];
+  const params = [
+    userId,
+    newSession.title,
+    newSession.className,
+    newSession.description
+  ];
 
   mySQL.query(sql, params, (err, data) => {
     if (err) {
       _cb(err.code);
     } else {
-
       if (data.length === 0) {
         _cb("ER_FAILED_TO_SAVE_SESSION");
       }
@@ -46,7 +54,11 @@ exports.updateSession = (sessionUpdate, userId, _cb) => {
     return;
   }
 
-  console.log("Attempting to update sessionId [%d] for userId [%d]", sessionUpdate.sessionId, userId);
+  console.log(
+    "Attempting to update sessionId [%d] for userId [%d]",
+    sessionUpdate.sessionId,
+    userId
+  );
 
   const sql = "CALL update_session(?,?,?,?,?,?)";
   const params = [
@@ -55,7 +67,7 @@ exports.updateSession = (sessionUpdate, userId, _cb) => {
     sessionUpdate.className,
     sessionUpdate.title,
     sessionUpdate.totalQuestions,
-    sessionUpdate.description,
+    sessionUpdate.description
   ];
 
   mySQL.query(sql, params, (err, data) => {
@@ -84,7 +96,8 @@ exports.getAllSessions = (userId, _cb) => {
 
   console.log(`Retrieving all sessions for user: ${userId}`);
 
-  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE userId = ? ORDER BY timeStamp DESC";
+  const sql =
+    "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE userId = ? ORDER BY timeStamp DESC";
   const params = [userId];
 
   mySQL.query(sql, params, (err, sessions) => {
@@ -107,8 +120,8 @@ exports.getAllSessions = (userId, _cb) => {
 * Returns the active sessions
 * @param _cb callback
 */
-exports.activeSessions = (_cb) => {
-  console.log("Retrieving all actie sessions");
+exports.activeSessions = _cb => {
+  console.log("Retrieving all active sessions");
 
   const sql = "SELECT * FROM sessions WHERE isActive = true";
 
@@ -120,7 +133,7 @@ exports.activeSessions = (_cb) => {
 
     _cb(null, sessions);
   });
-}
+};
 
 /**
  * Returns a single session associated with a sessionId.
@@ -136,7 +149,8 @@ exports.getSession = (sessionId, userId, _cb) => {
 
   console.log("Retrieving sessionId: [%d]", sessionId);
 
-  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE sessionId = ? AND userId = ?";
+  const sql =
+    "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE sessionId = ? AND userId = ?";
   const params = [sessionId, userId];
 
   mySQL.query(sql, params, (err, sessions) => {
@@ -172,7 +186,7 @@ exports.deleteSession = (userId, sessionId, _cb) => {
   const sql = "DELETE FROM sessions WHERE sessionId = ? AND userId = ?";
   const params = [sessionId, userId];
 
-  mySQL.query(sql, params, (err) => {
+  mySQL.query(sql, params, err => {
     if (err) {
       _cb(err.code);
       return;
@@ -195,7 +209,11 @@ exports.saveNewQuestion = (question, userId, _cb) => {
     return;
   }
 
-  console.log("Saving question for sessionId [%d] userId [%d] ", question.sessionId, userId);
+  console.log(
+    "Saving question for sessionId [%d] userId [%d] ",
+    question.sessionId,
+    userId
+  );
 
   const sql = "CALL save_new_question(?,?,?,?,?,?)";
   const params = [
@@ -204,7 +222,7 @@ exports.saveNewQuestion = (question, userId, _cb) => {
     question.imgFileName,
     question.question,
     question.orderNumber,
-    question.correctAnswer,
+    question.correctAnswer
   ];
 
   mySQL.query(sql, params, (err, row) => {
@@ -239,7 +257,7 @@ exports.updateQuestion = (question, userId, _cb) => {
     question.imgFileName,
     question.question,
     question.orderNumber,
-    question.correctAnswer,
+    question.correctAnswer
   ];
 
   mySQL.query(sql, params, (err, status) => {
@@ -286,7 +304,8 @@ exports.activateSession = (userId, sessionId, _cb) => {
 
   console.log("Activating sessionId %d", sessionId);
 
-  const sql = "UPDATE sessions SET isActive = true WHERE userId = ? AND sessionId = ?";
+  const sql =
+    "UPDATE sessions SET isActive = true WHERE userId = ? AND sessionId = ?";
   const params = [userId, sessionId];
 
   mySQL.query(sql, params, (err, data) => {
@@ -303,6 +322,28 @@ exports.activateSession = (userId, sessionId, _cb) => {
   });
 };
 
+exports.deactivateSession = (userId, sessionId, _cb) => {
+  if (!userId || !sessionId) {
+    _cb("ER_NEED_SESSION_AND_USER_IDS");
+    return;
+  }
+
+  console.log(`Deactivating sessionId ${sessionId}`);
+
+  const sql =
+    "UPDATE sessions SET isActive = false WHERE userId = ? and sessionId = ?";
+  const params = [userId, sessionId];
+
+  mySQL.query(sql, params, (err, data) => {
+    if (err) {
+      _cb(err.code);
+      return;
+    }
+
+    return _cb(null);
+  });
+};
+
 /**
  * Gets all questions associated with a sessionId.
  * @param sessionId id of the session to get questions for.
@@ -316,7 +357,8 @@ exports.getSessionQuestions = (sessionId, _cb) => {
 
   console.log(`Retrieving all questions for sessionId: ${sessionId}`);
 
-  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE sessionId = ? ORDER BY orderNumber ASC";
+  const sql =
+    "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE sessionId = ? ORDER BY orderNumber ASC";
   const params = [sessionId];
 
   mySQL.query(sql, params, (err, questions) => {
@@ -347,7 +389,8 @@ exports.getQuestion = (questionId, _cb) => {
 
   console.log(`Retrieving questionId: ${questionId}`);
 
-  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE questionId = ?";
+  const sql =
+    "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE questionId = ?";
   const params = [questionId];
 
   mySQL.query(sql, params, (err, questions) => {

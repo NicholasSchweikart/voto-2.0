@@ -114,14 +114,25 @@ router.post("/saveSessionQuestions", (req, res) => {
  */
 router.post("/activateSession", (req, res) => {
 
-  db.activateSession(req.session.userId, req.body.sessionId, (err, activated) => {
-    if (err || !activated) {
-      res.status(500).json({ error: err });
-      return;
-    }
+  if (!req.body.isActive) {
+    db.activateSession(req.session.userId, req.body.sessionId, (err, activated) => {
+      if (err || !activated) {
+        res.status(500).json({ error: err });
+        return;
+      }
 
-    res.json({ status: "activated" });
-  });
+      res.json({ status: "activated" });
+    });
+  } else {
+    db.deactivateSession(req.session.userId, req.body.sessionId, (err) => {
+      if (err) {
+        res.status(500).json({ error: err });
+        return;
+      }
+
+      res.json({ status: "deactivated" });
+    })
+  }
 });
 
 /**

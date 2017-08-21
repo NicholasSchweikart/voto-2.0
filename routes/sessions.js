@@ -139,7 +139,7 @@ router.post("/activateSession", (req, res) => {
 * GET all the active sessions
 */
 router.get("/active", (req, res) => {
-  db.getActiveSessions((err, sessions) => {
+  db.getActiveSessions(req.session.userId, (err, sessions) => {
     if (err) {
       res.status(500).json({ error: err });
       return;

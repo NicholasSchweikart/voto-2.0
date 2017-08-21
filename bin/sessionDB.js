@@ -118,14 +118,28 @@ exports.getAllSessions = (userId, _cb) => {
 
 /**
 * Returns the active sessions
+ * @param userId the id of the user to query against
 * @param _cb callback
 */
-exports.getActiveSessions = _cb => {
+exports.getActiveSessions = (userId,_cb) => {
   console.log("Retrieving all active sessions");
 
-  const sql = "SELECT * FROM sessions WHERE isActive = true";
+  const sql = `SELECT 
+    sessions.sessionId, 
+    sessions.title, 
+    sessions.className, 
+    sessions.userId, 
+    sessions.isActive,
+    users.firstName, 
+    users.lastName
+    FROM votodb.authorized_users 
+    INNER JOIN votodb.sessions 
+    ON authorized_users.sessionId = sessions.sessionId
+    INNER JOIN votodb.users
+    ON users.userId = sessions.userId
+    WHERE authorized_users.userId = ?;`;
 
-  mySQL.query(sql, [], (err, sessions) => {
+  mySQL.query(sql, [userId], (err, sessions) => {
     if (err) {
       _cb(err.code);
       return;

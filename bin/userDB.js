@@ -229,7 +229,7 @@ exports.isUserAuthorized = (userId, sessionId, _cb) => {
  * @param sessionId the sessionId of the session to authorize for this user
  * @param _cb callback
  */
-exports.authorizeUser = (userId, authorizeId, sessionId,_cb) =>{
+exports.authorizeUser = (userId, authorizeId, sessionId,_cb) => {
 
   if(!authorizeId || !userId || !sessionId){
     _cb("ER_EMPTY_PARAMETERS");
@@ -245,8 +245,44 @@ exports.authorizeUser = (userId, authorizeId, sessionId,_cb) =>{
       _cb(err.code);
       return;
     }
+
     // NOTE data will be returned in a RowDataPacket so double index the array
     console.log(rows[0][0].success);
+    return _cb(null, rows[0][0].success);
+  });
+};
+
+/**
+ * de-authorizes a specific userId to access a sessionId when it is active
+ * @param de_authorizeId the userId to authorize
+ * @param userId the userId to authorize this transaction
+ * @param sessionId the sessionId of the session to authorize for this user
+ * @param _cb callback
+ */
+exports.deauthorizeUser = (userId, de_authorizeId, sessionId,_cb) => {
+
+  if(!de_authorizeId || !userId || !sessionId){
+    _cb("ER_EMPTY_PARAMETERS");
+    return;
+  }
+
+  console.log(`userId [${userId}] is de-authorizing userId [${de_authorizeId}] for sessionId [${sessionId}]`);
+  const sql = "CALL de_authorize_user(?, ?, ?)";
+  const params = [userId, de_authorizeId, sessionId];
+
+  mySQL.query(sql, params, (err, rows) => {
+
+    if (err) {
+      _cb(err.code);
+      return;
+    }
+
+    // NOTE data will be returned in a RowDataPacket so double index the array
+    if(rows[0][0].success === 0){
+      _cb("ER_NOT_AUTHORIZED");
+      return;
+    }
+
     return _cb(null, rows[0][0].success);
   });
 };

@@ -90,4 +90,23 @@ router.post('/authorizeUser/:authorizeId/:sessionId', (req, res) => {
 
 });
 
+router.post('/de_authorizeUser/:de_authorizeId/:sessionId', (req, res) => {
+
+  if (!req.session.userId) {
+    res.status(401).json({ error: "ER_NOT_LOGGED_IN" });
+    return;
+  }
+
+  db.deauthorizeUser(req.session.userId, req.params.de_authorizeId, req.params.sessionId,(err, status)=>{
+
+    if (err) {
+      console.error(new Error(`de-authorization failure: ${err}`));
+      res.status(500).json({ error: err });
+    } else{
+      res.json({ status: status });
+    }
+  });
+
+});
+
 module.exports = router;

@@ -170,17 +170,17 @@ router.post("/accessSession", (req, res) => {
     if (err) {
       console.error(new Error(`authorizing user for session: ${err}`));
       res.status(500).json({ error: err });
-      return;
-    }
 
-    if (!yes) {
+    }else if (!yes) {
+
       console.error(new Error(`authorizing user for session: ${err}`));
       res.status(401).json({ error: err });
-      return;
-    }
+    }else{
 
-    req.session.authorizedSessionId = sessionId;
-    res.json({ status: "successfully authorized" });
+      // Assign the session.authorizedSessionId to this session.
+      req.session.authorizedSessionId = sessionId;
+      res.json({ status: "successfully authorized" });
+    }
   });
 });
 

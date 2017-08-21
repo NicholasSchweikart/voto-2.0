@@ -69,4 +69,25 @@ router.delete("/", (req, res) => {
   });
 });
 
+router.post('/authorizeUser/:authorizeId/:sessionId', (req, res) => {
+
+  if (!req.session.userId) {
+    res.status(401).json({ error: "ER_NOT_LOGGED_IN" });
+    return;
+  }
+
+  db.authorizeUser(req.session.userId, req.params.authorizeId, req.params.sessionId,(err, authorized)=>{
+
+    if (err) {
+      console.error(new Error(`authorization failure: ${err}`));
+      res.status(500).json({ error: err });
+    } else if(!authorized){
+      res.status(500).json({ error: "ER_FAILED_TO_AUTHORIZE" });
+    }else{
+      res.json({ status: "successful authorization" });
+    }
+  });
+
+});
+
 module.exports = router;

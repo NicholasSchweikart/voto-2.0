@@ -122,7 +122,7 @@ exports.getAllSessions = (userId, _cb) => {
 * @param _cb callback
 */
 exports.getActiveSessions = (userId,_cb) => {
-  console.log("Retrieving all active sessions");
+  console.log(`Retrieving all active sessions for userId [${userId}]`);
 
   const sql = `SELECT 
     sessions.sessionId, 

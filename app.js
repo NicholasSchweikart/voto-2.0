@@ -27,11 +27,11 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(cookieParser(serverConfig.secret));
 
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:3000");
+  res.header("Access-Control-Allow-Origin", "http://localhost:8080");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   res.header("Access-Control-Allow-Credentials", 'true');
 
-  if (req.method == 'OPTIONS') {
+  if (req.method === 'OPTIONS') {
     res.send(200);
   } else {
     next();
@@ -54,11 +54,11 @@ app.use(session(
     rolling:true,
     cookie: {
       path: "/",
-      maxAge: 2 * 1800000, // 60 min max cookie life
-      httpOnly: true, // Hide from JavaScript
-      //secure: true      //TODO Require an HTTPS connection by uncommenting here
+      maxAge: 2 * 1800000,  // 60 min max cookie life
+      httpOnly: true,       // Hide from JavaScript
+      //secure: true        //TODO Require an HTTPS connection by uncommenting here
     },
-    name: "id", // Change cookie name to obscure inner workings
+    name: "id",             // Change cookie name to obscure inner workings
   }
 ));
 

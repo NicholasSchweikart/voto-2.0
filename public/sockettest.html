@@ -13,11 +13,11 @@
     let socket = {};
     let cred = {userName:"NicholasSchweikart",password:"finAmelia"};
 
-    $.post('http://localhost:8080/login', cred)
+    $.post('https://voto.io/api/login', cred)
         .done((response) => {
 
             console.log('login successful!\n');
-            socket = io.connect('http://localhost:1212');
+            //socket = io.connect('http://localhost:1212');
         })
         .fail((xhr, status, err) => {
             console.log(xhr);

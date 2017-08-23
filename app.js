@@ -25,18 +25,18 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Setup session persistence with redis
 app.use(cookieParser(serverConfig.secret));
-
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "http://localhost:8080");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-  res.header("Access-Control-Allow-Credentials", 'true');
-
-  if (req.method === 'OPTIONS') {
-    res.send(200);
-  } else {
-    next();
-  }
-});
+//
+// app.use((req, res, next) => {
+//   res.header("Access-Control-Allow-Origin", "http://localhost:8080");
+//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+//   res.header("Access-Control-Allow-Credentials", 'true');
+//
+//   if (req.method === 'OPTIONS') {
+//     res.send(200);
+//   } else {
+//     next();
+//   }
+// });
 
 const store = new redisStore({
   host: "localhost",

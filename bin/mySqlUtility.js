@@ -4,7 +4,7 @@ const pool = mysql.createPool({
   connectionLimit: 10, // Max number of simultaneous connections
   host: process.env.VOTO_MYSQL_SERVER_URL, // Use DB on local interface
   user: "voto", // Operate as the voto user
-  password: process.env.VOTO_MYSQL_PASSWORD,
+  password: "VotoUser!1",
   database: "votodb", // Only use the voto DB
   debug: false,
 });

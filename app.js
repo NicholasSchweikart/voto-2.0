@@ -27,7 +27,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(cookieParser(serverConfig.secret));
 
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Origin", "http://localhost:3000");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
   next();
 });
@@ -50,7 +50,7 @@ app.use(session(
       path: "/",
       maxAge: 2 * 1800000, // 60 min max cookie life
       httpOnly: true, // Hide from JavaScript
-      secure: true      //TODO Require an HTTPS connection by uncommenting here
+      //secure: true      //TODO Require an HTTPS connection by uncommenting here
     },
     name: "id", // Change cookie name to obscure inner workings
   }

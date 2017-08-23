@@ -124,16 +124,17 @@ exports.getAllSessions = (userId, _cb) => {
 exports.getActiveSessions = (userId,_cb) => {
   console.log(`Retrieving all active sessions for userId [${userId}]`);
 
-  const sql = `SELECT 
-    sessions.sessionId, 
-    sessions.title, 
-    sessions.className, 
-    sessions.userId, 
+  const sql = `SELECT
+    sessions.sessionId,
+    sessions.title,
+    sessions.className,
+    sessions.description,
+    sessions.userId,
     sessions.isActive,
-    users.firstName, 
+    users.firstName,
     users.lastName
-    FROM votodb.authorized_users 
-    INNER JOIN votodb.sessions 
+    FROM votodb.authorized_users
+    INNER JOIN votodb.sessions
     ON authorized_users.sessionId = sessions.sessionId
     INNER JOIN votodb.users
     ON users.userId = sessions.userId

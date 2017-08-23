@@ -23,7 +23,7 @@ const s3 = new AWS.S3({
  * Preforms userId session authorization on all incoming requests.
  */
 router.all('/*',(req,res,next)=>{
-    console.log(req.header.cookie);
+//    console.log(req.session);
     if (!req.session.userId) {
         res.status(401).json({ error: "ERR_NOT_LOGGED_IN" });
         return;

@@ -26,6 +26,12 @@ app.use(express.static(path.join(__dirname, "public")));
 // Setup session persistence with redis
 app.use(cookieParser(serverConfig.secret));
 
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  next();
+});
+
 const store = new redisStore({
   host: "localhost",
   port: 6379,

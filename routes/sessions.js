@@ -348,13 +348,13 @@ router.get("/session/:sessionId", (req, res) => {
  */
 router.get("/sessionQuestions/:sessionId", (req, res) => {
 
-  db.getSessionQuestions(req.params.sessionId, (err, questions) => {
+  db.getSessionQuestions(req.params.sessionId, req.session.userId, (err, questions) => {
     if (err) {
       res.status(500).json({ error: err });
       return;
     }
 
-    res.json(questions);
+    res.json({questions});
   });
 });
 
@@ -363,13 +363,13 @@ router.get("/sessionQuestions/:sessionId", (req, res) => {
  */
 router.get("/question/:questionId", (req, res) => {
 
-  db.getQuestion(req.params.questionId, (err, question) => {
+  db.getQuestion(req.session.userId, req.params.questionId, (err, question) => {
     if (err) {
       res.status(500).json({ error: err });
       return;
     }
 
-    res.json(question);
+    res.json({question});
   });
 });
 

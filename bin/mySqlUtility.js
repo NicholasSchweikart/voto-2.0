@@ -8,7 +8,7 @@ const pool = mysql.createPool({
   database: "votodb",                                       // Only use the voto DB
   debug: false,
 });
-console.log("dddd "+ process.env.VOTO_MYSQL_SERVER_URL);
+
 /**
  * Performs an SQL query on the DB using a connection from the pool.
  * @param queryString the SQL query to perform

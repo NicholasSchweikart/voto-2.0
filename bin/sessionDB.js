@@ -96,8 +96,7 @@ exports.getAllSessions = (userId, _cb) => {
 
   console.log(`Retrieving all sessions for user: ${userId}`);
 
-  const sql =
-    "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE userId = ? ORDER BY timeStamp DESC";
+  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE userId = ? ORDER BY timeStamp DESC";
   const params = [userId];
 
   mySQL.query(sql, params, (err, sessions) => {
@@ -312,6 +311,7 @@ exports.deleteQuestion = (questionId, _cb) => {
 };
 
 exports.activateSession = (userId, sessionId, _cb) => {
+
   if (!userId || !sessionId) {
     _cb("ER_NEED_SESSION_AND_USER_IDS");
     return;
@@ -338,6 +338,7 @@ exports.activateSession = (userId, sessionId, _cb) => {
 };
 
 exports.deactivateSession = (userId, sessionId, _cb) => {
+
   if (!userId || !sessionId) {
     _cb("ER_NEED_SESSION_AND_USER_IDS");
     return;
@@ -362,63 +363,66 @@ exports.deactivateSession = (userId, sessionId, _cb) => {
 /**
  * Gets all questions associated with a sessionId.
  * @param sessionId id of the session to get questions for.
+ * @param userId the user id to authorize this action
  * @param _cb callback
  */
-exports.getSessionQuestions = (sessionId, _cb) => {
-  if (!sessionId) {
-    _cb("ER_NO_SESSION_ID");
+exports.getSessionQuestions = (sessionId, userId, _cb) => {
+
+  if (!sessionId || !userId) {
+    _cb("ER_NO_SESSION_OR_USER_ID");
     return;
   }
 
-  console.log(`Retrieving all questions for sessionId: ${sessionId}`);
+  console.log(`userId [${userId}] retrieving all questions for sessionId [${sessionId}]`);
 
-  const sql =
-    "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE sessionId = ? ORDER BY orderNumber ASC";
-  const params = [sessionId];
+  const sql = "CALL get_session_questions(?,?)";
+  const params = [userId,sessionId];
 
   mySQL.query(sql, params, (err, questions) => {
+
     if (err) {
       return _cb(err.code);
     }
 
-    // if(questions.length === 0){
-    //     _cb("ER_NO_QUESTIONS_FOR_SESSION_ID");
-    //     return;
-    // }
+    if(questions[0][0].unauthorized){
+        _cb("ER_NOT_AUTHORIZED");
+        return;
+    }
 
-    // Return the
-    _cb(null, questions);
+    // Return the questions
+    _cb(null, questions[0]);
   });
 };
 
 /**
  * Get a question associated with a questionId.
  * @param questionId id of the question to get.
+ * @param userId id of the user for authorization.
  * @param _cb callback
  */
-exports.getQuestion = (questionId, userId, _cb) => {
+exports.getQuestion = (userId, questionId, _cb) => {
 
   if (!questionId || !userId) {
     _cb("ER_NO_QUESTION_OR_ID");
     return;
   }
 
-  console.log(`Retrieving questionId: ${questionId}`);
+  console.log(`userId [${userId}] retrieving questionId [${questionId}]`);
 
-  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE questionId = ?";
-  const params = [questionId];
+  const sql = "CALL get_question(?,?)";
+  const params = [userId, questionId];
 
   mySQL.query(sql, params, (err, questions) => {
     if (err) {
       return _cb(err.code);
     }
 
-    // if(questions.length === 0){
-    //     _cb("ER_NO_QUESTIONS_FOR_SESSION_ID");
-    //     return;
-    // }
+    if(questions[0].length === 0){
+        _cb("ER_CANT_GET_QUESTION");
+        return;
+    }
 
     // Return the
-    _cb(null, questions);
+    _cb(null, questions[0]);
   });
 };

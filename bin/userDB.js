@@ -247,7 +247,6 @@ exports.authorizeUser = (userId, authorizeId, sessionId,_cb) => {
     }
 
     // NOTE data will be returned in a RowDataPacket so double index the array
-    console.log(rows[0][0].success);
     return _cb(null, rows[0][0].success);
   });
 };

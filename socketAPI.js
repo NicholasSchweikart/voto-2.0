@@ -9,12 +9,13 @@ const cookieParser = require("cookie-parser"),
  * @returns {{API OBJECT}|*}
  */
 module.exports = (io, store) => {
+
   // API object to return after import.
   const API = {};
 
   /**
-     * Set up socket authorization for all new connections.
-     */
+   * Set up socket authorization for all new connections.
+   */
   io.set("authorization", (handshake, accept) => {
     getUserId(handshake, (err, data) => {
       if (err) {
@@ -29,15 +30,16 @@ module.exports = (io, store) => {
   });
 
   /**
-     * Handle the connection of a new socket client.
-     */
+   * Handle the connection of a new socket client.
+   */
   io.on("connection", (socket) => {
-    console.log("Client Connected! ");
+    console.log("New Client Connected!");
 
     /**
-         * Provide authorization for a client to connect to a specific session.
-         */
-    socket.on("join room", (sessionId) => {
+     * Provide authorization for a client to connect to a specific session.
+     */
+    socket.on("JOIN_SESSION", (sessionId) => {
+
       // Authorize user for this room.
       getUserId(socket.handshake, (err, userId) => {
         if (err) {
@@ -60,11 +62,11 @@ module.exports = (io, store) => {
   });
 
   /**
-     * Emit a message to an entire IO room. The room number will be the sessionId.
-     * @param sessionId the sessionId room to emit too.
-     * @param msg the message for the room
-     * @param _cb callback
-     */
+   * Emit a message to an entire IO room. The room number will be the sessionId.
+   * @param sessionId the sessionId room to emit too.
+   * @param msg the message for the room
+   * @param _cb callback
+   */
   API.emitToRoom = (sessionId, msg, _cb) => {
     if (!sessionId) {
       _cb("ER_NO_SESSION_ID");
@@ -72,7 +74,7 @@ module.exports = (io, store) => {
     }
 
     if (!msg) {
-      _cb("ER_NO_SESSION_ID");
+      _cb("ER_NO_MSG");
       return;
     }
 
@@ -81,11 +83,12 @@ module.exports = (io, store) => {
   };
 
   /**
-     * Gets the userId from the socket handshake cookies.
-     * @param handshake proved socket.handshake object.
-     * @param _cb callback(err, userId)
-     */
+   * Gets the userId from the socket handshake cookies.
+   * @param handshake proved socket.handshake object.
+   * @param _cb callback(err, userId)
+   */
   let getUserId = (handshake, _cb) => {
+
     const cookies = cookie.parse(handshake.headers.cookie);
     const cookieSessionId = cookieParser.signedCookie(cookies.id, serverConfig.secret);
 

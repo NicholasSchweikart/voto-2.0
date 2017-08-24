@@ -396,16 +396,16 @@ exports.getSessionQuestions = (sessionId, _cb) => {
  * @param questionId id of the question to get.
  * @param _cb callback
  */
-exports.getQuestion = (questionId, _cb) => {
-  if (!questionId) {
-    _cb("ER_NO_QUESTION_ID");
+exports.getQuestion = (questionId, userId, _cb) => {
+
+  if (!questionId || !userId) {
+    _cb("ER_NO_QUESTION_OR_ID");
     return;
   }
 
   console.log(`Retrieving questionId: ${questionId}`);
 
-  const sql =
-    "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE questionId = ?";
+  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM questions WHERE questionId = ?";
   const params = [questionId];
 
   mySQL.query(sql, params, (err, questions) => {

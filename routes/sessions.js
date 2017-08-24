@@ -23,7 +23,7 @@ const s3 = new AWS.S3({
  * Preforms userId session authorization on all incoming requests.
  */
 router.all('/*',(req,res,next)=>{
-//    console.log(req.session);
+
     if (!req.session.userId) {
         res.status(401).json({ error: "ERR_NOT_LOGGED_IN" });
         return;
@@ -111,12 +111,12 @@ router.post("/saveSessionQuestions", (req, res) => {
 });
 
 /**
- * POST to put a specifc session into the active state.
+ * POST to put a specific session into the active state.
  */
-router.post("/activateSession", (req, res) => {
+router.post("/activateSession/:sessionId", (req, res) => {
 
   if (!req.body.isActive) {
-    db.activateSession(req.session.userId, req.body.sessionId, (err, activated) => {
+    db.activateSession(req.session.userId, req.params.sessionId, (err, activated) => {
       if (err || !activated) {
         res.status(500).json({ error: err });
         return;
@@ -125,7 +125,7 @@ router.post("/activateSession", (req, res) => {
       res.json({ status: "activated" });
     });
   } else {
-    db.deactivateSession(req.session.userId, req.body.sessionId, (err) => {
+    db.deactivateSession(req.session.userId, req.params.sessionId, (err) => {
       if (err) {
         res.status(500).json({ error: err });
         return;
@@ -154,17 +154,17 @@ router.get("/active", (req, res) => {
  * POST route to upload new media for a specific session. Under beta right now, but will at some point need to have
  * access to a sessionId.
  */
-router.post("/accessSession", (req, res) => {
+router.get("/accessSession/:sessionId", (req, res) => {
 
-  if (!req.body.sessionId) {
+  if (!req.params.sessionId) {
     res.status(401).json({ error: "ERR_NO_SESSION_ID" });
     return;
   }
 
   let userId = req.session.userId,
-    sessionId = req.body.sessionId;
+    sessionId = req.params.sessionId;
 
-  console.log("Authorizing userId %d for sessionId %d", userId, sessionId);
+  console.log(`Authorizing userId [${userId}] for sessionId [${sessionId}]`);
 
   // TODO check that session is active.
   userDb.isUserAuthorized(userId, sessionId, (err, yes) => {
@@ -296,9 +296,9 @@ router.delete("/:questionId/image/:imgFileName", (req, res) => {
 /**
  * DELETE route to remove a session from the DB. URL "/deleteSession?sessionId=xx"
  */
-router.delete("/deleteSession", (req, res) => {
+router.delete("/deleteSession/:sessionId", (req, res) => {
 
-  db.deleteSession(req.query.sessionId, req.session.userId, (err) => {
+  db.deleteSession(req.params.sessionId, req.session.userId, (err) => {
     if (err) {
       res.status(500).json({ error: err });
       return;
@@ -326,14 +326,14 @@ router.get("/", (req, res) => {
 /**
  * GET method to retrieve all sessions for a userId. URL "/session?sessionId=xx"
  */
-router.get("/session", (req, res) => {
+router.get("/session/:sessionId", (req, res) => {
 
-  if (!req.query.sessionId) {
+  if (!req.params.sessionId) {
     res.status(500).json({ error: "ERR_NO_SESSION_ID" });
     return;
   }
 
-  db.getSession(req.query.sessionId, req.session.userId, (err, sessions) => {
+  db.getSession(req.params.sessionId, req.session.userId, (err, sessions) => {
     if (err) {
       res.status(500).json({ error: err });
       return;
@@ -361,9 +361,9 @@ router.get("/sessionQuestions/:sessionId", (req, res) => {
 /**
  * GET method to return a single question. URL:"/question?questionId=xxxx".
  */
-router.get("/question", (req, res) => {
+router.get("/question/:questionId", (req, res) => {
 
-  db.getQuestion(req.query.questionId, (err, question) => {
+  db.getQuestion(req.params.questionId, (err, question) => {
     if (err) {
       res.status(500).json({ error: err });
       return;
@@ -376,13 +376,13 @@ router.get("/question", (req, res) => {
 /**
  * GET method to return a one time URL to view a question image slide. URL:"/sessionQuestions?sessionId=xxxx.ext".
  */
-router.get("/questionImageURL", (req, res) => {
+router.get("/questionImageURL/:imgFileName", (req, res) => {
 
-  if (!req.query.imgFileName) {
+  if (!req.params.imgFileName) {
     res.status(500).json({ error: "ER_NO_FILENAME" });
   }
 
-  const imgFileName = req.query.imgFileName;
+  const imgFileName = req.params.imgFileName;
   const params = { Bucket: "voto-question-images", Key: imgFileName, Expires: 10 * 60 };
 
   s3.getSignedUrl("getObject", params, (err, url) => {

@@ -464,7 +464,7 @@ exports.getSessionQuestions = (sessionId, userId, _cb) => {
       return _cb(err.code);
     }
 
-    if(questions[0][0].unauthorized){
+    if(questions[0][0] && questions[0][0].unauthorized){
         _cb("ER_NOT_AUTHORIZED");
         return;
     }

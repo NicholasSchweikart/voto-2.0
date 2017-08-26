@@ -130,7 +130,7 @@ router.post("/activateSession/:sessionId", (req, res) => {
       res.json({status: "activated"});
 
       // Alert all sockets
-      socketAPI.emitSessionActivated(req.params.sessionId)
+      socketAPI.emitSessionActivated(req.params.sessionId);
     });
 
   } else {
@@ -208,13 +208,13 @@ router.post('/saveResponse/:sessionId/:questionId', (req, res) => {
 
       res.json({status: "success"});
 
-      db.getSessionOwner(req.params.sessionId, (err, userId) => {
+      db.getSessionOwner(req.params.sessionId, (err, teacherId) => {
 
         if (err) {
           console.error(new Error(`Owner lookup error: ${err}`))
         } else {
           // Alert the teacher through their private channel
-          socketAPI.emitUserResponse(req.body, req.session.userId);
+          socketAPI.emitUserResponse(req.body, teacherId);
         }
       });
     }

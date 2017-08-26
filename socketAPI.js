@@ -25,7 +25,7 @@ exports.emitSessionActivated = (sessionId) =>{
   io.sockets.in(sessionId).emit('session-active', sessionId);
 };
 
-exports.emitSessionDeactivated = (sessionId) =>{
+exports.emitSessionDeactivated = (sessionId) => {
 
   console.log(`Emitting session de-activation for sessionId ${sessionId}`);
   io.sockets.in(sessionId).emit('DE_ACTIVATED', sessionId);
@@ -64,11 +64,10 @@ io.on("connection", (socket) => {
       if (err) {
         return;
       }
-
+      //TODO maybe change this to only use the cookie.
       if (authorizedSessionId === sessionId) {
         socket.join(sessionId);
       }
-
     });
   });
 

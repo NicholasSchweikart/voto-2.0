@@ -261,7 +261,7 @@ exports.updateQuestion = (question, userId, _cb) => {
 
   console.log(`Updating questionId: ${question.questionId}`);
 
-  const sql = "CALL update_question(?,?,?,?,?,?,?,?)";
+  const sql = "CALL update_question(?,?,?,?,?,?,?)";
   const params = [
     userId,
     question.sessionId,
@@ -524,18 +524,18 @@ exports.getSessionOwner = (sessionId, _cb) => {
   const sql = "SELECT userId FROM votodb.sessions WHERE sessionId = ?";
   const params = [sessionId];
 
-  mySQL.query(sql, params, (err, userId) => {
+  mySQL.query(sql, params, (err, data) => {
     if (err) {
       return _cb(err.code);
     }
 
-    if(userId.length === 0){
+    if(data.length === 0){
       _cb("ER_CANT_GET_USER_ID");
       return;
     }
-
+    //TODO fix the userId return.
     // Return the
-    _cb(null, userId);
+    _cb(null, data[0][0].userId);
   });
 };
 

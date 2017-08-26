@@ -25,18 +25,6 @@ app.use(express.static(path.join(__dirname, "public")));
 
 // Setup session persistence with redis
 app.use(cookieParser(serverConfig.secret));
-//
-// app.use((req, res, next) => {
-//   res.header("Access-Control-Allow-Origin", "http://localhost:8080");
-//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
-//   res.header("Access-Control-Allow-Credentials", 'true');
-//
-//   if (req.method === 'OPTIONS') {
-//     res.send(200);
-//   } else {
-//     next();
-//   }
-// });
 
 const store = new redisStore({
   host: "localhost",
@@ -54,23 +42,16 @@ app.use(session(
     rolling:true,
     cookie: {
       path: "/",
-      maxAge: 2 * 1800000,  // 60 min max cookie life
-      httpOnly: true,       // Hide from JavaScript
-      //secure: true        //TODO Require an HTTPS connection by uncommenting here
+      maxAge: 2 * 1800000,                  // 60 min max cookie life
+      httpOnly: true,                       // Hide from JavaScript
+      //secure: true                        //TODO Require an HTTPS connection by uncommenting here
     },
-    name: "id",             // Change cookie name to obscure inner workings
+    name: "id",                             // Change cookie name to obscure inner workings
   }
 ));
 
-// Set up Socket IO ready on port 1212.
-const
-  http = require("http"),
-  server = http.createServer(),
-  io = require("socket.io").listen(server);
-
-const socketAPI = require("./socketAPI")(io, store);
-
-server.listen(1212);
+const socketAPI = require("./socketAPI");   // Integrate our socket.io
+socketAPI.store = store;              // Connect the redis store to the socketAPI
 
 // Attach paths to router files
 app.use("/api/users", userRouter);

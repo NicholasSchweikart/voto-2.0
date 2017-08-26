@@ -34,7 +34,6 @@ exports.saveNewSession = (newSession, userId, _cb) => {
       if (data.length === 0) {
         _cb("ER_FAILED_TO_SAVE_SESSION");
       }
-
       _cb(null, data[0]);
     }
   });
@@ -163,23 +162,22 @@ exports.getSession = (sessionId, userId, _cb) => {
 
   console.log("Retrieving sessionId: [%d]", sessionId);
 
-  const sql =
-    "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE sessionId = ? AND userId = ?";
+  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE sessionId = ? AND userId = ?";
   const params = [sessionId, userId];
 
-  mySQL.query(sql, params, (err, sessions) => {
+  mySQL.query(sql, params, (err, session) => {
     if (err) {
       _cb(err.code);
       return;
     }
 
-    if (sessions.length === 0) {
-      _cb("No Sessions for this sessionId");
+    if (session.length === 0) {
+      _cb("No Session for this sessionId");
       return;
     }
 
     // Return the records.
-    _cb(null, sessions);
+    _cb(null, session);
   });
 };
 
@@ -310,6 +308,12 @@ exports.deleteQuestion = (questionId, _cb) => {
   });
 };
 
+/**
+ * Activates a session in the DB.
+ * @param userId the owners userId for authorization.
+ * @param sessionId the session to activate.
+ * @param _cb callback(err)
+ */
 exports.activateSession = (userId, sessionId, _cb) => {
 
   if (!userId || !sessionId) {
@@ -337,6 +341,12 @@ exports.activateSession = (userId, sessionId, _cb) => {
   });
 };
 
+/**
+ * De-Activates a session in the DB.
+ * @param userId the owners userId for authorization.
+ * @param sessionId the session to de-activate.
+ * @param _cb callback(err)
+ */
 exports.deactivateSession = (userId, sessionId, _cb) => {
 
   if (!userId || !sessionId) {
@@ -357,6 +367,76 @@ exports.deactivateSession = (userId, sessionId, _cb) => {
     }
 
     return _cb(null);
+  });
+};
+
+/**
+ * Activates a question in the DB for a session. Returns the sessionId of the deactivated question for
+ * socket.io alert purposes.
+ * @param userId user ID for authorization.
+ * @param questionId the question to activate.
+ * @param _cb callback(err, sessionId)
+ */
+exports.activateQuestion = (userId, questionId, _cb) => {
+
+  if (!userId || !questionId) {
+    _cb("ER_NEED_QUESTION_AND_USER_IDS");
+    return;
+  }
+
+  console.log("Activating questionId %d", questionId);
+
+  const sql = "CALL activate_question(?,?)";
+  const params = [userId, questionId];
+
+  mySQL.query(sql, params, (err, data) => {
+    if (err) {
+      _cb(err.code);
+      return;
+    }
+
+    if (data[0][0].failure) {
+      return _cb('ER_NOT_ACTIVATED');
+    }
+
+    if(data[0][0].session_id){
+      return _cb(null, data[0][0].session_id);
+    }
+  });
+};
+
+/**
+ * De-Activates a question in the DB for a session. Returns the sessionId of the deactivated question for
+ * socket.io alert purposes.
+ * @param userId user ID for authorization.
+ * @param questionId the question to deactivate.
+ * @param _cb callback(err, sessionId)
+ */
+exports.deactivateQuestion = (userId, questionId, _cb) => {
+
+  if (!userId || !questionId) {
+    _cb("ER_NEED_QUESTION_AND_USER_IDS");
+    return;
+  }
+
+  console.log("de-activating questionId %d", questionId);
+
+  const sql = "CALL de_activate_question(?,?)";
+  const params = [userId, questionId];
+
+  mySQL.query(sql, params, (err, data) => {
+    if (err) {
+      _cb(err.code);
+      return;
+    }
+
+    if (data[0][0].failure) {
+      return _cb('ER_NOT_DE_ACTIVATED');
+    }
+
+    if(data[0][0].session_id){
+      return _cb(null, data[0][0].session_id);
+    }
   });
 };
 
@@ -398,7 +478,7 @@ exports.getSessionQuestions = (sessionId, userId, _cb) => {
  * Get a question associated with a questionId.
  * @param questionId id of the question to get.
  * @param userId id of the user for authorization.
- * @param _cb callback
+ * @param _cb callback(err, question)
  */
 exports.getQuestion = (userId, questionId, _cb) => {
 
@@ -424,5 +504,69 @@ exports.getQuestion = (userId, questionId, _cb) => {
 
     // Return the
     _cb(null, questions[0]);
+  });
+};
+
+/**
+ * Gets the userId associated with a sessionId.
+ * @param sessionId id of the question to get.
+ * @param _cb callback(err,userId)
+ */
+exports.getSessionOwner = (sessionId, _cb) => {
+
+  if (!sessionId) {
+    _cb("ER_NO_QUESTION_OR_ID");
+    return;
+  }
+
+  console.log(`getting owner for sessionId [${sessionId}]`);
+
+  const sql = "SELECT userId FROM votodb.sessions WHERE sessionId = ?";
+  const params = [sessionId];
+
+  mySQL.query(sql, params, (err, userId) => {
+    if (err) {
+      return _cb(err.code);
+    }
+
+    if(userId.length === 0){
+      _cb("ER_CANT_GET_USER_ID");
+      return;
+    }
+
+    // Return the
+    _cb(null, userId);
+  });
+};
+
+/**
+ * Get a question associated with a questionId.
+ * @param response response object '{questionId:xx,answer:xx}'.
+ * @param userId id of the user for authorization.
+ * @param _cb callback
+ */
+exports.saveResponse = (userId, questionId, response, _cb) => {
+
+  if (!userId || !response) {
+    _cb("ER_NO_USER_ID_OR_RESPONSE");
+    return;
+  }
+
+  console.log(`userId [${userId}] saving response [${response}]`);
+
+  const sql = "CALL save_response(?,?,?)";
+  const params = [userId, questionId, response.answer];
+
+  mySQL.query(sql, params, (err, data) => {
+    if (err) {
+      return _cb(err.code);
+    }
+
+    if(data[0][0].failure === true){
+      _cb("ER_SAVING_RESPONSE");
+      return;
+    }
+
+    _cb(null, true);
   });
 };

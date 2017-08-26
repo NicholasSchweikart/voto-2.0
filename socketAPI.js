@@ -1,111 +1,174 @@
 const cookieParser = require("cookie-parser"),
   cookie = require("cookie"),
-  serverConfig = require("./serverConfig.json");
+  serverConfig = require("./serverConfig.json"),
+  http = require("http"),
+  server = http.createServer(),
+  io = require("socket.io").listen(server);
+
+let store = {};
+
+exports.emitUserResponse = (response, userId) => {
+
+  console.log(`Emitting to teacher userId: ${userId} update: ${response}`);
+  io.sockets.in(userId).emit('user-response',response);
+};
+
+exports.emitNewQuestion = (questionId, sessionId) => {
+
+  console.log(`Emitting to sessionId: ${sessionId} new questionId: ${questionId}`);
+  io.sockets.in(sessionId).emit('new-question', questionId);
+};
+
+exports.emitSessionActivated = (sessionId) =>{
+
+  console.log(`Emitting session activation for sessionId ${sessionId}`);
+  io.sockets.in(sessionId).emit('session-active', sessionId);
+};
+
+exports.emitSessionDeactivated = (sessionId) =>{
+
+  console.log(`Emitting session de-activation for sessionId ${sessionId}`);
+  io.sockets.in(sessionId).emit('DE_ACTIVATED', sessionId);
+};
 
 /**
- * Module to wrap a socket IO system.
- * @param io provide the pre-initialized socket.IO object.
- * @param store provide the pre-initialized redis store object.
- * @returns {{API OBJECT}|*}
+ * Set up socket authorization for all new connections.
  */
-module.exports = (io, store) => {
+io.set("authorization", (handshake, accept) => {
+  getUserId(handshake, (err, data) => {
+    if (err) {
+      return accept(err);
+    }
+    if (!data) {
+      return accept(err);
+    }
 
-  // API object to return after import.
-  const API = {};
+    return accept(null, true);
+  });
+});
+
+/**
+ * Handle the connection of a new socket client.
+ */
+io.on("connection", (socket) => {
+  console.log("New client connected to socket.io!");
 
   /**
-   * Set up socket authorization for all new connections.
+   * Provide authorization for a student to connect to a specific session.
    */
-  io.set("authorization", (handshake, accept) => {
-    getUserId(handshake, (err, data) => {
+  socket.on("subscribe-to-session-student", (sessionId) => {
+
+    // Authorize this user and then add them to the room for this sessionId.
+    getAuthorizedSessionId(socket.handshake, (err, authorizedSessionId) => {
+
       if (err) {
-        return accept(err);
-      }
-      if (!data) {
-        return accept(err);
+        return;
       }
 
-      return accept(null, true);
+      if (authorizedSessionId === sessionId) {
+        socket.join(sessionId);
+      }
+
     });
   });
 
   /**
-   * Handle the connection of a new socket client.
+   * Authorize and then open a room for an active session. Teacher ONLY
    */
-  io.on("connection", (socket) => {
-    console.log("New Client Connected!");
+  socket.on('subscribe-to-active-session-teacher', (sessionId) => {
 
-    /**
-     * Provide authorization for a client to connect to a specific session.
-     */
-    socket.on("JOIN_SESSION", (sessionId) => {
+    getActiveSessionId(socket.handshake, (err, activeSessionId) => {
+      if(err)return;
 
-      // Authorize user for this room.
-      getUserId(socket.handshake, (err, userId) => {
-        if (err) {
-          return;
-        }
+      if(sessionId === activeSessionId){
 
-        db.isUserAuthorized(userId, sessionId, (err, yes) => {
-          if (err) {
-            console.error(new Error("userId %d not authorized: %s", userId, err));
-            socket.emit("ER_NOT_AUTHORIZED");
-            return;
-          }
-
-          if (yes) {
-            socket.join(sessionId);
-          }
+        // Create room based on their userId
+        getUserId(socket.handshake, (err, userId) => {
+          if(err)return;
+          socket.join(userId);
         });
-      });
+      }
     });
   });
 
-  /**
-   * Emit a message to an entire IO room. The room number will be the sessionId.
-   * @param sessionId the sessionId room to emit too.
-   * @param msg the message for the room
-   * @param _cb callback
-   */
-  API.emitToRoom = (sessionId, msg, _cb) => {
-    if (!sessionId) {
-      _cb("ER_NO_SESSION_ID");
-      return;
+  socket.on('error',(err)=>{
+    console.error(new Error(`Socket: ${err}`));
+  });
+});
+
+io.on('error',(err)=>{
+  console.error(new Error(`IO: ${err}`));
+});
+
+/**
+ * Gets the userId from the socket handshake cookies.
+ * @param handshake proved socket.handshake object.
+ * @param _cb callback(err, credentials)
+ */
+let getUserId = (handshake, _cb) => {
+
+  const cookies = cookie.parse(handshake.headers.cookie),
+    user_id = cookieParser.signedCookie(cookies.id, serverConfig.secret);
+
+  store.get(user_id, (err, data) => {
+    if (err) {
+      console.error(new Error(`Retrieving userId from redis: ${err}`));
+      return _cb("ER_REDIS_FAILURE");
     }
-
-    if (!msg) {
-      _cb("ER_NO_MSG");
-      return;
+    if (!data) {
+      return _cb("ER_NOT_LOGGED_IN");
     }
-
-    console.log(`Emitting to room: ${sessionId} Message: ${msg}`);
-    io.sockets.in(sessionId).emit(msg);
-  };
-
-  /**
-   * Gets the userId from the socket handshake cookies.
-   * @param handshake proved socket.handshake object.
-   * @param _cb callback(err, userId)
-   */
-  let getUserId = (handshake, _cb) => {
-
-    const cookies = cookie.parse(handshake.headers.cookie);
-    const cookieSessionId = cookieParser.signedCookie(cookies.id, serverConfig.secret);
-
-    store.get(cookieSessionId, (err, data) => {
-      if (err) {
-        return _cb("ER_NOT_LOGGED_IN");
-      }
-      if (!data) {
-        return _cb("ER_NOT_LOGGED_IN");
-      }
-      if (data.userId) {
-        const userId = data.userId;
-        console.log(`User: ${userId} authorized on socket`);
-        return _cb(null, userId);
-      }
-    });
-  };
-
-  return API;
+    if (data.userId) {
+      return _cb(null, data.userId);
+    }
+  });
 };
+
+/**
+ * Gets the userId from the socket handshake cookies.
+ * @param handshake proved socket.handshake object.
+ * @param _cb callback(err, authorizedSessionId)
+ */
+let getAuthorizedSessionId = (handshake, _cb) => {
+
+  const cookies = cookie.parse(handshake.headers.cookie),
+    auth_session_id = cookieParser.signedCookie(cookies.authorizedSessionId, serverConfig.secret);
+
+  store.get(auth_session_id, (err, data) => {
+    if (err) {
+      console.error(new Error(`Retrieving userId from redis: ${err}`));
+      return _cb("ER_REDIS_FAILURE");
+    }
+    if (!data) {
+      return _cb("ER_NOT_LOGGED_IN");
+    }
+    if (data.authorizedSessionId) {
+      return _cb(null, data.authorizedSessionId);
+    }
+  });
+};
+
+/**
+ * Gets the userId from the socket handshake cookies.
+ * @param handshake proved socket.handshake object.
+ * @param _cb callback(err, activeSessionId)
+ */
+let getActiveSessionId = (handshake, _cb) => {
+
+  const cookies = cookie.parse(handshake.headers.cookie),
+    auth_session_id = cookieParser.signedCookie(cookies.activeSessionId, serverConfig.secret);
+
+  store.get(auth_session_id, (err, data) => {
+    if (err) {
+      console.error(new Error(`Retrieving userId from redis: ${err}`));
+      return _cb("ER_REDIS_FAILURE");
+    }
+    if (!data) {
+      return _cb("ER_NO_ACTIVE_SESSION_SET");
+    }
+    if (data.activeSessionId) {
+      return _cb(null, data.activeSessionId);
+    }
+  });
+};
+server.listen(1212);

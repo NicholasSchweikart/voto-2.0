@@ -286,28 +286,3 @@ exports.deauthorizeUser = (userId, de_authorizeId, sessionId,_cb) => {
   });
 };
 
-/**
- * Saves a users response to a session question.
- * @param userResponse the response to save
- * @param userId the userId associated with the response
- * @param _cb callback(err, success)
- */
-exports.saveUserResponse = (userResponse, userId, _cb) => {
-  console.log(`Attempting to save a vote for USER: ${userId}`);
-
-  if (!userResponse || !userResponse.answer) {
-    _cb("failed one or more empty userResponse parameters");
-    return;
-  }
-
-  const sql = "INSERT INTO user_responses (userId, title) VALUES (?, ?)";
-  const params = [userId, newSession.title];
-
-  mySQL.query(sql, params, (err, data) => {
-    if (err) {
-      _cb(err);
-    } else {
-      _cb(null, data[0]);
-    }
-  });
-};

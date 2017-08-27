@@ -32,6 +32,7 @@ const store = new redisStore({
   client: redisClient,
   ttl: 3600, // One Hour Life
 });
+app.store = store;
 
 app.use(session(
   {
@@ -46,12 +47,9 @@ app.use(session(
       httpOnly: true,                       // Hide from JavaScript
       //secure: true                        //TODO Require an HTTPS connection by uncommenting here
     },
-    name: "id",                             // Change cookie name to obscure inner workings
+    name: "id"                             // Change cookie name to obscure inner workings
   }
 ));
-
-const socketAPI = require("./socketAPI");   // Integrate our socket.io
-socketAPI.store = store;              // Connect the redis store to the socketAPI
 
 // Attach paths to router files
 app.use("/api/users", userRouter);

@@ -12,7 +12,7 @@ const express = require("express"),
   path = require("path"),
   async = require("async"),
   AWS = require("aws-sdk"),
-  socketAPI = require("../socketAPI");
+  socketAPI = require("../socketAPI").api;
 
 AWS.config.region = "us-east-2";
 

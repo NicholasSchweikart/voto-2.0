@@ -6,25 +6,51 @@
 </head>
 <body>
 
-<script src="/js/socket.io.js"></script>
+<script src="/socket.io/socket.io.js"></script>
 <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
 <script>
 
     let socket = {};
-    let cred = {userName:"NicholasSchweikart",password:"finAmelia"};
+    let cred = {userName:"teacher",password:"password"};
 
-    $.post('https://voto.io/api/login', cred)
+    $.post('http://localhost:8080/api/login', cred)
         .done((response) => {
 
             console.log('login successful!\n');
-            //socket = io.connect('http://localhost:1212');
+            accessSession();
         })
         .fail((xhr, status, err) => {
             console.log(xhr);
             console.log(status);
             console.log(err);
         });
+    function accessSession() {
+      $.get('http://localhost:8080/api/sessions/accessSession/8')
+        .success((response) => {
 
+          console.log('session access succesfull!\n');
+          sock();
+        })
+        .fail((xhr, status, err) => {
+          console.log(xhr);
+          console.log(status);
+          console.log(err);
+        });
+    }
+
+    function sock() {
+      socket = io.connect('http://localhost:8080');
+
+      socket.on('new-session', (sessionId)=>{
+        console.log(sessionId)
+      });
+
+      socket.on('session-active', (sessionId)=>{
+        console.log('New active session: ' + sessionId)
+      });
+
+      socket.emit('subscribe-to-session-student', 8);
+    }
 </script>
 </body>
 </html>

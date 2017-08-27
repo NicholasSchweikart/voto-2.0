@@ -21,8 +21,7 @@ router.post("/", (req, res) => {
     }
 
     req.session.userId = user.userId;
-    req.session.authorizedSessionId = null;
-
+    req.session.authorizedSessionId = 0;
     const { passwordHash, passwordSalt, ...response } = user;
 
     res.json(response);

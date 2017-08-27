@@ -1,13 +1,20 @@
 const cookieParser = require("cookie-parser"),
   cookie = require("cookie"),
   serverConfig = require("./serverConfig.json");
+
 const api = {};
+
 module.exports = (io, store) => {
 
-  api.emitUserResponse = (response, userId) => {
+  /**
+   * Emits a user response notification event to a teacher userId.
+   * @param response the response logged in the system.
+   * @param teacherId the userId of the teacher used to find the room.
+   */
+  api.emitUserResponse = (response, teacherId) => {
 
-    console.log(`Emitting to teacher userId: ${userId} update: ${response}`);
-    io.sockets.in(userId).emit('user-response', response);
+    console.log(`Emitting to teacher userId: ${teacherId} update: ${response}`);
+    io.sockets.in(teacherId).emit('user-response', response);
   };
 
   api.emitNewQuestion = (questionId, sessionId) => {
@@ -74,13 +81,14 @@ module.exports = (io, store) => {
     /**
      * Authorize and then open a room for an active session. Teacher ONLY
      */
-    socket.on('subscribe-to-active-session-teacher', (sessionId) => {
+    socket.on('subscribe-to-feed-teacher',() => {
 
       getUserSession(socket.handshake, (err, session) => {
         if (err) return;
 
-        // Create room based on their userId
+        // Create room based on their userId for sending all future updates.
         socket.join(session.userId);
+        console.log(`teacher userId ${session.userId} has opened a new feed`);
       });
     });
 
@@ -90,13 +98,13 @@ module.exports = (io, store) => {
   });
 
   io.on('error', (err) => {
-    console.error(new Error(`IO: ${err}`));
+    console.error(new Error(`SocketAPI error: ${err}`));
   });
 
   /**
-   * Gets the userId from the socket handshake cookies.
+   * Gets the session object from the redis store for this user.
    * @param handshake proved socket.handshake object.
-   * @param _cb callback(err, credentials)
+   * @param _cb callback(err, session)
    */
   let getUserSession = (handshake, _cb) => {
 
@@ -117,4 +125,5 @@ module.exports = (io, store) => {
     });
   };
 };
+
 module.exports.api = api;

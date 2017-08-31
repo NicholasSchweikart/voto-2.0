@@ -333,7 +333,7 @@ exports.activateSession = (userId, sessionId, _cb) => {
       return;
     }
 
-    if (data.length === 0) {
+    if (data[0].length === 0) {
       return _cb(null, true);
     }
 

@@ -95,7 +95,7 @@ exports.getAllSessions = (userId, _cb) => {
 
   console.log(`Retrieving all sessions for user: ${userId}`);
 
-  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp FROM sessions WHERE userId = ? ORDER BY timeStamp DESC";
+  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp, UNIX_TIMESTAMP(dateLastUsed) as timeStampLast FROM sessions WHERE userId = ? ORDER BY timeStamp DESC";
   const params = [userId];
 
   mySQL.query(sql, params, (err, sessions) => {

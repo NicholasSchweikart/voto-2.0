@@ -570,3 +570,59 @@ exports.saveResponse = (userId, questionId, response, _cb) => {
     _cb(null, true);
   });
 };
+
+exports.getFavoriteSessions = (userId, _cb) => {
+  if (!userId) {
+    _cb("failed one or more empty session parameters");
+    return;
+  }
+
+  console.log(`Retrieving favorite sessions for user: ${userId}`);
+
+  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp, UNIX_TIMESTAMP(dateLastUsed) as timeStampLast FROM sessions WHERE userId = ? and isFavorite = 1 ORDER BY timeStamp DESC";
+  const params = [userId];
+
+  mySQL.query(sql, params, (err, sessions) => {
+    if (err) {
+      _cb(err.code);
+      return;
+    }
+
+    if (sessions.length === 0) {
+      _cb("No Sessions for this ID");
+      return;
+    }
+
+    // Return the records.
+    _cb(null, sessions);
+  });
+};
+
+exports.getRecentSessions = (userId, _cb) => {
+  if (!userId) {
+    _cb("failed one or more empty session parameters");
+    return;
+  }
+
+  console.log(`Retrieving recent sessions for user: ${userId}`);
+
+  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp, UNIX_TIMESTAMP(dateLastUsed) as timeStampLast FROM sessions WHERE userId = ? ORDER BY timeStampLast DESC LIMIT 5";
+  const params = [userId];
+
+  mySQL.query(sql, params, (err, sessions) => {
+    if (err) {
+      _cb(err.code);
+      return;
+    }
+
+    if (sessions.length === 0) {
+      _cb("No Sessions for this ID");
+      return;
+    }
+
+    // Return the records.
+    _cb(null, sessions);
+  });
+};
+
+

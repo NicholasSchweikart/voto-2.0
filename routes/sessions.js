@@ -369,14 +369,22 @@ router.delete("/deleteSession/:sessionId", (req, res) => {
  */
 router.get("/", (req, res) => {
 
-  db.getAllSessions(req.session.userId, (err, sessions) => {
+  const _cb = (err, sessions) => {
     if (err) {
-      res.status(500).json({error: err});
+      res.status(500).json({ error: err });
       return;
     }
 
-    res.json({sessions});
-  });
+    res.json({ sessions });
+  }
+
+  if (req.query.favorite) {
+    db.getFavoriteSessions(req.session.userId, _cb); 
+  } else if (req.query.recent) {
+    db.getRecentSessions(req.session.userId, _cb);
+  } else {
+    db.getAllSessions(req.session.userId, _cb); 
+  }
 });
 
 /**

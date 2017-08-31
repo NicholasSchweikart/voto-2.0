@@ -324,7 +324,7 @@ exports.activateSession = (userId, sessionId, _cb) => {
   console.log("Activating sessionId %d", sessionId);
 
   const sql =
-    "UPDATE sessions SET isActive = true WHERE userId = ? AND sessionId = ?";
+    "call activate_session(?, ?)";
   const params = [userId, sessionId];
 
   mySQL.query(sql, params, (err, data) => {
@@ -334,10 +334,10 @@ exports.activateSession = (userId, sessionId, _cb) => {
     }
 
     if (data.length === 0) {
-      return _cb(null, false);
+      return _cb(null, true);
     }
 
-    return _cb(null, true);
+    return _cb(null, false);
   });
 };
 

@@ -314,17 +314,17 @@ exports.deleteQuestion = (questionId, _cb) => {
  * @param sessionId the session to activate.
  * @param _cb callback(err)
  */
-exports.activateSession = (userId, sessionId, _cb) => {
+exports.toggleSession = (userId, sessionId, _cb) => {
 
   if (!userId || !sessionId) {
     _cb("ER_NEED_SESSION_AND_USER_IDS");
     return;
   }
 
-  console.log("Activating sessionId %d", sessionId);
+  console.log("Toggling sessionId %d", sessionId);
 
   const sql =
-    "call activate_session(?, ?)";
+    "call toggle_session(?, ?)";
   const params = [userId, sessionId];
 
   mySQL.query(sql, params, (err, data) => {
@@ -333,11 +333,11 @@ exports.activateSession = (userId, sessionId, _cb) => {
       return;
     }
 
-    if (data[0].length === 0) {
-      return _cb(null, true);
+    if (data[0][0].failure) {
+      return _cb("ERR_NOT_FOUND");
     }
 
-    return _cb(null, false);
+    return _cb(null, data[0][0].active);
   });
 };
 

@@ -116,38 +116,24 @@ router.post("/saveSessionQuestions", (req, res) => {
  */
 router.post("/activateSession/:sessionId", (req, res) => {
 
-  if (!req.body.isActive) {
-
-    db.activateSession(req.session.userId, req.params.sessionId, (err, activated) => {
-
-      if (err || !activated) {
-        res.status(500).json({error: err});
-        return;
-      }
-
-      // Set cookie for socket.io operations to happen without DB interaction.
-      req.session.activeSessionId = req.params.sessionId;
-      res.json({status: "activated"});
-
-      // Alert all sockets
-      socketAPI.emitSessionActivated(req.params.sessionId);
-    });
-
-  } else {
-
-    db.deactivateSession(req.session.userId, req.params.sessionId, (err) => {
+    db.toggleSession(req.session.userId, req.params.sessionId, (err, activated) => {
 
       if (err) {
         res.status(500).json({error: err});
         return;
       }
 
-      res.json({status: "deactivated"});
-
-      // Alert sockets
-      socketAPI.emitSessionDeactivated(req.params.sessionId);
+      // Set cookie for socket.io operations to happen without DB interaction.
+      if (activated == 1) {
+        req.session.activeSessionId = req.params.sessionId;
+        // Alert all sockets
+        socketAPI.emitSessionActivated(req.params.sessionId);
+        res.json({ status: "activated" });
+      } else {
+        socketAPI.emitSessionDeactivated(req.params.sessionId);
+        res.json({ status: "deactivated" });
+      }  
     });
-  }
 });
 
 /**

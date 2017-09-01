@@ -588,11 +588,6 @@ exports.getFavoriteSessions = (userId, _cb) => {
       return;
     }
 
-    if (sessions.length === 0) {
-      _cb("No Sessions for this ID");
-      return;
-    }
-
     // Return the records.
     _cb(null, sessions);
   });
@@ -612,11 +607,6 @@ exports.getRecentSessions = (userId, _cb) => {
   mySQL.query(sql, params, (err, sessions) => {
     if (err) {
       _cb(err.code);
-      return;
-    }
-
-    if (sessions.length === 0) {
-      _cb("No Sessions for this ID");
       return;
     }
 

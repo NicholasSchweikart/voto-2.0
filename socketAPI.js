@@ -5,34 +5,42 @@ const cookieParser = require("cookie-parser"),
 const api = {};
 
 module.exports = (io, store) => {
-
   /**
    * Emits a user response notification event to a teacher userId.
    * @param response the response logged in the system.
    * @param teacherId the userId of the teacher used to find the room.
    */
   api.emitUserResponse = (response, teacherId) => {
-
     console.log(`Emitting to teacher userId: ${teacherId} update: ${response}`);
-    io.sockets.in(teacherId).emit('user-response', response);
+    io.sockets.in(teacherId).emit("user-response", response);
   };
 
+  /**
+   * Emits a new-question event to all the users in a specific session room.
+   * @param questionId the ID of the question being activated.
+   * @param sessionId the sessionId to find the room.
+   */
   api.emitNewQuestion = (questionId, sessionId) => {
-
     console.log(`Emitting to sessionId: ${sessionId} new questionId: ${questionId}`);
-    io.sockets.in(sessionId).emit('new-question', questionId);
+    io.sockets.in(sessionId).emit("new-question", questionId);
   };
 
+  /**
+   * Emits a session-active event to all the users in the session room.
+   * @param sessionId the session ID to find the room.
+   */
   api.emitSessionActivated = (sessionId) => {
-
     console.log(`Emitting session activation for sessionId ${sessionId}`);
-    io.sockets.in(sessionId).emit('session-active', sessionId);
+    io.sockets.in(sessionId).emit("session-active", sessionId);
   };
 
+  /**
+   * Emits a session-de-activated event to all clients in the room.
+   * @param sessionId the sessionId to find the room.
+   */
   api.emitSessionDeactivated = (sessionId) => {
-
     console.log(`Emitting session de-activation for sessionId ${sessionId}`);
-    io.sockets.in(sessionId).emit('session-de-activated', sessionId);
+    io.sockets.in(sessionId).emit("session-de-activated", sessionId);
   };
 
   /**
@@ -61,12 +69,10 @@ module.exports = (io, store) => {
      * Provide authorization for a student to connect to a specific session.
      */
     socket.on("subscribe-to-session-student", (sessionId) => {
-
       console.log(`subscribing new user for sessionId ${sessionId}`);
 
       // Authorize this user and then add them to the room for this sessionId.
       getUserSession(socket.handshake, (err, session) => {
-
         if (err) {
           console.log(`error on subscription: ${err}`);
           return;
@@ -74,15 +80,13 @@ module.exports = (io, store) => {
 
         socket.join(session.authorizedSessionId);
         console.log(`socket authorized for ${session.authorizedSessionId}`);
-
       });
     });
 
     /**
      * Authorize and then open a room for an active session. Teacher ONLY
      */
-    socket.on('subscribe-to-feed-teacher',() => {
-
+    socket.on("subscribe-to-feed-teacher", () => {
       getUserSession(socket.handshake, (err, session) => {
         if (err) return;
 
@@ -92,12 +96,12 @@ module.exports = (io, store) => {
       });
     });
 
-    socket.on('error', (err) => {
+    socket.on("error", (err) => {
       console.error(new Error(`Socket: ${err}`));
     });
   });
 
-  io.on('error', (err) => {
+  io.on("error", (err) => {
     console.error(new Error(`SocketAPI error: ${err}`));
   });
 
@@ -107,7 +111,6 @@ module.exports = (io, store) => {
    * @param _cb callback(err, session)
    */
   let getUserSession = (handshake, _cb) => {
-
     const cookies = cookie.parse(handshake.headers.cookie),
       user_id = cookieParser.signedCookie(cookies.id, serverConfig.secret);
 

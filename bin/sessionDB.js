@@ -342,35 +342,6 @@ exports.toggleSession = (userId, sessionId, _cb) => {
 };
 
 /**
- * De-Activates a session in the DB.
- * @param userId the owners userId for authorization.
- * @param sessionId the session to de-activate.
- * @param _cb callback(err)
- */
-exports.deactivateSession = (userId, sessionId, _cb) => {
-
-  if (!userId || !sessionId) {
-    _cb("ER_NEED_SESSION_AND_USER_IDS");
-    return;
-  }
-
-  console.log(`Deactivating sessionId ${sessionId}`);
-
-  const sql =
-    "UPDATE sessions SET isActive = false WHERE userId = ? and sessionId = ?";
-  const params = [userId, sessionId];
-
-  mySQL.query(sql, params, (err, data) => {
-    if (err) {
-      _cb(err.code);
-      return;
-    }
-
-    return _cb(null);
-  });
-};
-
-/**
  * Activates a question in the DB for a session. Returns the sessionId of the deactivated question for
  * socket.io alert purposes.
  * @param userId user ID for authorization.

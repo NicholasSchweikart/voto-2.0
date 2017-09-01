@@ -37,6 +37,8 @@ router.post("/logout", (req, res) => {
     return;
   }
 
+  //TODO de-activate everything about this user.
+
   req.session.destroy((err) => {
     if (err) {
       console.error(new Error(`logout failure: ${err}`));

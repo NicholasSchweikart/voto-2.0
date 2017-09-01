@@ -124,12 +124,13 @@ router.post("/activateSession/:sessionId", (req, res) => {
       }
 
       // Set cookie for socket.io operations to happen without DB interaction.
-      if (activated == 1) {
+      if (activated === 1) {
         req.session.activeSessionId = req.params.sessionId;
         // Alert all sockets
         socketAPI.emitSessionActivated(req.params.sessionId);
         res.json({ status: "activated" });
       } else {
+        req.session.activeSessionId = 0;
         socketAPI.emitSessionDeactivated(req.params.sessionId);
         res.json({ status: "deactivated" });
       }  

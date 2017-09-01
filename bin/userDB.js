@@ -37,7 +37,7 @@ exports.createUser = (newUser, _cb) => {
     newUser.type,
   ];
 
-  mySQL.query(sql, params, err => {
+  mySQL.query(sql, params, (err) => {
     if (err) {
       _cb(err);
     } else {
@@ -56,7 +56,7 @@ exports.createUser = (newUser, _cb) => {
         }
 
         _cb(null, users[0]);
-      })
+      });
     }
   });
 };
@@ -77,7 +77,7 @@ exports.deleteUser = (userId, _cb) => {
   const sql = "DELETE FROM users WHERE userId = ?";
   const params = [userId];
 
-  mySQL.query(sql, params, err => {
+  mySQL.query(sql, params, (err) => {
     if (err) {
       _cb(err);
     } else {
@@ -141,7 +141,7 @@ exports.changeUserPassword = (userId, currentPassword, newPassword, _cb) => {
     "Changing password for userId [%d] from %s -> %s",
     userId,
     currentPassword,
-    newPassword
+    newPassword,
   );
 
   const sql = "SELECT * FROM users WHERE userId = ?";
@@ -161,7 +161,7 @@ exports.changeUserPassword = (userId, currentPassword, newPassword, _cb) => {
     const user = data[0];
     const thisHash = passwordUtil.getPasswordHash(
       currentPassword,
-      user.passwordSalt
+      user.passwordSalt,
     );
 
     if (thisHash === user.passwordHash) {
@@ -172,14 +172,14 @@ exports.changeUserPassword = (userId, currentPassword, newPassword, _cb) => {
       mySQL.query(
         "UPDATE users SET passwordSalt = ?, passwordHash = ? WHERE userId = ?",
         [passwordData.salt, passwordData.passwordHash, userId],
-        err => {
+        (err) => {
           if (err) {
             _cb("ER_FAILED_TO_SAVE_NEW_PASSWORD");
             return;
           }
 
           _cb("SUCCESS");
-        }
+        },
       );
     } else {
       _cb("ERR_LOGIN_FAILED");
@@ -202,7 +202,7 @@ exports.isUserAuthorized = (userId, sessionId, _cb) => {
   console.log(
     "Checking authorization for userId %d on sessionId %d",
     userId,
-    sessionId
+    sessionId,
   );
 
   const sql = "SELECT * FROM authorized_users WHERE userId = ? AND sessionId=?";
@@ -229,9 +229,8 @@ exports.isUserAuthorized = (userId, sessionId, _cb) => {
  * @param sessionId the sessionId of the session to authorize for this user
  * @param _cb callback
  */
-exports.authorizeUser = (userId, authorizeId, sessionId,_cb) => {
-
-  if(!authorizeId || !userId || !sessionId){
+exports.authorizeUser = (userId, authorizeId, sessionId, _cb) => {
+  if (!authorizeId || !userId || !sessionId) {
     _cb("ER_EMPTY_PARAMETERS");
     return;
   }
@@ -258,9 +257,8 @@ exports.authorizeUser = (userId, authorizeId, sessionId,_cb) => {
  * @param sessionId the sessionId of the session to authorize for this user
  * @param _cb callback
  */
-exports.deauthorizeUser = (userId, de_authorizeId, sessionId,_cb) => {
-
-  if(!de_authorizeId || !userId || !sessionId){
+exports.deauthorizeUser = (userId, de_authorizeId, sessionId, _cb) => {
+  if (!de_authorizeId || !userId || !sessionId) {
     _cb("ER_EMPTY_PARAMETERS");
     return;
   }
@@ -270,14 +268,13 @@ exports.deauthorizeUser = (userId, de_authorizeId, sessionId,_cb) => {
   const params = [userId, de_authorizeId, sessionId];
 
   mySQL.query(sql, params, (err, rows) => {
-
     if (err) {
       _cb(err.code);
       return;
     }
 
     // NOTE data will be returned in a RowDataPacket so double index the array
-    if(rows[0][0].success === 0){
+    if (rows[0][0].success === 0) {
       _cb("ER_NOT_AUTHORIZED");
       return;
     }

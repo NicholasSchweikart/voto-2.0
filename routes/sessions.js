@@ -378,6 +378,8 @@ router.get("/", (req, res) => {
     res.json({ sessions });
   }
 
+  console.log(req.query);
+
   if (req.query.favorite) {
     db.getFavoriteSessions(req.session.userId, _cb); 
   } else if (req.query.recent) {

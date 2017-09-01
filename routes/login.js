@@ -21,9 +21,8 @@ router.post("/", (req, res) => {
     }
 
     req.session.userId = user.userId;
-    req.session.authorizedSessionId = 0;
+    req.session.authorizedSessionIds = [];
     const { passwordHash, passwordSalt, ...response } = user;
-
     res.json(response);
   });
 });
@@ -38,7 +37,6 @@ router.post("/logout", (req, res) => {
   }
 
   //TODO de-activate everything about this user.
-
   req.session.destroy((err) => {
     if (err) {
       console.error(new Error(`logout failure: ${err}`));

@@ -44,18 +44,20 @@ module.exports = (io, store) => {
   };
 
   /**
-   * Set up socket authorization for all new connections.
+   *  Sets up authentication for every socket request.
+   *  This will add a new object to sockets: socket.session === res.session
    */
-  io.set("authorization", (handshake, accept) => {
-    getUserSession(handshake, (err, session) => {
-      if (err) {
-        return accept(err);
-      }
-      if (!session.userId) {
-        return accept(err);
-      }
+  io.use((socket, next)=>{
 
-      return accept(null, true);
+    getUserSession(socket.handshake, (err, session) => {
+      if (err) {
+        console.log(`error on subscription: ${err}`);
+        next(new Error('NOT_AUTHORIZED'));
+      }else{
+        console.log(`new socket authorized`);
+        socket.session = session;
+        next();
+      }
     });
   });
 
@@ -66,20 +68,13 @@ module.exports = (io, store) => {
     console.log("New client connected to socket.io!");
 
     /**
-     * Provide authorization for a student to connect to a specific session.
+     * Subscribe a student to the channel for all authorized sessions.
      */
-    socket.on("subscribe-to-session-student", (sessionId) => {
-      console.log(`subscribing new user for sessionId ${sessionId}`);
-
-      // Authorize this user and then add them to the room for this sessionId.
-      getUserSession(socket.handshake, (err, session) => {
-        if (err) {
-          console.log(`error on subscription: ${err}`);
-          return;
-        }
-
-        socket.join(session.authorizedSessionId);
-        console.log(`socket authorized for ${session.authorizedSessionId}`);
+    socket.on("subscribe-to-sessions-student", () => {
+      console.log(`socket authorized for ${socket.session.authorizedSessionIds}`);
+      socket.session.authorizedSessionIds.map((sessionId)=>{
+        console.log(`joining channel for sessionId: ${sessionId}`);
+        socket.join(sessionId);
       });
     });
 
@@ -87,13 +82,8 @@ module.exports = (io, store) => {
      * Authorize and then open a room for an active session. Teacher ONLY
      */
     socket.on("subscribe-to-feed-teacher", () => {
-      getUserSession(socket.handshake, (err, session) => {
-        if (err) return;
-
-        // Create room based on their userId for sending all future updates.
-        socket.join(session.userId);
-        console.log(`teacher userId ${session.userId} has opened a new feed`);
-      });
+      socket.join(socket.session.userId);
+      console.log(`teacher userId ${socket.session.userId} has opened a new feed`);
     });
 
     socket.on("error", (err) => {

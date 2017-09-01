@@ -190,35 +190,29 @@ exports.changeUserPassword = (userId, currentPassword, newPassword, _cb) => {
 /**
  * Determines if a userId is authorized to access an active session.
  * @param userId the userId for the check
- * @param sessionId the sessionId for the check
- * @param _cb callback(err, yes) yes = true if authorised
+ * @param _cb callback(err, sessions) sessions = [sessionIDs]
  */
-exports.isUserAuthorized = (userId, sessionId, _cb) => {
-  if (!userId || !sessionId) {
+exports.getAuthorizedSessions = (userId, _cb) => {
+  if (!userId) {
     _cb("ER_NEED_SESSION_AND_USER_IDS");
     return;
   }
 
-  console.log(
-    "Checking authorization for userId %d on sessionId %d",
-    userId,
-    sessionId,
-  );
+  console.log(`Getting all authorized sessions for userId: ${userId}`);
 
-  const sql = "SELECT * FROM authorized_users WHERE userId = ? AND sessionId=?";
-  const params = [userId, sessionId];
+  const sql = "SELECT * FROM authorized_users WHERE userId = ?";
+  const params = [userId];
 
-  mySQL.query(sql, params, (err, data) => {
+  mySQL.query(sql, params, (err, sessions) => {
     if (err) {
       _cb(err.code);
       return;
     }
-
-    if (data.length === 0) {
-      return _cb(null, false);
-    }
-
-    return _cb(null, true);
+    const authorizedIds = [];
+    sessions.map((row)=>{
+      authorizedIds.push(row.sessionId);
+    });
+    return _cb(null, authorizedIds);
   });
 };
 

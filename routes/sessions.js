@@ -156,28 +156,21 @@ router.get("/active", (req, res) => {
  * NOTE: this does not mean that a session is active, only that this user is allowed to join that sessions room,
  * and post votes once it is active.
  */
-router.get("/accessSession/:sessionId", (req, res) => {
-
-  if (!req.params.sessionId) {
-    res.status(500).json({error: "ERR_NO_SESSION_ID"});
-    return;
-  }
+router.get("/setAuthorizations", (req, res) => {
 
   let userId = req.session.userId,
     sessionId = req.params.sessionId;
 
   console.log(`Authorizing userId [${userId}] for sessionId [${sessionId}]`);
 
-  userDb.isUserAuthorized(userId, sessionId, (err, yes) => {
+  userDb.getAuthorizedSessions(userId, (err, authorizedSessions) => {
     if (err) {
       res.status(500).json({error: err});
-    } else if (!yes) {
-      res.status(401).json({error: err});
-    } else {
+    }else {
 
       // Assign the session.authorizedSessionId to this session.
-      req.session.authorizedSessionId = sessionId;
-      res.json({status: "successfully authorized"});
+      req.session.authorizedSessionIds = authorizedSessions;
+      res.json({status: authorizedSessions});
     }
   });
 });

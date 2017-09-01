@@ -49,6 +49,10 @@
         console.log('New active session: ' + sessionId)
       });
 
+      socket.on('error', (error)=>{
+        console.log('ERR: ' + error);
+      });
+
       socket.emit('subscribe-to-session-student', 8);
     }
 </script>

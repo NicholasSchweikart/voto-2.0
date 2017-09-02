@@ -136,7 +136,7 @@ exports.getActiveSessions = (userId, _cb) => {
     ON authorized_users.sessionId = sessions.sessionId
     INNER JOIN votodb.users
     ON users.userId = sessions.userId
-    WHERE authorized_users.userId = ?;`;
+    WHERE authorized_users.userId = ? AND sessions.isActive = 1;`;
 
   mySQL.query(sql, [userId], (err, sessions) => {
     if (err) {

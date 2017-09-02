@@ -11,7 +11,7 @@
 <script>
 
     let socket = {};
-    let cred = {userName:"teacher",password:"password"};
+    let cred = {userName:"Nicbilly",password:"password"};
 
     $.post('http://localhost:8080/api/login', cred)
         .done((response) => {
@@ -24,11 +24,12 @@
             console.log(status);
             console.log(err);
         });
+
     function accessSession() {
-      $.get('http://localhost:8080/api/sessions/accessSession/8')
+      $.get('http://localhost:8080/api/sessions/setAuthorizations')
         .success((response) => {
 
-          console.log('session access succesfull!\n');
+          console.log('session access successful!');
           sock();
         })
         .fail((xhr, status, err) => {
@@ -53,7 +54,7 @@
         console.log('ERR: ' + error);
       });
 
-      socket.emit('subscribe-to-session-student', 8);
+      socket.emit('subscribe-to-sessions-student');
     }
 </script>
 </body>

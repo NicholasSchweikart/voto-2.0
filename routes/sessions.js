@@ -158,10 +158,9 @@ router.get("/active", (req, res) => {
  */
 router.get("/setAuthorizations", (req, res) => {
 
-  let userId = req.session.userId,
-    sessionId = req.params.sessionId;
+  let userId = req.session.userId;
 
-  console.log(`Authorizing userId [${userId}] for sessionId [${sessionId}]`);
+  console.log(`Setting authorized sessions for userId [${userId}]`);
 
   userDb.getAuthorizedSessions(userId, (err, authorizedSessions) => {
     if (err) {
@@ -170,7 +169,7 @@ router.get("/setAuthorizations", (req, res) => {
 
       // Assign the session.authorizedSessionId to this session.
       req.session.authorizedSessionIds = authorizedSessions;
-      res.json({status: authorizedSessions});
+      res.json({status: 'success'});
     }
   });
 });

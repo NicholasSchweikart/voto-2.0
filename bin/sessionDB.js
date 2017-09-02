@@ -542,6 +542,11 @@ exports.saveResponse = (userId, questionId, response, _cb) => {
   });
 };
 
+/**
+ * Gets a users favorite sessions from the DB.
+ * @param userId the user ID to get sessions for.
+ * @param _cb callback(err, sessions[])
+ */
 exports.getFavoriteSessions = (userId, _cb) => {
   if (!userId) {
     _cb("failed one or more empty session parameters");
@@ -564,6 +569,11 @@ exports.getFavoriteSessions = (userId, _cb) => {
   });
 };
 
+/**
+ * Gets the most recent sessions for a user.
+ * @param userId the user ID to get sessions for.
+ * @param _cb callback(err, sessions)
+ */
 exports.getRecentSessions = (userId, _cb) => {
   if (!userId) {
     _cb("failed one or more empty session parameters");

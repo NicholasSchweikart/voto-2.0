@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser"),
 const api = {};
 
 module.exports = (io, store) => {
+
   /**
    * Emits a user response notification event to a teacher userId.
    * @param response the response logged in the system.
@@ -69,6 +70,7 @@ module.exports = (io, store) => {
 
     /**
      * Subscribe a student to the channel for all authorized sessions.
+     * These sessions are stored in redis and retrieved from the userSession.
      */
     socket.on("subscribe-to-sessions-student", () => {
       console.log(`socket authorized for ${socket.session.authorizedSessionIds}`);
@@ -86,8 +88,11 @@ module.exports = (io, store) => {
       console.log(`teacher userId ${socket.session.userId} has opened a new feed`);
     });
 
+    /**
+     * Error handler for all sockets.
+     */
     socket.on("error", (err) => {
-      console.error(new Error(`Socket: ${err}`));
+      console.error(new Error(`Socket Error: ${err}`));
     });
   });
 

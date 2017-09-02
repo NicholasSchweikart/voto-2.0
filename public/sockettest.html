@@ -13,7 +13,7 @@
     let socket = {};
     let cred = {userName:"Nicbilly",password:"password"};
 
-    $.post('http://localhost:8080/api/login', cred)
+    $.post('https://voto.io/api/login', cred)
         .done((response) => {
 
             console.log('login successful!\n');
@@ -40,7 +40,7 @@
     }
 
     function sock() {
-      socket = io.connect('http://localhost:8080');
+      socket = io.connect('https://voto.io:8080');
 
       socket.on('new-session', (sessionId)=>{
         console.log(sessionId)

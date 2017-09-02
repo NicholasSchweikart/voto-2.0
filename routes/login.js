@@ -20,10 +20,18 @@ router.post("/", (req, res) => {
       return;
     }
 
-    req.session.userId = user.userId;
-    req.session.authorizedSessionIds = [];
-    const { passwordHash, passwordSalt, ...response } = user;
-    res.json(response);
+    db.getAuthorizedSessions(user.userId, (err, authorizedSessions) => {
+      if (err) {
+        res.status(500).json({error: err});
+      }else {
+
+        // Assign the session.authorizedSessionId to this session.
+        req.session.userId = user.userId;
+        req.session.authorizedSessionIds = authorizedSessions;
+        const { passwordHash, passwordSalt, ...response } = user;
+        res.json(response);
+      }
+    });
   });
 });
 

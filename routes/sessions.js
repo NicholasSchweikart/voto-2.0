@@ -368,7 +368,7 @@ router.get("/", (req, res) => {
     }
 
     res.json({ sessions });
-  }
+  };
 
   console.log(req.query);
 

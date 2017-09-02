@@ -115,11 +115,11 @@ exports.getAllSessions = (userId, _cb) => {
 };
 
 /**
-* Returns the active sessions
+ * Returns the active sessions
  * @param userId the id of the user to query against
-* @param _cb callback
-*/
-exports.getActiveSessions = (userId,_cb) => {
+ * @param _cb callback
+ */
+exports.getActiveSessions = (userId, _cb) => {
   console.log(`Retrieving all active sessions for userId [${userId}]`);
 
   const sql = `SELECT
@@ -370,7 +370,7 @@ exports.activateQuestion = (userId, questionId, _cb) => {
       return _cb('ER_NOT_ACTIVATED');
     }
 
-    if(data[0][0].session_id){
+    if (data[0][0].session_id) {
       return _cb(null, data[0][0].session_id);
     }
   });
@@ -405,7 +405,7 @@ exports.deactivateQuestion = (userId, questionId, _cb) => {
       return _cb('ER_NOT_DE_ACTIVATED');
     }
 
-    if(data[0][0].session_id){
+    if (data[0][0].session_id) {
       return _cb(null, data[0][0].session_id);
     }
   });
@@ -427,7 +427,7 @@ exports.getSessionQuestions = (sessionId, userId, _cb) => {
   console.log(`userId [${userId}] retrieving all questions for sessionId [${sessionId}]`);
 
   const sql = "CALL get_session_questions(?,?)";
-  const params = [userId,sessionId];
+  const params = [userId, sessionId];
 
   mySQL.query(sql, params, (err, questions) => {
 
@@ -435,9 +435,9 @@ exports.getSessionQuestions = (sessionId, userId, _cb) => {
       return _cb(err.code);
     }
 
-    if(questions[0][0] && questions[0][0].unauthorized){
-        _cb("ER_NOT_AUTHORIZED");
-        return;
+    if (questions[0][0] && questions[0][0].unauthorized) {
+      _cb("ER_NOT_AUTHORIZED");
+      return;
     }
 
     // Return the questions
@@ -468,9 +468,9 @@ exports.getQuestion = (userId, questionId, _cb) => {
       return _cb(err.code);
     }
 
-    if(questions[0].length === 0){
-        _cb("ER_CANT_GET_QUESTION");
-        return;
+    if (questions[0].length === 0) {
+      _cb("ER_CANT_GET_QUESTION");
+      return;
     }
 
     // Return the
@@ -500,13 +500,13 @@ exports.getSessionOwner = (sessionId, _cb) => {
       return _cb(err.code);
     }
 
-    if(data.length === 0){
+    if (data.length === 0) {
       _cb("ER_CANT_GET_USER_ID");
       return;
     }
-    //TODO fix the userId return.
-    // Return the
-    _cb(null, data[0][0].userId);
+
+    // Return the userId
+    _cb(null, data[0].userId);
   });
 };
 
@@ -514,6 +514,7 @@ exports.getSessionOwner = (sessionId, _cb) => {
  * Get a question associated with a questionId.
  * @param response response object '{questionId:xx,answer:xx}'.
  * @param userId id of the user for authorization.
+ * @param questionId the id of the question to save the response for.
  * @param _cb callback
  */
 exports.saveResponse = (userId, questionId, response, _cb) => {
@@ -533,7 +534,7 @@ exports.saveResponse = (userId, questionId, response, _cb) => {
       return _cb(err.code);
     }
 
-    if(data[0][0].failure === true){
+    if (data[0][0].failure === true) {
       _cb("ER_SAVING_RESPONSE");
       return;
     }
@@ -555,7 +556,10 @@ exports.getFavoriteSessions = (userId, _cb) => {
 
   console.log(`Retrieving favorite sessions for user: ${userId}`);
 
-  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp, UNIX_TIMESTAMP(dateLastUsed) as timeStampLast FROM sessions WHERE userId = ? and isFavorite = 1 ORDER BY timeStamp DESC";
+  const sql = `SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp, UNIX_TIMESTAMP(dateLastUsed) as timeStampLast 
+               FROM sessions 
+               WHERE userId = ? and isFavorite = 1 
+               ORDER BY timeStamp DESC`;
   const params = [userId];
 
   mySQL.query(sql, params, (err, sessions) => {

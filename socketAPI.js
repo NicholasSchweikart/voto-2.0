@@ -1,6 +1,7 @@
 const cookieParser = require("cookie-parser"),
   cookie = require("cookie"),
-  serverConfig = require("./serverConfig.json");
+  serverConfig = require("./serverConfig.json"),
+  redis = require('socket.io-redis');
 
 const api = {};
 
@@ -43,6 +44,9 @@ module.exports = (io, store) => {
     console.log(`Emitting session de-activation for sessionId ${sessionId}`);
     io.sockets.in(sessionId).emit("session-de-activated", sessionId);
   };
+
+  // Attach to the local redis server for scalability.
+  io.adapter(redis({ host: 'localhost', port: 6379 }));
 
   /**
    *  Sets up authentication for every socket request.

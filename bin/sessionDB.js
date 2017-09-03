@@ -312,20 +312,20 @@ exports.deleteQuestion = (questionId, _cb) => {
  * Activates a session in the DB.
  * @param userId the owners userId for authorization.
  * @param sessionId the session to activate.
+ * @param newState the new state to put the session in. Active = true
  * @param _cb callback(err)
  */
-exports.toggleSession = (userId, sessionId, _cb) => {
+exports.toggleSession = (userId, sessionId, newState, _cb) => {
 
   if (!userId || !sessionId) {
     _cb("ER_NEED_SESSION_AND_USER_IDS");
     return;
   }
 
-  console.log("Toggling sessionId %d", sessionId);
+  console.log(`Toggling sessionId ${sessionId} -> ${newState}`);
 
-  const sql =
-    "call toggle_session(?, ?)";
-  const params = [userId, sessionId];
+  const sql = "call toggle_session(?, ?, ?)";
+  const params = [userId, sessionId, newState];
 
   mySQL.query(sql, params, (err, data) => {
     if (err) {
@@ -337,7 +337,7 @@ exports.toggleSession = (userId, sessionId, _cb) => {
       return _cb("ERR_NOT_FOUND");
     }
 
-    return _cb(null, data[0][0].active);
+    return _cb(null, true);
   });
 };
 

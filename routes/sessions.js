@@ -116,7 +116,7 @@ router.post("/saveSessionQuestions", (req, res) => {
  */
 router.post("/activateSession/:sessionId", (req, res) => {
 
-    db.toggleSession(req.session.userId, req.params.sessionId, (err, activated) => {
+    db.toggleSession(req.session.userId, req.params.sessionId, true, (err, activated) => {
 
       if (err) {
         res.status(500).json({error: err});
@@ -124,17 +124,31 @@ router.post("/activateSession/:sessionId", (req, res) => {
       }
 
       // Set cookie for socket.io operations to happen without DB interaction.
-      if (activated === 1) {
+      if (activated) {
         req.session.activeSessionId = req.params.sessionId;
         // Alert all sockets
         socketAPI.emitSessionActivated(req.params.sessionId);
         res.json({ status: "activated" });
-      } else {
-        req.session.activeSessionId = 0;
-        socketAPI.emitSessionDeactivated(req.params.sessionId);
-        res.json({ status: "deactivated" });
-      }  
+      }
     });
+});
+
+router.post("/de-activateSession/:sessionId", (req, res) => {
+
+  db.toggleSession(req.session.userId, req.params.sessionId, false, (err, deActivated) => {
+
+    if (err) {
+      res.status(500).json({error: err});
+      return;
+    }
+
+    // Set cookie for socket.io operations to happen without DB interaction.
+    if (deActivated) {
+      req.session.activeSessionId = 0;
+      socketAPI.emitSessionDeactivated(req.params.sessionId);
+      res.json({ status: "deactivated" });
+    }
+  });
 });
 
 /**

@@ -524,7 +524,7 @@ exports.saveResponse = (userId, questionId, response, _cb) => {
     return;
   }
 
-  console.log(`userId [${userId}] saving response [${response}]`);
+  console.log(`userId [${userId}] saving response [${JSON.stringify(response)}]`);
 
   const sql = "CALL save_response(?,?,?)";
   const params = [userId, questionId, response.answer];

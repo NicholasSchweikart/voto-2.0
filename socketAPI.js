@@ -24,7 +24,7 @@ module.exports = (io, store) => {
    */
   api.emitNewQuestion = (questionId, sessionId) => {
     console.log(`Emitting to sessionId: ${sessionId} new questionId: ${questionId}`);
-    io.sockets.in(sessionId).emit("new-question", questionId);
+    io.sockets.in(`sessionId_${sessionId}`).emit("new-question", questionId);
   };
 
   /**
@@ -33,7 +33,7 @@ module.exports = (io, store) => {
    */
   api.emitSessionActivated = (sessionId) => {
     console.log(`Emitting session activation for sessionId ${sessionId}`);
-    io.sockets.in(sessionId).emit("session-active", sessionId);
+    io.sockets.in(`sessionId_${sessionId}`).emit("session-active", sessionId);
   };
 
   /**
@@ -42,7 +42,7 @@ module.exports = (io, store) => {
    */
   api.emitSessionDeactivated = (sessionId) => {
     console.log(`Emitting session de-activation for sessionId ${sessionId}`);
-    io.sockets.in(sessionId).emit("session-de-activated", sessionId);
+    io.sockets.in(`sessionId_${sessionId}`).emit("session-de-activated", sessionId);
   };
 
   // Attach to the local redis server for scalability.
@@ -80,7 +80,7 @@ module.exports = (io, store) => {
       console.log(`socket authorized for ${socket.session.authorizedSessionIds}`);
       socket.session.authorizedSessionIds.map((sessionId)=>{
         console.log(`joining channel for sessionId: ${sessionId}`);
-        socket.join(sessionId);
+        socket.join(`sessionId_${sessionId}`);
       });
     });
 

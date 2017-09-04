@@ -13,7 +13,7 @@ module.exports = (io, store) => {
    * @param teacherId the userId of the teacher used to find the room.
    */
   api.emitUserResponse = (response, teacherId) => {
-    console.log(`Emitting to teacher userId: ${teacherId} update: ${response}`);
+    console.log(`Emitting to teacher userId: ${teacherId} update: ${JSON.stringify(response)}`);
     io.sockets.in(teacherId).emit("user-response", response);
   };
 

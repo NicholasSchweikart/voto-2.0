@@ -534,7 +534,7 @@ exports.saveResponse = (userId, questionId, response, _cb) => {
       return _cb(err.code);
     }
 
-    if (data[0][0].failure === true) {
+    if (data[0][0].failure) {
       _cb("ER_SAVING_RESPONSE");
       return;
     }

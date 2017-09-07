@@ -207,7 +207,7 @@ router.post('/saveResponse/:sessionId/:questionId', (req, res) => {
           console.error(new Error(`Owner lookup error: ${err}`))
         } else {
           // Alert the teacher through their private channel
-          socketAPI.emitUserResponse(req.body, teacherId);
+          socketAPI.emitUserResponse({...req.body, userId: req.session.userId}, teacherId);
         }
       });
     }

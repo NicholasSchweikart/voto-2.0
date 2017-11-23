@@ -122,6 +122,7 @@ module.exports = (io, store) => {
         return _cb("ER_NOT_LOGGED_IN");
       }
       if (session.userId) {
+	console.log(`Found the userId of ${session.userId}`);
         return _cb(null, session);
       }
     });

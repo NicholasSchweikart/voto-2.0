@@ -21,7 +21,7 @@ app.set('port', port);
 
 const server = http.createServer(app),
   io = require('socket.io')(server),
-  socketAPI = require("../socketAPI")(io, app.store);
+  socketAPI = require("../socketAPI")(io, app.store); //TODO remove this for JWT simplification
 
 /**
  * Listen on provided port, on all network interfaces.

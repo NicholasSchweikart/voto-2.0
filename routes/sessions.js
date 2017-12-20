@@ -12,7 +12,9 @@ const express = require("express"),
   path = require("path"),
   async = require("async"),
   AWS = require("aws-sdk"),
-  socketAPI = require("../socketAPI").api;
+  socketAPI = require("../socketAPI").api,
+  jwt = require('jsonwebtoken'),
+  serverConfig = require('../serverConfig');
 
 AWS.config.region = "us-east-2";
 
@@ -21,15 +23,31 @@ const s3 = new AWS.S3({
 });
 
 /**
- * Preforms userId session authorization on all incoming requests.
+ * Preforms token authorization on all incoming requests.
  */
 router.all('/*', (req, res, next) => {
 
-  if (!req.session.userId) {
+  let token = req.body.authorization || req.headers['authorization'];
+
+  if (!token) {
     res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
     return;
   }
-  next();
+
+  jwt.verify(token,serverConfig.secret,(err, user) =>{
+
+    if(err){
+      console.log(`decode err: ${err}`);
+      return res.json({success:false, msg: "failed to decode token"});
+    }
+
+    console.log(`user = ${JSON.stringify(user)}`);
+    req.user = user;
+
+    // Continue on to the next route match.
+    next();
+  });
+
 });
 
 /**
@@ -39,7 +57,7 @@ router.post("/saveNewSession", (req, res) => {
 
   const newSession = req.body;
 
-  db.saveNewSession(newSession, req.session.userId, (err, newSession) => {
+  db.saveNewSession(newSession, req.user.userId, (err, newSession) => {
     if (err) {
       console.error(new Error(`saving new session: ${err}`));
       res.status(500).json({error: err});
@@ -56,7 +74,7 @@ router.post("/updateSession", (req, res) => {
 
   const sessionUpdate = req.body;
 
-  db.updateSession(sessionUpdate, req.session.userId, (err, updated) => {
+  db.updateSession(sessionUpdate, req.user.userId, (err, updated) => {
     if (err) {
       console.error(new Error(`Updating session: ${err}`));
       res.status(500).json({error: err});
@@ -74,7 +92,7 @@ router.post("/saveSessionQuestions", (req, res) => {
   const questions = req.body.questions;
   const uploadErrors = [];
   const dbErrors = [];
-  const userId = req.session.userId;
+  const userId = req.user.userId;
 
   async.each(questions, (question, _cb) => {
     // Check if its a new question
@@ -116,26 +134,36 @@ router.post("/saveSessionQuestions", (req, res) => {
  */
 router.post("/activateSession/:sessionId", (req, res) => {
 
-    db.toggleSession(req.session.userId, req.params.sessionId, true, (err, activated) => {
+  let sessionId = req.params.sessionId;
+
+  db.toggleSession(req.user.userId, sessionId, true, (err, activated) => {
 
       if (err) {
         res.status(500).json({error: err});
         return;
       }
 
-      // Set cookie for socket.io operations to happen without DB interaction.
+      // Set array for socket.io operations to happen without DB interaction.
       if (activated) {
-        req.session.activeSessionId = req.params.sessionId;
+
+        if(!req.user.activeSessionsIds){
+          req.user.activeSessionsIds = 0;
+        }
+
+        req.user.activeSessionId = sessionId; //TODO alert jay that he will need to activly watch for token updates
+
         // Alert all sockets
-        socketAPI.emitSessionActivated(req.params.sessionId);
-        res.json({ status: "activated" });
+        socketAPI.emitSessionActivated(sessionId);
+
+        // Update the token to reflect these changes
+        updateTokenAndRespond(req,res,"de-activated");
       }
     });
 });
 
 router.post("/de-activateSession/:sessionId", (req, res) => {
 
-  db.toggleSession(req.session.userId, req.params.sessionId, false, (err, deActivated) => {
+  db.toggleSession(req.user.userId, req.params.sessionId, false, (err, deActivated) => {
 
     if (err) {
       res.status(500).json({error: err});
@@ -144,9 +172,14 @@ router.post("/de-activateSession/:sessionId", (req, res) => {
 
     // Set cookie for socket.io operations to happen without DB interaction.
     if (deActivated) {
-      req.session.activeSessionId = 0;
+
+      //Reset the array of active sessions in the token.
+      req.user.activeSessionId = 0;
+
       socketAPI.emitSessionDeactivated(req.params.sessionId);
-      res.json({ status: "deactivated" });
+
+      // Update the token to reflect these changes
+      updateTokenAndRespond(req,res,"de-activated");
     }
   });
 });
@@ -155,7 +188,7 @@ router.post("/de-activateSession/:sessionId", (req, res) => {
  * GET all the active sessions as of current.
  */
 router.get("/active", (req, res) => {
-  db.getActiveSessions(req.session.userId, (err, sessions) => {
+  db.getActiveSessions(req.user.userId, (err, sessions) => {
     if (err) {
       res.status(500).json({error: err});
       return;
@@ -172,7 +205,7 @@ router.get("/active", (req, res) => {
  */
 router.get("/setAuthorizations", (req, res) => {
 
-  let userId = req.session.userId;
+  let userId = req.user.userId;
 
   console.log(`Setting authorized sessions for userId [${userId}]`);
 
@@ -182,8 +215,10 @@ router.get("/setAuthorizations", (req, res) => {
     }else {
 
       // Assign the session.authorizedSessionId to this session.
-      req.session.authorizedSessionIds = authorizedSessions;
-      res.json({status: 'success'});
+      req.user.authorizedSessionIds = authorizedSessions;
+
+      // Update and send the new token and response
+      updateTokenAndRespond(req,res,"success");
     }
   });
 });
@@ -193,7 +228,7 @@ router.get("/setAuthorizations", (req, res) => {
  */
 router.post('/saveResponse/:sessionId/:questionId', (req, res) => {
 
-  db.saveResponse(req.session.userId, req.params.questionId, req.body, (err) => {
+  db.saveResponse(req.user.userId, req.params.questionId, req.body, (err) => {
 
     if (err) {
       res.status(500).json({error: err});
@@ -207,7 +242,7 @@ router.post('/saveResponse/:sessionId/:questionId', (req, res) => {
           console.error(new Error(`Owner lookup error: ${err}`))
         } else {
           // Alert the teacher through their private channel
-          socketAPI.emitUserResponse({...req.body, userId: req.session.userId}, teacherId);
+          socketAPI.emitUserResponse({...req.body, userId: req.user.userId}, teacherId);
         }
       });
     }
@@ -219,7 +254,7 @@ router.post('/saveResponse/:sessionId/:questionId', (req, res) => {
  */
 router.post('/activateQuestion/:questionId', (req, res) => {
 
-  db.activateQuestion(req.session.userId, req.params.questionId, (err, sessionId) => {
+  db.activateQuestion(req.user.userId, req.params.questionId, (err, sessionId) => {
     if (err) {
       res.status(500).json({error: err});
     } else {
@@ -236,7 +271,7 @@ router.post('/activateQuestion/:questionId', (req, res) => {
  */
 router.post('/deactivateQuestion/:questionId', (req, res) => {
 
-  db.deactivateQuestion(req.session.userId, req.params.questionId, (err, sessionId) => {
+  db.deactivateQuestion(req.user.userId, req.params.questionId, (err, sessionId) => {
     if (err) {
       res.status(500).json({error: err});
     } else {
@@ -360,7 +395,7 @@ router.delete("/:questionId/image/:imgFileName", (req, res) => {
  */
 router.delete("/deleteSession/:sessionId", (req, res) => {
 
-  db.deleteSession(req.params.sessionId, req.session.userId, (err) => {
+  db.deleteSession(req.params.sessionId, req.user.userId, (err) => {
     if (err) {
       res.status(500).json({error: err});
       return;
@@ -384,14 +419,14 @@ router.get("/", (req, res) => {
     res.json({ sessions });
   };
 
-  console.log(req.query);
-
+  let userId = req.user.userId;
+  console.log(`userID: ${userId}`);
   if (req.query.favorite) {
-    db.getFavoriteSessions(req.session.userId, _cb); 
+    db.getFavoriteSessions(userId, _cb);
   } else if (req.query.recent) {
-    db.getRecentSessions(req.session.userId, _cb);
+    db.getRecentSessions(userId, _cb);
   } else {
-    db.getAllSessions(req.session.userId, _cb); 
+    db.getAllSessions(userId, _cb);
   }
 });
 
@@ -405,7 +440,7 @@ router.get("/session/:sessionId", (req, res) => {
     return;
   }
 
-  db.getSession(req.params.sessionId, req.session.userId, (err, sessions) => {
+  db.getSession(req.params.sessionId, req.user.userId, (err, sessions) => {
     if (err) {
       res.status(500).json({error: err});
       return;
@@ -420,7 +455,7 @@ router.get("/session/:sessionId", (req, res) => {
  */
 router.get("/sessionQuestions/:sessionId", (req, res) => {
 
-  db.getSessionQuestions(req.params.sessionId, req.session.userId, (err, questions) => {
+  db.getSessionQuestions(req.params.sessionId, req.user.userId, (err, questions) => {
     if (err) {
       res.status(500).json({error: err});
       return;
@@ -435,7 +470,7 @@ router.get("/sessionQuestions/:sessionId", (req, res) => {
  */
 router.get("/question/:questionId", (req, res) => {
 
-  db.getQuestion(req.session.userId, req.params.questionId, (err, question) => {
+  db.getQuestion(req.user.userId, req.params.questionId, (err, question) => {
     if (err) {
       res.status(500).json({error: err});
       return;
@@ -476,5 +511,16 @@ router.get("/questionImageURL/:imgFileName", (req, res) => {
 router.get("/getActiveSessions", (req, res) => {
 
 });
+
+const updateTokenAndRespond =(req,res,statusMessage)=>{
+
+  // Update the token to reflect these changes
+  jwt.sign(req.user,serverConfig.secret,{expiresIn:60*60*24}, (err, token)=>{
+    if(err)
+      res.status(500).json({error:err});
+    else
+      res.json({ status: statusMessage, token:token});
+  });
+};
 
 module.exports = router;

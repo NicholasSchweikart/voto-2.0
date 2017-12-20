@@ -47,6 +47,7 @@ const store = new redisStore({
 });
 app.store = store;
 
+//TODO delete all session stuff and offload it into the JWT
 app.use(session(
   {
     secret: serverConfig.secret,

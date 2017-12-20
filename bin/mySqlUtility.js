@@ -18,7 +18,7 @@ const pool = mysql.createPool({
 exports.query = (queryString, parametersArray, callback) => {
   pool.getConnection((err, connection) => {
     if (err) {
-      connection.release();
+      //connection.release();
       callback(err);
     } else {
       connection.query(queryString, parametersArray, (err, data) => {

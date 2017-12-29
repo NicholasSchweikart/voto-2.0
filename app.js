@@ -45,7 +45,6 @@ const store = new redisStore({
   client: redisClient,
   ttl: 3600, // One Hour Life
 });
-app.store = store;
 
 //TODO delete all session stuff and offload it into the JWT
 app.use(session(

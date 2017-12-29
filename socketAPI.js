@@ -1,14 +1,16 @@
 const cookieParser = require("cookie-parser"),
   cookie = require("cookie"),
-  serverConfig = require("./serverConfig.json"),
-  redis = require('socket.io-redis');
+  redis = require('socket.io-redis'),
+  userDb = require('./bin/userDB'),
+  jwt = require('jsonwebtoken'),
+  serverConfig = require('./serverConfig');
 
 const api = {};
 
-module.exports = (io, store) => {
+module.exports = (io) => {
 
   /**
-   * Emits a user response notification event to a teacher userId.
+   * Emits a user respon se notification event to a teacher userId.
    * @param response the response logged in the system.
    * @param teacherId the userId of the teacher used to find the room.
    */
@@ -46,21 +48,23 @@ module.exports = (io, store) => {
   };
 
   // Attach to the local redis server for scalability.
-  io.adapter(redis({ host: 'localhost', port: 6379 }));
+  io.adapter(redis({host: 'localhost', port: 6379}));
 
   /**
    *  Sets up authentication for every socket request.
    *  This will add a new object to sockets: socket.session === res.session
    */
-  io.use((socket, next)=>{
+  io.use((socket, next) => {
 
-    getUserSession(socket.handshake, (err, session) => {
+    let token = socket.handshake.query.token;
+
+    jwt.verify(token, serverConfig.secret, (err, user) => {
       if (err) {
         console.log(`error on subscription: ${err}`);
         next(new Error('NOT_AUTHORIZED'));
-      }else{
+      } else {
         console.log(`new socket authorized`);
-        socket.session = session;
+        socket.user = user;
         next();
       }
     });
@@ -74,13 +78,22 @@ module.exports = (io, store) => {
 
     /**
      * Subscribe a student to the channel for all authorized sessions.
-     * These sessions are stored in redis and retrieved from the userSession.
      */
-    socket.on("subscribe-to-sessions-student", () => {
-      console.log(`socket authorized for ${socket.session.authorizedSessionIds}`);
-      socket.session.authorizedSessionIds.map((sessionId)=>{
-        console.log(`joining channel for sessionId: ${sessionId}`);
-        socket.join(`sessionId_${sessionId}`);
+    socket.on("subscribe-to-sessions-student", (msg) => {
+
+      let userId = socket.user.userId;
+      console.log(`Checking authorizations for userId [${userId}]`);
+
+      userDb.getAuthorizedClasses(userId, (err, authorizedSessions) => {
+        if (err) {
+          res.status(500).json({error: err});
+        } else {
+          console.log(`user authorized for ${authorizedSessions}`);
+          authorizedSessions.map((sessionId) => {
+            console.log(`joining channel for sessionId: ${sessionId}`);
+            socket.join(`sessionId_${sessionId}`);
+          });
+        }
       });
     });
 
@@ -88,8 +101,8 @@ module.exports = (io, store) => {
      * Authorize and then open a room for an active session. Teacher ONLY
      */
     socket.on("subscribe-to-feed-teacher", () => {
-      socket.join(socket.session.userId);
-      console.log(`teacher userId ${socket.session.userId} has opened a new feed`);
+      socket.join(socket.user.userId);
+      console.log(`teacher userId ${socket.user.userId} has opened a new feed`);
     });
 
     /**
@@ -103,30 +116,5 @@ module.exports = (io, store) => {
   io.on("error", (err) => {
     console.error(new Error(`SocketAPI error: ${err}`));
   });
-
-  /**
-   * Gets the session object from the redis store for this user.
-   * @param handshake proved socket.handshake object.
-   * @param _cb callback(err, session)
-   */
-  let getUserSession = (handshake, _cb) => {
-    const cookies = cookie.parse(handshake.headers.cookie),
-      user_id = cookieParser.signedCookie(cookies.id, serverConfig.secret);
-
-    store.get(user_id, (err, session) => {
-      if (err) {
-        console.error(new Error(`Retrieving userId from redis: ${err}`));
-        return _cb("ER_REDIS_FAILURE");
-      }
-      if (!session) {
-        return _cb("ER_NOT_LOGGED_IN");
-      }
-      if (session.userId) {
-	console.log(`Found the userId of ${session.userId}`);
-        return _cb(null, session);
-      }
-    });
-  };
 };
-
 module.exports.api = api;

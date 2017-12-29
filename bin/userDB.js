@@ -25,39 +25,30 @@ exports.createUser = (newUser, _cb) => {
   // Get the hash and salt for the provided password
   const passwordData = passwordUtil.getSaltHashPassword(newUser.password);
 
-  const sql =
-    "INSERT INTO users (firstName, lastName, userName, passwordSalt, passwordHash, email, type ) VALUES(?,?,?,?,?,?,?)";
+  const sql = "CALL create_user(?,?,?,?,?,?,?)";
+
   const params = [
     newUser.firstName,
     newUser.lastName,
     newUser.userName,
     passwordData.salt,
     passwordData.passwordHash,
-    newUser.email,
     newUser.type,
+    newUser.email,
   ];
 
-  mySQL.query(sql, params, (err) => {
+  mySQL.query(sql, params, (err, user) => {
+
     if (err) {
-      _cb(err);
-    } else {
-      const returnSql = "SELECT * FROM users where userName=?";
-      const returnParams = [newUser.userName];
-
-      mySQL.query(returnSql, returnParams, (err2, users) => {
-        if (err2) {
-          _cb(err2.code);
-          return;
-        }
-
-        if (users.length === 0) {
-          _cb("Something when wrong on fetching user from table!");
-          return;
-        }
-
-        _cb(null, users[0]);
-      });
+      return _cb(err);
     }
+
+    if (user.length === 0) {
+      return _cb("Something when wrong on fetching user from table!");
+    }
+
+    // Return the new user to the caller
+    return _cb(null, user[0]);
   });
 };
 
@@ -100,28 +91,27 @@ exports.loginUser = (userName, password, _cb) => {
     return;
   }
 
-  const sql = "SELECT * FROM users WHERE userName = ?";
+  const sql = "CALL get_user(?)";
   const params = [userName];
 
-  mySQL.query(sql, params, (err, data) => {
+  mySQL.query(sql, params, (err, user) => {
+
     if (err) {
-      _cb(err.code);
-      return;
+      return _cb(err.code);
     }
 
-    if (data.length === 0) {
-      _cb("No user found with this name!");
-      return;
+    if (user.length === 0) {
+      return _cb("No user found with this name!");
     }
 
-    const user = data[0];
+    user = user[0];
     const thisHash = passwordUtil.getPasswordHash(password, user.passwordSalt);
 
     if (thisHash === user.passwordHash) {
-      _cb(null, user);
-    } else {
-      _cb("ERR_LOGIN_FAILED");
+      return _cb(null, user);
     }
+
+    return _cb("ERR_LOGIN_FAILED");
   });
 };
 
@@ -188,11 +178,11 @@ exports.changeUserPassword = (userId, currentPassword, newPassword, _cb) => {
 };
 
 /**
- * Determines if a userId is authorized to access an active session.
+ * Retrieves all classes a user is authorized for.
  * @param userId the userId for the check
  * @param _cb callback(err, sessions) sessions = [sessionIDs]
  */
-exports.getAuthorizedSessions = (userId, _cb) => {
+exports.getAuthorizedClasses = (userId, _cb) => {
   if (!userId) {
     _cb("ER_NEED_SESSION_AND_USER_IDS");
     return;
@@ -200,18 +190,20 @@ exports.getAuthorizedSessions = (userId, _cb) => {
 
   console.log(`Getting all authorized sessions for userId: ${userId}`);
 
-  const sql = "SELECT * FROM authorized_users WHERE userId = ?";
+  const sql = "CALL get_users_authorized_classes(?)";
   const params = [userId];
 
-  mySQL.query(sql, params, (err, sessions) => {
+  mySQL.query(sql, params, (err, classes) => {
     if (err) {
-      _cb(err.code);
-      return;
+      return _cb(err.code);
     }
-    const authorizedIds = [];
-    sessions.map((row)=>{
-      authorizedIds.push(row.sessionId);
+
+    // Create the array of classIds that are valid.
+    const authorizedClassIds = [];
+    classes.map((row) => {
+      authorizedIds.push(row.classId);
     });
+
     return _cb(null, authorizedIds);
   });
 };
@@ -220,60 +212,30 @@ exports.getAuthorizedSessions = (userId, _cb) => {
  * Authorizes a specific userId to access a sessionId when it is active
  * @param authorizeId the userId to authorize
  * @param userId the userId to authorize this transaction
- * @param sessionId the sessionId of the session to authorize for this user
+ * @param classId the sessionId of the session to authorize for this user
+ * @param allowAccess 1 or 0 to specify the new rights to apply
  * @param _cb callback
  */
-exports.authorizeUser = (userId, authorizeId, sessionId, _cb) => {
-  if (!authorizeId || !userId || !sessionId) {
-    _cb("ER_EMPTY_PARAMETERS");
-    return;
+exports.authorizeUser = (userId, authorizeId, classId, allowAccess, _cb) => {
+  if (!authorizeId || !userId || !classId || !allowAccess) {
+    return _cb("ER_EMPTY_PARAMETERS");
   }
 
-  console.log(`userId [${userId}] is authorizing userId [${authorizeId}] for sessionId [${sessionId}]`);
-  const sql = "CALL authorize_user(?, ?, ?)";
-  const params = [userId, authorizeId, sessionId];
+  console.log(`userId [${userId}] is authorizing userId [${authorizeId}] for classId [${classId}]`);
+  const sql = "CALL change_user_authorization(?, ?, ?, ?)";
+  const params = [userId, authorizeId, classId, allowAccess];
 
-  mySQL.query(sql, params, (err, rows) => {
+  mySQL.query(sql, params, (err, data) => {
     if (err) {
-      _cb(err.code);
-      return;
+      return _cb(err.code);
     }
 
-    // NOTE data will be returned in a RowDataPacket so double index the array
-    return _cb(null, rows[0][0].success);
-  });
-};
-
-/**
- * de-authorizes a specific userId to access a sessionId when it is active
- * @param de_authorizeId the userId to authorize
- * @param userId the userId to authorize this transaction
- * @param sessionId the sessionId of the session to authorize for this user
- * @param _cb callback
- */
-exports.deauthorizeUser = (userId, de_authorizeId, sessionId, _cb) => {
-  if (!de_authorizeId || !userId || !sessionId) {
-    _cb("ER_EMPTY_PARAMETERS");
-    return;
-  }
-
-  console.log(`userId [${userId}] is de-authorizing userId [${de_authorizeId}] for sessionId [${sessionId}]`);
-  const sql = "CALL de_authorize_user(?, ?, ?)";
-  const params = [userId, de_authorizeId, sessionId];
-
-  mySQL.query(sql, params, (err, rows) => {
-    if (err) {
-      _cb(err.code);
-      return;
+    if(data.length === 0){
+      return _cb("FAILED_TO_CHANGE_PERMISSIONS");
     }
 
-    // NOTE data will be returned in a RowDataPacket so double index the array
-    if (rows[0][0].success === 0) {
-      _cb("ER_NOT_AUTHORIZED");
-      return;
-    }
-
-    return _cb(null, rows[0][0].success);
+    // Return success to the caller.
+    return _cb(null, true);
   });
 };
 

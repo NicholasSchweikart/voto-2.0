@@ -1,30 +1,31 @@
 const mySQL = require("./mySqlUtility");
 
 /**
- * Saves a new session in the DB for a user.
- * @param newSession the sessions object to save: '{title:"here"}'
+ * Saves a new presentation in the DB for a user.
+ * @param newPresentation the sessions object to save: '{title:"here"}'
  * @param userId the userId for this session
  * @param _cb callback function
  */
-exports.saveNewSession = (newSession, userId, _cb) => {
+exports.saveNewPresentation = (newPresentation, userId, classId, _cb) => {
   console.log(`Attempting to save a session for USER: ${userId}`);
 
   if (
-    !newSession ||
-    !newSession.title ||
-    !newSession.className ||
-    !newSession.description
+    !newPresentation ||
+    !newPresentation.title ||
+    !newPresentation.className ||
+    !newPresentation.description
   ) {
     _cb("failed one or more empty session parameters");
     return;
   }
 
-  const sql = "CALL save_new_session(?, ?, ?, ?)";
+  const sql = "CALL save_new_presentation(?, ?, ?, ?, ?)";
   const params = [
     userId,
-    newSession.title,
-    newSession.className,
-    newSession.description
+    classId,
+    newPresentation.title,
+    newPresentation.className,
+    newPresentation.description
   ];
 
   mySQL.query(sql, params, (err, data) => {
@@ -32,7 +33,7 @@ exports.saveNewSession = (newSession, userId, _cb) => {
       _cb(err.code);
     } else {
       if (data.length === 0) {
-        _cb("ER_FAILED_TO_SAVE_SESSION");
+        _cb("ER_FAILED_TO_SAVE_PRESENTATION");
       }
       _cb(null, data[0]);
     }
@@ -40,33 +41,71 @@ exports.saveNewSession = (newSession, userId, _cb) => {
 };
 
 /**
+ * Saves a new class in the DB for a user.
+ * @param newClass the class object to save: '{}'
+ * @param userId the userId for this session
+ * @param _cb callback function
+ */
+exports.saveNewClass = (newClass, userId, _cb) => {
+  console.log(`Attempting to save a new class for USER: ${userId}`);
+
+  if (
+    !newClass ||
+    !newClass.title ||
+    !newClass.className
+  ) {
+    return _cb("failed one or more empty session parameters");
+  }
+
+  const sql = "CALL save_new_class(?, ?)";
+
+  const params = [
+    userId,
+    newClass.name
+  ];
+
+  mySQL.query(sql, params, (err, data) => {
+    if (err) {
+      return _cb(err.code);
+    } else {
+      if (data.length === 0) {
+       return _cb("ER_FAILED_TO_SAVE_CLASS");
+      }
+
+      // Return the new classId to the caller.
+      _cb(null, data[0]);
+    }
+  });
+};
+
+/**
  * Updates a sessions that already exists.
- * @param sessionUpdate '{updateArray:["title":"","group":"","totalQuestions":"","sessionId":""]}'
+ * @param presentationUpdate '{updateArray:["title":"","group":"","totalQuestions":"","sessionId":""]}'
  * @param userId the id for the user to authorize this transaction
  * @param _cb callback
  */
-exports.updateSession = (sessionUpdate, userId, _cb) => {
-  console.log(sessionUpdate);
+exports.updatePresentation = (presentationUpdate, userId, _cb) => {
+  console.log(presentationUpdate);
 
-  if (!sessionUpdate) {
+  if (!presentationUpdate) {
     _cb("failed one or more empty session parameters");
     return;
   }
 
   console.log(
     "Attempting to update sessionId [%d] for userId [%d]",
-    sessionUpdate.sessionId,
+    presentationUpdate.sessionId,
     userId
   );
 
-  const sql = "CALL update_session(?,?,?,?,?,?)";
+  const sql = "CALL update_presentation(?,?,?,?,?,?)";
   const params = [
     userId,
-    sessionUpdate.sessionId,
-    sessionUpdate.className,
-    sessionUpdate.title,
-    sessionUpdate.totalQuestions,
-    sessionUpdate.description
+    presentationUpdate.presentationId,
+    presentationUpdate.className,
+    presentationUpdate.title,
+    presentationUpdate.totalQuestions,
+    presentationUpdate.description
   ];
 
   mySQL.query(sql, params, (err, data) => {
@@ -87,7 +126,7 @@ exports.updateSession = (sessionUpdate, userId, _cb) => {
  * @param userId the userId to get sessions for
  * @param _cb callback
  */
-exports.getAllSessions = (userId, _cb) => {
+exports.getAllPresentations = (userId, _cb) => {
   if (!userId) {
     _cb("failed one or more empty session parameters");
     return;
@@ -95,22 +134,22 @@ exports.getAllSessions = (userId, _cb) => {
 
   console.log(`Retrieving all sessions for user: ${userId}`);
 
-  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp, UNIX_TIMESTAMP(dateLastUsed) as timeStampLast FROM sessions WHERE userId = ? ORDER BY timeStamp DESC";
+  const sql = "SELECT *, UNIX_TIMESTAMP(dateCreated) as timeStamp, UNIX_TIMESTAMP(dateLastUsed) as timeStampLast FROM presentations WHERE userId = ? ORDER BY timeStamp DESC";
   const params = [userId];
 
-  mySQL.query(sql, params, (err, sessions) => {
+  mySQL.query(sql, params, (err, presentations) => {
     if (err) {
       _cb(err.code);
       return;
     }
 
-    if (sessions.length === 0) {
+    if (presentations.length === 0) {
       _cb("No Sessions for this ID");
       return;
     }
 
     // Return the records.
-    _cb(null, sessions);
+    _cb(null, presentations);
   });
 };
 
@@ -249,36 +288,37 @@ exports.saveNewQuestion = (question, userId, _cb) => {
 
 /**
  * Saves a question to the DB for a session.
- * @param question the question data to save '{sessionId, imgFileName, question, correctAnswer}'
+ * @param slide the question data to save '{sessionId, imgFileName, question, correctAnswer}'
  * @param userId the user id for authorization
  * @param _cb callback
  */
-exports.updateQuestion = (question, userId, _cb) => {
-  if (!question) {
+exports.updateSlide = (slide, userId, _cb) => {
+  if (!slide) {
     _cb("failed need question obj");
     return;
   }
 
-  console.log(`Updating questionId: ${question.questionId}`);
+  console.log(`Updating questionId: ${slide.questionId}`);
 
   const sql = "CALL update_question(?,?,?,?,?,?,?)";
   const params = [
     userId,
-    question.sessionId,
-    question.questionId,
-    question.imgFileName,
-    question.question,
-    question.orderNumber,
-    question.correctAnswer
+    slide.presentationId,
+    slide.questionId,
+    slide.imgFileName,
+    slide.question,
+    slide.orderNumber,
+    slide.correctAnswer
   ];
 
   mySQL.query(sql, params, (err, status) => {
     if (err) {
-      _cb(err.code);
-      return;
+      return _cb(err.code);
     }
-
-    _cb(null, status);
+    if (status.length === 0) {
+      return _cb("SOMETHING WHEN WRONG ON SLIDE UPDATE");
+    }
+    _cb(null, true);
   });
 };
 
@@ -311,21 +351,21 @@ exports.deleteQuestion = (questionId, _cb) => {
 /**
  * Activates a session in the DB.
  * @param userId the owners userId for authorization.
- * @param sessionId the session to activate.
+ * @param presentationId the session to activate.
  * @param newState the new state to put the session in. Active = true
  * @param _cb callback(err)
  */
-exports.toggleSession = (userId, sessionId, newState, _cb) => {
+exports.togglePresentation = (userId, presentationId, newState, _cb) => {
 
-  if (!userId || !sessionId) {
+  if (!userId || !presentationId) {
     _cb("ER_NEED_SESSION_AND_USER_IDS");
     return;
   }
 
-  console.log(`Toggling sessionId ${sessionId} -> ${newState}`);
+  console.log(`Toggling presentationId ${presentationId} -> ${newState}`);
 
   const sql = "call toggle_session(?, ?, ?)";
-  const params = [userId, sessionId, newState];
+  const params = [userId, presentationId, newState];
 
   mySQL.query(sql, params, (err, data) => {
     if (err) {
@@ -333,8 +373,8 @@ exports.toggleSession = (userId, sessionId, newState, _cb) => {
       return;
     }
 
-    if (data[0][0].failure) {
-      return _cb("ERR_NOT_FOUND");
+    if (data.length === 0) {
+      return _cb("ERR_TOGGLE_FAILURE");
     }
 
     return _cb(null, true);

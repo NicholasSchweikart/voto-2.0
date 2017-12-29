@@ -53,11 +53,11 @@ router.all('/*', (req, res, next) => {
 /**
  * POST to save a new session for a user.
  */
-router.post("/saveNewSession", (req, res) => {
+router.post("/saveNewPresentation", (req, res) => {
 
-  const newSession = req.body;
-
-  db.saveNewSession(newSession, req.user.userId, (err, newSession) => {
+  const newPresentation = req.body;
+  //TODO alert jay he needs to provide a class ID now.
+  db.saveNewPresentation(newPresentation, req.user.userId, req.body.classId, (err, newSession) => {
     if (err) {
       console.error(new Error(`saving new session: ${err}`));
       res.status(500).json({error: err});
@@ -68,15 +68,15 @@ router.post("/saveNewSession", (req, res) => {
 });
 
 /**
- * POST to update an existing session. Refer to db.updateSession() for details.
+ * POST to update an existing session. Refer to db.updatePresentation() for details.
  */
-router.post("/updateSession", (req, res) => {
+router.post("/updatePresentation", (req, res) => {
 
-  const sessionUpdate = req.body;
+  const presenationUpdate = req.body;
 
-  db.updateSession(sessionUpdate, req.user.userId, (err, updated) => {
+  db.updatePresentation(presenationUpdate, req.user.userId, (err, updated) => {
     if (err) {
-      console.error(new Error(`Updating session: ${err}`));
+      console.error(new Error(`Updating presentation: ${err}`));
       res.status(500).json({error: err});
     } else {
       res.json(updated);
@@ -107,7 +107,7 @@ router.post("/saveSessionQuestions", (req, res) => {
       });
     } else {
       // Update the question in the DB
-      db.updateQuestion(question, userId, (err) => {
+      db.updateSlide(question, userId, (err) => {
         if (err) {
           console.error(new Error(`updating question: ${err}`));
           dbErrors.push(question);
@@ -130,13 +130,13 @@ router.post("/saveSessionQuestions", (req, res) => {
 });
 
 /**
- * POST to put a specific session into the active state.
+ * POST to put a specific presentation into the active state.
  */
-router.post("/activateSession/:sessionId", (req, res) => {
+router.post("/activatePresentation/:presentationId", (req, res) => {
 
-  let sessionId = req.params.sessionId;
+  let presentationId = req.params.presentationId;
 
-  db.toggleSession(req.user.userId, sessionId, true, (err, activated) => {
+  db.togglePresentation(req.user.userId, presentationId, true, (err, activated) => {
 
       if (err) {
         res.status(500).json({error: err});
@@ -146,40 +146,34 @@ router.post("/activateSession/:sessionId", (req, res) => {
       // Set array for socket.io operations to happen without DB interaction.
       if (activated) {
 
-        if(!req.user.activeSessionsIds){
-          req.user.activeSessionsIds = 0;
-        }
-
-        req.user.activeSessionId = sessionId; //TODO alert jay that he will need to activly watch for token updates
-
         // Alert all sockets
-        socketAPI.emitSessionActivated(sessionId);
+        socketAPI.emitSessionActivated(presentationId);
 
-        // Update the token to reflect these changes
-        updateTokenAndRespond(req,res,"de-activated");
+        // Alert the user that the operation was successful
+        res.json({ status: "activated"});
       }
     });
 });
 
 router.post("/de-activateSession/:sessionId", (req, res) => {
 
-  db.toggleSession(req.user.userId, req.params.sessionId, false, (err, deActivated) => {
+  let presentationId = req.params.presentationId;
+
+  db.togglePresentation(req.user.userId, presentationId, false, (err, activated) => {
 
     if (err) {
       res.status(500).json({error: err});
       return;
     }
 
-    // Set cookie for socket.io operations to happen without DB interaction.
-    if (deActivated) {
+    // Set array for socket.io operations to happen without DB interaction.
+    if (activated) {
 
-      //Reset the array of active sessions in the token.
-      req.user.activeSessionId = 0;
+      // Alert all sockets
+      socketAPI.emitSessionActivated(presentationId);
 
-      socketAPI.emitSessionDeactivated(req.params.sessionId);
-
-      // Update the token to reflect these changes
-      updateTokenAndRespond(req,res,"de-activated");
+      // Alert the user that the operation was successful
+      res.json({ status: "de-activated"});
     }
   });
 });
@@ -196,31 +190,6 @@ router.get("/active", (req, res) => {
 
     res.json(sessions);
   })
-});
-
-/**
- * GET sets HTTP cookie to authorize a user for session access.
- * NOTE: this does not mean that a session is active, only that this user is allowed to join that sessions room,
- * and post votes once it is active.
- */
-router.get("/setAuthorizations", (req, res) => {
-
-  let userId = req.user.userId;
-
-  console.log(`Setting authorized sessions for userId [${userId}]`);
-
-  userDb.getAuthorizedSessions(userId, (err, authorizedSessions) => {
-    if (err) {
-      res.status(500).json({error: err});
-    }else {
-
-      // Assign the session.authorizedSessionId to this session.
-      req.user.authorizedSessionIds = authorizedSessions;
-
-      // Update and send the new token and response
-      updateTokenAndRespond(req,res,"success");
-    }
-  });
 });
 
 /**
@@ -426,7 +395,7 @@ router.get("/", (req, res) => {
   } else if (req.query.recent) {
     db.getRecentSessions(userId, _cb);
   } else {
-    db.getAllSessions(userId, _cb);
+    db.getAllPresentations(userId, _cb);
   }
 });
 
@@ -511,16 +480,5 @@ router.get("/questionImageURL/:imgFileName", (req, res) => {
 router.get("/getActiveSessions", (req, res) => {
 
 });
-
-const updateTokenAndRespond =(req,res,statusMessage)=>{
-
-  // Update the token to reflect these changes
-  jwt.sign(req.user,serverConfig.secret,{expiresIn:60*60*24}, (err, token)=>{
-    if(err)
-      res.status(500).json({error:err});
-    else
-      res.json({ status: statusMessage, token:token});
-  });
-};
 
 module.exports = router;

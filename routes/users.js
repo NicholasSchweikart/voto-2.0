@@ -4,14 +4,18 @@
  */
 const express = require("express"),
   router = express.Router(),
-  db = require("../bin/userDB");
+  db = require("../bin/userDB"),
+  jwt = require('jsonwebtoken'),
+  serverConfig = require('../serverConfig');
 
 /**
  * Creates a new user in the voto system. Post json {firstName:xxx, lastName:xxx, userName:xxx, password:xxx}
  * @ voto.io/database/createUser
  */
 router.post("/createUser", (req, res) => {
+
   const newUser = req.body;
+
   db.createUser(newUser, (err, user) => {
     if (err) {
       console.error(new Error(`creating new user: ${err}`));
@@ -68,37 +72,36 @@ router.delete("/", (req, res) => {
   });
 });
 
-router.post("/authorizeUser/:authorizeId/:sessionId", (req, res) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ER_NOT_LOGGED_IN" });
+router.post("/changeUserAuthorization/:authorizeId/:classId/:allowAccess", (req, res) => {
+
+  let token = req.body.authorization || req.headers['authorization'];
+
+  if (!token) {
+    res.status(401).json({error: "ERR_NOT_LOGGED_IN"});
     return;
   }
 
-  db.authorizeUser(req.session.userId, req.params.authorizeId, req.params.sessionId, (err, authorized) => {
-    if (err) {
-      console.error(new Error(`authorization failure: ${err}`));
-      res.status(500).json({ error: err });
-    } else if (!authorized) {
-      res.status(500).json({ error: "ER_FAILED_TO_AUTHORIZE" });
-    } else {
-      res.json({ status: "successful authorization" });
-    }
-  });
-});
+  jwt.verify(token,serverConfig.secret,(err, user) =>{
 
-router.post("/de_authorizeUser/:de_authorizeId/:sessionId", (req, res) => {
-  if (!req.session.userId) {
-    res.status(401).json({ error: "ER_NOT_LOGGED_IN" });
-    return;
-  }
-
-  db.deauthorizeUser(req.session.userId, req.params.de_authorizeId, req.params.sessionId, (err, status) => {
-    if (err) {
-      console.error(new Error(`de-authorization failure: ${err}`));
-      res.status(500).json({ error: err });
-    } else {
-      res.json({ status });
+    if(err){
+      console.log(`decode err: ${err}`);
+      return res.json({success:false, msg: "failed to decode token"});
     }
+
+    console.log(`user = ${JSON.stringify(user)}`);
+
+    db.authorizeUser(user.userId, req.params.authorizeId, req.params.classId, req.params.allowAccess, (err, success) => {
+      if (err) {
+        console.error(new Error(`authorization failure: ${err}`));
+        return res.status(500).json({ error: err });
+      }
+
+      if (!success) {
+        return res.status(500).json({ error: "ER_FAILED_TO_CHANGE_AUTHORIZATION" });
+      }
+
+      res.json({ status: "success"});
+    });
   });
 });
 

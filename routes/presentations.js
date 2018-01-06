@@ -4,7 +4,8 @@
  */
 const express = require("express"),
   router = express.Router(),
-  db = require("../bin/sessionDB"),
+  db = require("../bin/presentationsDB"),
+  slidesDb = require("../bin/slidesDB"),
   userDb = require("../bin/userDB"),
   formidable = require("formidable"),
   fs = require("fs"),
@@ -55,15 +56,12 @@ router.all('/*', (req, res, next) => {
  */
 router.post("/saveNewPresentation", (req, res) => {
 
-  const newPresentation = req.body;
-  //TODO alert jay he needs to provide a class ID now.
-  db.saveNewPresentation(newPresentation, req.user.userId, req.body.classId, (err, newSession) => {
+  db.saveNewPresentation(req.user.userId, req.body, (err, newSession) => {
     if (err) {
       console.error(new Error(`saving new session: ${err}`));
-      res.status(500).json({error: err});
-    } else {
-      res.json(newSession);
+      return res.status(500).json({error: err});
     }
+    return res.json(newSession);
   });
 });
 
@@ -72,45 +70,45 @@ router.post("/saveNewPresentation", (req, res) => {
  */
 router.post("/updatePresentation", (req, res) => {
 
-  const presenationUpdate = req.body;
-
-  db.updatePresentation(presenationUpdate, req.user.userId, (err, updated) => {
+  db.updatePresentation(req.user.userId, req.body, (err, updated) => {
     if (err) {
       console.error(new Error(`Updating presentation: ${err}`));
-      res.status(500).json({error: err});
-    } else {
-      res.json(updated);
+      return res.status(500).json({error: err});
     }
+    return res.json(updated);
   });
 });
 
 /**
  * POST to save an array of new questions for a session.
  */
-router.post("/saveSessionQuestions", (req, res) => {
+router.post("/savePresentationSlides", (req, res) => {
 
-  const questions = req.body.questions;
+  const slides = req.body.slides;
   const uploadErrors = [];
   const dbErrors = [];
   const userId = req.user.userId;
 
-  async.each(questions, (question, _cb) => {
-    // Check if its a new question
-    if (!question.questionId) {
+  async.each(slides, (slide, _cb) => {
+
+    // Check if its a new slide
+    if (!slide.slideId) {
+
       // Save the new question to DB
-      db.saveNewQuestion(question, userId, (err) => {
+      slidesDb.saveNewSlide(userId, slide, (err) => {
         if (err) {
-          console.error(new Error(`saving question to DB: ${err}`));
-          dbErrors.push(question);
+          console.error(new Error(`Saving slide to DB: ${err}`));
+          dbErrors.push(slide);
         }
         _cb(null);
       });
     } else {
+
       // Update the question in the DB
-      db.updateSlide(question, userId, (err) => {
+      slidesDb.updateSlide(userId, slide, (err) => {
         if (err) {
-          console.error(new Error(`updating question: ${err}`));
-          dbErrors.push(question);
+          console.error(new Error(`Updating slide: ${err}`));
+          dbErrors.push(slide);
         }
         _cb(null);
       });
@@ -125,7 +123,7 @@ router.post("/saveSessionQuestions", (req, res) => {
     }
 
     console.log("saved successfully");
-    res.json({questions});
+    res.json({questions: slides});
   });
 });
 
@@ -139,8 +137,7 @@ router.post("/activatePresentation/:presentationId", (req, res) => {
   db.togglePresentation(req.user.userId, presentationId, true, (err, activated) => {
 
       if (err) {
-        res.status(500).json({error: err});
-        return;
+        return res.status(500).json({error: err});
       }
 
       // Set array for socket.io operations to happen without DB interaction.
@@ -155,7 +152,10 @@ router.post("/activatePresentation/:presentationId", (req, res) => {
     });
 });
 
-router.post("/de-activateSession/:sessionId", (req, res) => {
+/**
+ * POST to put a specific presentation into the in active state.
+ */
+router.post("/de-activateSession/:presentationId", (req, res) => {
 
   let presentationId = req.params.presentationId;
 
@@ -170,26 +170,12 @@ router.post("/de-activateSession/:sessionId", (req, res) => {
     if (activated) {
 
       // Alert all sockets
-      socketAPI.emitSessionActivated(presentationId);
+      socketAPI.emitSessionActivated(presentationId); //TODO change to deactivated
 
       // Alert the user that the operation was successful
       res.json({ status: "de-activated"});
     }
   });
-});
-
-/**
- * GET all the active sessions as of current.
- */
-router.get("/active", (req, res) => {
-  db.getActiveSessions(req.user.userId, (err, sessions) => {
-    if (err) {
-      res.status(500).json({error: err});
-      return;
-    }
-
-    res.json(sessions);
-  })
 });
 
 /**
@@ -205,7 +191,7 @@ router.post('/saveResponse/:sessionId/:questionId', (req, res) => {
 
       res.json({status: "success"});
 
-      db.getSessionOwner(req.params.sessionId, (err, teacherId) => {
+      db.getPresentationOwner(req.params.sessionId, (err, teacherId) => {
 
         if (err) {
           console.error(new Error(`Owner lookup error: ${err}`))
@@ -316,7 +302,7 @@ router.post("/uploadImageFile", (req, res) => {
 });
 
 /**
- * DELETE route to remove a question from the DB. URL: /deleteQuestion?questionId=x&imgFileName=x
+ * DELETE route to remove a question from the DB. URL: /deleteSlide?questionId=x&imgFileName=x
  */
 router.delete("/:questionId/image/:imgFileName", (req, res) => {
 
@@ -341,7 +327,7 @@ router.delete("/:questionId/image/:imgFileName", (req, res) => {
 
   if (req.params.questionId > 0) {
     // Delete this questionId from the DB.
-    db.deleteQuestion(req.params.questionId, (err) => {
+    db.deleteSlide(req.params.questionId, (err) => {
       if (err) {
         console.error(new Error(err));
         res.status(500).json({error: err});
@@ -360,11 +346,11 @@ router.delete("/:questionId/image/:imgFileName", (req, res) => {
 });
 
 /**
- * DELETE route to remove a session from the DB. URL "/deleteSession?sessionId=xx"
+ * DELETE route to remove a session from the DB. URL "/deletePresentation?sessionId=xx"
  */
-router.delete("/deleteSession/:sessionId", (req, res) => {
+router.delete("/deletePresentation/:sessionId", (req, res) => {
 
-  db.deleteSession(req.params.sessionId, req.user.userId, (err) => {
+  db.deletePresentation(req.params.sessionId, req.user.userId, (err) => {
     if (err) {
       res.status(500).json({error: err});
       return;
@@ -375,77 +361,35 @@ router.delete("/deleteSession/:sessionId", (req, res) => {
 });
 
 /**
- * GET method to retrieve all sessions for a userId. no URL modification need because userId is in the cookie.
+ * GET method to retrieve a specific presentation for a userId. URL "/presentation/xx"
  */
-router.get("/", (req, res) => {
+router.get("/:presentationId", (req, res) => {
 
-  const _cb = (err, sessions) => {
-    if (err) {
-      res.status(500).json({ error: err });
-      return;
-    }
-
-    res.json({ sessions });
-  };
-
-  let userId = req.user.userId;
-  console.log(`userID: ${userId}`);
-  if (req.query.favorite) {
-    db.getFavoriteSessions(userId, _cb);
-  } else if (req.query.recent) {
-    db.getRecentSessions(userId, _cb);
-  } else {
-    db.getAllPresentations(userId, _cb);
-  }
-});
-
-/**
- * GET method to retrieve all sessions for a userId. URL "/session?sessionId=xx"
- */
-router.get("/session/:sessionId", (req, res) => {
-
-  if (!req.params.sessionId) {
-    res.status(500).json({error: "ERR_NO_SESSION_ID"});
-    return;
+  if (!req.params.presentationId) {
+    return res.status(500).json({error: "ERR_NO_PRES_ID"});
   }
 
-  db.getSession(req.params.sessionId, req.user.userId, (err, sessions) => {
+  db.getPresentation( req.user.userId, req.params.presentationId, (err, presentation) => {
     if (err) {
-      res.status(500).json({error: err});
-      return;
+      return res.status(500).json({error: err});
     }
 
-    res.json({session: sessions});
+    res.json({session: presentation});
   });
 });
 
 /**
  * GET method to return all questions for a specific session. URL:"/sessionQuestions?sessionId=xxxx".
  */
-router.get("/sessionQuestions/:sessionId", (req, res) => {
+router.get("/slides/:sessionId", (req, res) => {
 
-  db.getSessionQuestions(req.params.sessionId, req.user.userId, (err, questions) => {
+  db.getPresentationSlides(req.params.sessionId, req.user.userId, (err, questions) => {
     if (err) {
       res.status(500).json({error: err});
       return;
     }
 
     res.json({questions});
-  });
-});
-
-/**
- * GET method to return a single question. URL:"/question?questionId=xxxx".
- */
-router.get("/question/:questionId", (req, res) => {
-
-  db.getQuestion(req.user.userId, req.params.questionId, (err, question) => {
-    if (err) {
-      res.status(500).json({error: err});
-      return;
-    }
-
-    res.json({question});
   });
 });
 
@@ -472,13 +416,6 @@ router.get("/questionImageURL/:imgFileName", (req, res) => {
       url,
     });
   });
-});
-
-/**
- * GET inital route to manually load all active session for a user.
- */
-router.get("/getActiveSessions", (req, res) => {
-
 });
 
 module.exports = router;

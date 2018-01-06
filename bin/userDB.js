@@ -18,8 +18,7 @@ exports.createUser = (newUser, _cb) => {
     !newUser.type ||
     !newUser.email
   ) {
-    _cb("must provide all new user credentials");
-    return;
+    return _cb("must provide all new user credentials");
   }
 
   // Get the hash and salt for the provided password
@@ -209,21 +208,18 @@ exports.getAuthorizedClasses = (userId, _cb) => {
 };
 
 /**
- * Authorizes a specific userId to access a sessionId when it is active
- * @param authorizeId the userId to authorize
- * @param userId the userId to authorize this transaction
- * @param classId the sessionId of the session to authorize for this user
- * @param allowAccess 1 or 0 to specify the new rights to apply
- * @param _cb callback
+ * Determines if a user is authorized to join the channel for a presentation.
+ * @param userId the userId for the check
+ * @param presentationId ID for presentation to check
+ * @param _cb callback(err, yes) yes = true if authorized
  */
-exports.authorizeUser = (userId, authorizeId, classId, allowAccess, _cb) => {
-  if (!authorizeId || !userId || !classId || !allowAccess) {
-    return _cb("ER_EMPTY_PARAMETERS");
+exports.canUserJoinPresentationChannel = (userId, presentationId, _cb) => {
+  if (!userId || !presentationId) {
+    return _cb("ER_NEED_ALL_IDS");
   }
 
-  console.log(`userId [${userId}] is authorizing userId [${authorizeId}] for classId [${classId}]`);
-  const sql = "CALL change_user_authorization(?, ?, ?, ?)";
-  const params = [userId, authorizeId, classId, allowAccess];
+  const sql = "CALL can_user_access_presentation(?,?)";
+  const params = [userId, presentationId];
 
   mySQL.query(sql, params, (err, data) => {
     if (err) {
@@ -231,11 +227,9 @@ exports.authorizeUser = (userId, authorizeId, classId, allowAccess, _cb) => {
     }
 
     if(data.length === 0){
-      return _cb("FAILED_TO_CHANGE_PERMISSIONS");
+      return _cb("PERMISSION_DENIED");
     }
 
-    // Return success to the caller.
     return _cb(null, true);
   });
 };
-

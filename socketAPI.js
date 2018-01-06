@@ -79,20 +79,38 @@ module.exports = (io) => {
     /**
      * Subscribe a student to the channel for all authorized sessions.
      */
-    socket.on("subscribe-to-sessions-student", (msg) => {
+    socket.on("subscribe-to-class-channels", () => {
 
       let userId = socket.user.userId;
       console.log(`Checking authorizations for userId [${userId}]`);
 
-      userDb.getAuthorizedClasses(userId, (err, authorizedSessions) => {
+      userDb.getAuthorizedClasses(userId, (err, authorizedClasses) => {
         if (err) {
-          res.status(500).json({error: err});
-        } else {
-          console.log(`user authorized for ${authorizedSessions}`);
-          authorizedSessions.map((sessionId) => {
-            console.log(`joining channel for sessionId: ${sessionId}`);
-            socket.join(`sessionId_${sessionId}`);
-          });
+          return res.status(500).json({error: err});
+        }
+        console.log(`User authorized for ${authorizedClasses}`);
+        authorizedClasses.map((classId) => {
+          console.log(`joining channel for classId: ${classId}`);
+          socket.join(`classId_${classId}`);
+        });
+      });
+    });
+
+    /**
+     * Subscribe a student to the channel for a specific presentation.
+     */
+    socket.on("subscribe-to-presentation-channel", (presenationId) => {
+
+      let userId = socket.user.userId;
+      console.log(`Checking authorizations for userId ${userId} for presentationId ${presenationId}`);
+
+      userDb.canUserJoinPresentationChannel(userId, (err, yes) => {
+        if (err) {
+          return res.status(500).json({error: err});
+        }
+
+        if(yes){
+          return socket.join(`presentationId_${presenationId}`);
         }
       });
     });
@@ -100,9 +118,9 @@ module.exports = (io) => {
     /**
      * Authorize and then open a room for an active session. Teacher ONLY
      */
-    socket.on("subscribe-to-feed-teacher", () => {
+    socket.on("subscribe-to-channel-teacher", () => {
       socket.join(socket.user.userId);
-      console.log(`teacher userId ${socket.user.userId} has opened a new feed`);
+      console.log(`teacher userId ${socket.user.userId} has opened a new channel`);
     });
 
     /**

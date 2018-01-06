@@ -8,7 +8,7 @@ const express = require("express"),
   userRouter = require("./routes/users"),
   emailRouter = require("./routes/email"),
   loginRouter = require("./routes/login"),
-  sessionsRouter = require("./routes/sessions"),
+  sessionsRouter = require("./routes/presentations"),
   serverConfig = require("./serverConfig.json"),
   app = express();
 

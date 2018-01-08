@@ -179,32 +179,6 @@ router.post("/de-activateSession/:presentationId", (req, res) => {
 });
 
 /**
- * POST save a user response to a question in the DB.
- */
-router.post('/saveResponse/:sessionId/:questionId', (req, res) => {
-
-  db.saveResponse(req.user.userId, req.params.questionId, req.body, (err) => {
-
-    if (err) {
-      res.status(500).json({error: err});
-    } else {
-
-      res.json({status: "success"});
-
-      db.getPresentationOwner(req.params.sessionId, (err, teacherId) => {
-
-        if (err) {
-          console.error(new Error(`Owner lookup error: ${err}`))
-        } else {
-          // Alert the teacher through their private channel
-          socketAPI.emitUserResponse({...req.body, userId: req.user.userId}, teacherId);
-        }
-      });
-    }
-  });
-});
-
-/**
  * POST activate a question in the DB for user access.
  */
 router.post('/activateQuestion/:questionId', (req, res) => {
@@ -379,17 +353,17 @@ router.get("/:presentationId", (req, res) => {
 });
 
 /**
- * GET method to return all questions for a specific session. URL:"/sessionQuestions?sessionId=xxxx".
+ * GET method to return all slides for a specific session. URL:"/sessionQuestions?sessionId=xxxx".
  */
-router.get("/slides/:sessionId", (req, res) => {
+router.get("/:presentationId/allSlides", (req, res) => {
 
-  db.getPresentationSlides(req.params.sessionId, req.user.userId, (err, questions) => {
+  db.getPresentationSlides(req.params.presentationId, req.user.userId, (err, slides) => {
     if (err) {
       res.status(500).json({error: err});
       return;
     }
 
-    res.json({questions});
+    res.json({slides});
   });
 });
 

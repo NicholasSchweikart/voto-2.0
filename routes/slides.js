@@ -100,3 +100,29 @@ router.get("/slide/:slideId", (req, res) => {
     res.json({question: slide});
   });
 });
+
+/**
+ * POST save a user response to a question in the DB.
+ */
+router.post('/saveResponse/:sessionId/:questionId', (req, res) => {
+
+  db.saveResponse(req.user.userId, req.params.questionId, req.body, (err) => {
+
+    if (err) {
+      res.status(500).json({error: err});
+    } else {
+
+      res.json({status: "success"});
+
+      db.getPresentationOwner(req.params.sessionId, (err, teacherId) => {
+
+        if (err) {
+          console.error(new Error(`Owner lookup error: ${err}`))
+        } else {
+          // Alert the teacher through their private channel
+          socketAPI.emitUserResponse({...req.body, userId: req.user.userId}, teacherId);
+        }
+      });
+    }
+  });
+});

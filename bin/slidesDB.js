@@ -172,3 +172,29 @@ exports.getSlide = (userId, slideId, _cb) => {
     return _cb(null, slide);
   });
 };
+
+
+exports.saveResponse = (userId, slideId, response, _cb) => {
+
+  if (!userId || !response) {
+    _cb("ER_NO_USER_ID_OR_RESPONSE");
+    return;
+  }
+
+  console.log(`userId [${userId}] saving response [${JSON.stringify(response)}]`);
+
+  const sql = "CALL save_response(?,?,?)";
+  const params = [userId, questionId, response.answer];
+
+  mySQL.query(sql, params, (err, data) => {
+    if (err) {
+      return _cb(err.code);
+    }
+
+    if (data.length === 0) {
+      return _cb("ER_SAVING_RESPONSE");
+    }
+
+    _cb(null, true);
+  });
+};

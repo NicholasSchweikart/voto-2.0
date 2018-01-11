@@ -9,8 +9,32 @@ const express = require("express"),
   serverConfig = require('../serverConfig');
 
 /**
- * Handles login for the entire API. Please post a json login object @ voto.io/database/login
- * Form {userName:xxxx, password:xxxx}
+ * @api {post} api/login Login as a specific user
+ * @apiName Login User
+ * @apiGroup Login
+ * @apiPermission ALL
+ *
+ * @apiParam {String} userName Users unique name.
+ * @apiParam {String} password Users account password.
+ *
+ * @apiParamExample {json} Request Example
+ * {"userName":"User123", "password":"password"}
+ *
+ * @apiSuccess {String} success Login worked.
+ * @apiSuccessExample {json} The user object and a new access token
+ *    HTTP/1.1 200 OK
+ *    [{
+ *   "user": {
+ *       "userId": 1,
+ *       "firstName": "John",
+ *       "lastName": "Doe",
+ *       "userName": "User123",
+ *       "creationDate": "2017-08-23T03:35:50.000Z",
+ *       "type": "T",
+ *       "email": "teacher@teacher.com"
+ *   },
+ *   "token": "eyJhbGciOiJ...."
+ * }]
  */
 router.post("/", (req, res) => {
 
@@ -64,7 +88,6 @@ router.post("/", (req, res) => {
 router.post("/logout", (req, res) => {
   if (!req.user.userId) {
     res.status(401).json({ error: "ER_NOT_LOGGED_IN" });
-    return;
   }
 });
 

@@ -102,8 +102,8 @@ exports.loginUser = (userName, password, _cb) => {
     if (user.length === 0) {
       return _cb("No user found with this name!");
     }
-
-    user = user[0];
+    console.log(user);
+    user = user[0][0];
     const thisHash = passwordUtil.getPasswordHash(password, user.passwordSalt);
 
     if (thisHash === user.passwordHash) {

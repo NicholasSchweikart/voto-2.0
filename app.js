@@ -8,7 +8,9 @@ const express = require("express"),
   userRouter = require("./routes/users"),
   emailRouter = require("./routes/email"),
   loginRouter = require("./routes/login"),
-  sessionsRouter = require("./routes/presentations"),
+  classesRouter = require("./routes/classes"),
+  slidesRouter = require("./routes/slides"),
+  presentationsRouter = require("./routes/presentationRoutes"),
   serverConfig = require("./serverConfig.json"),
   app = express();
 
@@ -68,7 +70,9 @@ app.use(session(
 app.use("/api/users", userRouter);
 app.use("/api/email", emailRouter);
 app.use("/api/login", loginRouter);
-app.use("/api/sessions", sessionsRouter);
+app.use("/api/presentations", presentationsRouter);
+app.use("/api/classes", classesRouter);
+app.use("/api/slides", slidesRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {

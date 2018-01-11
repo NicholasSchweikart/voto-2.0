@@ -117,12 +117,8 @@ exports.getAllClasses = (userId, _cb) => {
       return _cb(err.code);
     }
 
-    if (classes.length === 0) {
-      return _cb("No classes for this ID");
-    }
-
     // Return the records.
-    _cb(null, classes);
+    _cb(null, classes[0]);
   });
 };
 

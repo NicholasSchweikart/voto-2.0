@@ -45,14 +45,14 @@ router.post("/activateSlide/:slideId", (req, res) => {
 
   let slideId = req.params.presentationId;
 
-  db.toggleSlide(req.user.userId, slideId, true, (err, activated) => {
+  db.toggleSlide(req.user.userId, slideId, true, (err, presentationIdActive) => {
 
     if (err) {
       return res.status(500).json({error: err});
     }
 
     // Set array for socket.io operations to happen without DB interaction.
-    if (activated) {
+    if (presentationIdActive) {
 
       //TODO Alert all sockets
 
@@ -69,19 +69,19 @@ router.post("/de-activateSlide/:slideId", (req, res) => {
 
   let slideId = req.params.presentationId;
 
-  db.toggleSlide(req.user.userId, slideId, false, (err, activated) => {
+  db.toggleSlide(req.user.userId, slideId, false, (err, presentationIdDeActive) => {
 
     if (err) {
       return res.status(500).json({error: err});
     }
 
     // Set array for socket.io operations to happen without DB interaction.
-    if (activated) {
+    if (presentationIdDeActive) {
 
       //TODO Alert all sockets
 
       // Alert the user that the operation was successful
-      res.json({ status: "activated"});
+      res.json({ status: "de-activated"});
     }
   });
 });
@@ -126,3 +126,5 @@ router.post('/saveResponse/:sessionId/:questionId', (req, res) => {
     }
   });
 });
+
+module.exports = router;

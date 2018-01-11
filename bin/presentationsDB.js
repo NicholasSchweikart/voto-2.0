@@ -11,19 +11,18 @@ exports.saveNewPresentation = (userId, newPresentation, _cb) => {
 
   if (
     !newPresentation ||
+    !newPresentation.classId ||
     !newPresentation.title ||
-    !newPresentation.className ||
     !newPresentation.description
   ) {
     return _cb("failed one or more empty session parameters");
   }
 
-  const sql = "CALL save_new_presentation(?, ?, ?, ?, ?)";
+  const sql = "CALL save_new_presentation(?, ?, ?, ?)";
   const params = [
     userId,
-    classId,
+    newPresentation.classId,
     newPresentation.title,
-    newPresentation.className,
     newPresentation.description
   ];
 
@@ -97,12 +96,8 @@ exports.getPresentation = (userId, presentationId, _cb) => {
       return _cb(err.code);
     }
 
-    if (presentation.length === 0) {
-      return _cb("No presentation found");
-    }
-
     // Return the records.
-    _cb(null, presentation);
+    _cb(null, presentation[0][0]);
   });
 };
 
@@ -172,8 +167,8 @@ exports.getPresentationSlides = (userId, presentationId, _cb) => {
       return _cb(err.code);
     }
 
-    if (slides.length === 0) {
-      return _cb("ER_NOT_AUTHORIZED");
+    if (slides[0][0]["NOT_AUTHORIZED"]) {
+      return _cb("NOT_AUTHORIZED");
     }
 
     // Return the questions

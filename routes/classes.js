@@ -39,7 +39,40 @@ router.all('/*', (req, res, next) => {
 });
 
 /**
- * GET retrieve all classes that a userId owns.
+ * @api {get} api/classes Get all classes for a user
+ * @apiName Request all user classes
+ * @apiGroup Classes
+ * @apiPermission ALL
+ *
+ * @apiHeader {String} Authorization Users access token.
+ *
+ * @apiSuccess (200) {json} classes Array of class data
+ * @apiSuccessExample {json} The user object and a new access token
+ *    HTTP/1.1 200 OK
+ *    [
+ *    {
+ *   "classes": [
+ *       {
+ *           "classId": 1,
+ *           "userId": 1,
+ *           "className": "English 101",
+ *           "totalPresentations": 7,
+ *           "dateCreated": "2018-01-10T02:46:49.000Z",
+ *           "description": null,
+ *           "timeStamp": 1515548809
+ *       },
+ *       {
+ *            "classId": 2,
+ *           "userId": 1,
+ *           "className": "Stats 101",
+ *           "totalPresentations": 3,
+ *            "dateCreated": "2018-01-10T02:46:49.000Z",
+ *            "description": null,
+ *            "timeStamp": 1515548809
+ *        }
+ *    ]
+ *     }
+ *    ]
  */
 router.get("/", (req, res) => {
 
@@ -51,3 +84,5 @@ router.get("/", (req, res) => {
     res.json({classes: classes});
   });
 });
+
+module.exports = router;

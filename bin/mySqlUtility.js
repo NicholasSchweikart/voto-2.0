@@ -5,7 +5,7 @@ const pool = mysql.createPool({
   host: process.env.VOTO_MYSQL_SERVER_URL,                // Use DB pointed to by ENV, default is localhost
   user: "voto",                                           // Operate as the voto user in MySQL
   password: process.env.VOTO_MYSQL_PASSWORD,              // Load password from ENV
-  database: "votodb",                                     // Only use the voto DB
+  database: "votodev",                                     // Only use the voto DB
   debug: false,
 });
 

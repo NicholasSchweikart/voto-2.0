@@ -52,7 +52,29 @@ router.all('/*', (req, res, next) => {
 });
 
 /**
- * POST to save a new session for a user.
+ * @api {post} /saveNewPresentation Request to save a new presentation
+ * @apiPermission admin
+ * @apiGroup Presentations
+ * @apiName Save New Presentation
+ * @apiParam {Number} presentationId Presentations unique ID.
+ * @apiParam {Number} classId Presentations parent class.
+ * @apiParam {String} title Presentations new title.
+ * @apiParam {String} description Presentations quick description.
+ * @apiParamExample {json} Request Example
+ * {"classId":1, "title":"PHY 101", "description":"Physics..."}
+ * @apiSuccess {String} success Presentation Activated.
+ * @apiSuccessExample {json} The new presentation data
+ *    HTTP/1.1 200 OK
+ *    [{
+ *      "presentationId:"1",
+ *      "classId":"1",
+ *      "title":"PHY 101",
+ *      "description":"Physics...",
+ *      "totalSlides":2,
+ *      "useCount":0,
+ *      "dateLastUsed": 201923943,
+ *      "dateCreated": 2010210312
+ *    }]
  */
 router.post("/saveNewPresentation", (req, res) => {
 
@@ -128,7 +150,18 @@ router.post("/savePresentationSlides", (req, res) => {
 });
 
 /**
- * POST to put a specific presentation into the active state.
+ * @api {post} /activatePresentation/:presentationId Activate a specific presentation
+ * @apiName Activate Presentation
+ * @apiGroup Presentations
+ *
+ * @apiParam {Number} presentationId Presentations unique ID.
+ *
+ * @apiSuccess {String} success Presentation Activated.
+ * @apiSuccessExample {json} Success
+ *    HTTP/1.1 200 OK
+ *    [{
+ *      "status": "success"
+ *    }]
  */
 router.post("/activatePresentation/:presentationId", (req, res) => {
 
@@ -335,7 +368,30 @@ router.delete("/deletePresentation/:sessionId", (req, res) => {
 });
 
 /**
- * GET method to retrieve a specific presentation for a userId. URL "/presentation/xx"
+ * @api {get} api/presentation/:presentationId Get a specific presentation
+ * @apiName Request Presentation
+ * @apiGroup Presentations
+ * @apiPermission ALL
+ *
+ * @apiParam {Number} presentationId The unique ID of the presentation to retrieve.
+ *
+ * @apiSuccess (200) {json} presentation Presentation json data
+ * @apiSuccessExample {json} The user object and a new access token
+ *    HTTP/1.1 200 OK
+ *    [{
+ *       "presentationId": 1,
+ *        "userId": 1,
+ *        "classId": 1,
+ *        "title": "asdf",
+ *        "isActive": 0,
+ *        "totalSlides": 0,
+ *        "useCount": 31,
+ *        "description": "asdf",
+ *        "isFavorite": 0,
+ *        "dateLastUsed": "2018-01-10T02:17:49.000Z",
+ *        "dateCreated": "2017-08-23T05:42:03.000Z"
+ *   }
+ *   ]
  */
 router.get("/:presentationId", (req, res) => {
 
@@ -348,22 +404,58 @@ router.get("/:presentationId", (req, res) => {
       return res.status(500).json({error: err});
     }
 
-    res.json({session: presentation});
+    res.json(presentation);
   });
 });
 
 /**
- * GET method to return all slides for a specific session. URL:"/sessionQuestions?sessionId=xxxx".
+ * @api {get} api/:presentationId/allSlides Get all slides for a presentation
+ * @apiName Request Presentation Slides
+ * @apiGroup Presentations
+ * @apiPermission ADMIN ONLY
+ *
+ * @apiParam {Number} presentationId The unique ID of the presentation to retrieve slides for.
+ *
+ * @apiSuccess (200) {json} slides Array of slides
+ * @apiSuccessExample {json} The user object and a new access token
+ *    HTTP/1.1 200 OK
+ *    [{
+ *           "slideId": 5,
+ *           "userId": 1,
+ *           "classId": 1,
+ *           "presentationId": 7,
+ *           "imgFileName": "9e7f6fb9-adde-4459-bdc6-e5b17a3b1a42_viklander.jpg",
+ *           "isActive": 0,
+ *           "dateCreated": "2017-08-26T20:47:09.000Z",
+ *           "question": null,
+ *           "orderNumber": 0,
+ *           "correctAnswer": null,
+ *           "timeStamp": 1503776829
+ *       },
+ *        {
+ *            "slideId": 6,
+ *            "userId": 1,
+ *            "classId": 1,
+ *            "presentationId": 7,
+ *            "imgFileName": "27305fbf-8631-47d9-98a2-7bb127a7ce53_viklander.jpg",
+ *            "isActive": 0,
+ *            "dateCreated": "2017-08-27T14:35:26.000Z",
+ *            "question": null,
+ *            "orderNumber": 0,
+ *            "correctAnswer": null,
+ *            "timeStamp": 1503840926
+ *        }
+ *   ]
  */
 router.get("/:presentationId/allSlides", (req, res) => {
 
-  db.getPresentationSlides(req.params.presentationId, req.user.userId, (err, slides) => {
+  db.getPresentationSlides(req.user.userId, req.params.presentationId,(err, slides) => {
     if (err) {
       res.status(500).json({error: err});
       return;
     }
 
-    res.json({slides});
+    res.json(slides);
   });
 });
 

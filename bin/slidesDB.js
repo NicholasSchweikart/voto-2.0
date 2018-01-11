@@ -6,13 +6,12 @@ const mySQL = require("./mySqlUtility");
  * @param userId the userId for the owner of this slide and its accompanying class/pres
  * @param _cb callback function
  */
-exports.saveNewSlide = (userId, newSlide, _cb) => {
-  console.log(`Attempting to create a slide for classId: ${classIdId}`);
+exports.saveNewSlide = (userId,newSlide, _cb) => {
+  console.log(`Attempting to create a slide for presentationId: ${newSlide.presentationId}`);
 
   if (
     !newSlide ||
     !newSlide.presentationId ||
-    !newSlide.classId ||
     !newSlide.imgFileName ||
     !newSlide.question ||
     !newSlide.orderNumber ||
@@ -21,11 +20,10 @@ exports.saveNewSlide = (userId, newSlide, _cb) => {
     return _cb("failed one or more empty slide fields");
   }
 
-  const sql = "CALL save_new_slide(?, ?, ?, ?, ?, ?, ?)";
+  const sql = "CALL save_new_slide(?, ?, ?, ?, ?, ?)";
   const params = [
     userId,
     newSlide.presentationId,
-    newSlide.classId,
     newSlide.imgFileName,
     newSlide.question,
     newSlide.orderNumber,
@@ -113,7 +111,7 @@ exports.deleteSlide = (userId, slideId, _cb) => {
 };
 
 /**
- * Activates a slide in the DB.
+ * Changes state of a slide in the DB.
  * @param userId the owners userId for authorization.
  * @param slideId the slide to alter activation on.
  * @param newState the new state to put the slide in. Active = true
@@ -130,16 +128,17 @@ exports.toggleSlide = (userId, slideId, newState, _cb) => {
   const sql = "call toggle_slide(?, ?, ?)";
   const params = [userId, slideId, newState];
 
-  mySQL.query(sql, params, (err, data) => {
+  mySQL.query(sql, params, (err, slideId) => {
     if (err) {
       return _cb(err.code);
     }
 
-    if (data.length === 0) {
+    if (slideId.length === 0) {
       return _cb("ERR_TOGGLE_FAILURE");
     }
 
-    return _cb(null, true);
+    // Return the presentation ID for socket updating
+    return _cb(null, slideId[0]);
   });
 };
 

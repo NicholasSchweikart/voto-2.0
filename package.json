@@ -7,7 +7,8 @@
     "debug": "node --inspect=4000 ./bin/www",
     "server_start": "./node_modules/.bin/babel-node ./bin/www --presets es2015,stage-2",
     "lint": "eslint . --ext .js, --fix",
-    "lintnofix": "eslint . --ext .js,.jsx"
+    "lintnofix": "eslint . --ext .js,.jsx",
+    "gen-doc": "apidoc -c apidoc.json -i routes/ -o documentation/"
   },
   "dependencies": {
     "async": "^2.5.0",
@@ -28,7 +29,8 @@
     "serve-favicon": "~2.4.2",
     "socket.io": "^2.0.3",
     "socket.io-redis": "^5.2.0",
-    "uuid": "^3.1.0"
+    "uuid": "^3.1.0",
+    "apidoc": "^0.17.6"
   },
   "devDependencies": {
     "nodemon": "^1.11.0"

@@ -59,26 +59,6 @@ router.post("/", (req, res) => {
       else
         res.json({user:response,token:token});
     });
-
-    //TODO we dont need these anymore, offload to DB transaction in the socket.
-    // db.getAuthorizedClasses(user.userId, (err, authorizedSessions) => {
-    //
-    //   if (err) {
-    //     res.status(500).json({error: err});
-    //   }else {
-    //
-    //     // Assign the session.authorizedSessionId to this session.
-    //     const { passwordHash, passwordSalt, ...response } = user;
-    //
-    //     // Create and send token
-    //     jwt.sign(response,serverConfig.secret,{expiresIn:60*60*24}, (err, token)=>{
-    //       if(err)
-    //         res.status(500).json({error: err});
-    //       else
-    //         res.json({user:response,token:token});
-    //     });
-    //   }
-    // });
   });
 });
 

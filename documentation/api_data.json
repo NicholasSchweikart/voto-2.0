@@ -201,6 +201,54 @@
     "groupTitle": "Presentations"
   },
   {
+    "type": "get",
+    "url": "api/:presentationId/allSlides",
+    "title": "Get all slides for a presentation",
+    "name": "Request_Presentation_Slides",
+    "group": "Presentations",
+    "permission": [
+      {
+        "name": "ADMIN ONLY"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "presentationId",
+            "description": "<p>The unique ID of the presentation to retrieve slides for.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "200": [
+          {
+            "group": "200",
+            "type": "json",
+            "optional": false,
+            "field": "slides",
+            "description": "<p>Array of slides</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "The user object and a new access token",
+          "content": " HTTP/1.1 200 OK\n [{\n        \"slideId\": 5,\n        \"userId\": 1,\n        \"classId\": 1,\n        \"presentationId\": 7,\n        \"imgFileName\": \"9e7f6fb9-adde-4459-bdc6-e5b17a3b1a42_viklander.jpg\",\n        \"isActive\": 0,\n        \"dateCreated\": \"2017-08-26T20:47:09.000Z\",\n        \"question\": null,\n        \"orderNumber\": 0,\n        \"correctAnswer\": null,\n        \"timeStamp\": 1503776829\n    },\n     {\n         \"slideId\": 6,\n         \"userId\": 1,\n         \"classId\": 1,\n         \"presentationId\": 7,\n         \"imgFileName\": \"27305fbf-8631-47d9-98a2-7bb127a7ce53_viklander.jpg\",\n         \"isActive\": 0,\n         \"dateCreated\": \"2017-08-27T14:35:26.000Z\",\n         \"question\": null,\n         \"orderNumber\": 0,\n         \"correctAnswer\": null,\n         \"timeStamp\": 1503840926\n     }\n]",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "routes/presentationRoutes.js",
+    "groupTitle": "Presentations"
+  },
+  {
     "type": "post",
     "url": "/saveNewPresentation",
     "title": "Request to save a new presentation",
@@ -275,5 +323,181 @@
     "version": "0.0.0",
     "filename": "routes/presentationRoutes.js",
     "groupTitle": "Presentations"
+  },
+  {
+    "type": "post",
+    "url": "api/users/createUser",
+    "title": "Add a new user to the system.",
+    "name": "Create_New_User",
+    "group": "User",
+    "permission": [
+      {
+        "name": "ALL"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "firstName",
+            "description": "<p>The users first name.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "lastName",
+            "description": "<p>The users last name.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "userName",
+            "description": "<p>The users intended user name.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "email",
+            "description": "<p>The users email account.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "password",
+            "description": "<p>The users new password.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "type",
+            "description": "<p>The users type (S = Student, T = Teacher).</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request Example",
+          "content": "{\"userName\":\"User123\", \"password\":\"password\", \"email\":\"t@t.com\",\"type\":\"T\", \"firstName\":\"Bob\", \"lastName\":\"Villa\"}",
+          "type": "json"
+        }
+      ]
+    },
+    "success": {
+      "fields": {
+        "201": [
+          {
+            "group": "201",
+            "type": "json",
+            "optional": false,
+            "field": "user",
+            "description": "<p>The new user.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "The user object and a new access token",
+          "content": "   HTTP/1.1 200 OK\n   [{\n      \"user\": {\n      \"userId\": 1,\n      \"firstName\": \"John\",\n      \"lastName\": \"Doe\",\n      \"userName\": \"User123\",\n      \"creationDate\": \"2017-08-23T03:35:50.000Z\",\n      \"type\": \"T\",\n      \"email\": \"teacher@teacher.com\"\n  },\n  \"token\": \"eyJhbGciOiJ....\"\n}]",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "USER_NAME_IN_USE",
+            "description": "<p>This user name is already taken</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "error",
+          "content": "HTTP/1.1 500\n[\n {\"error\":\"USER_NAME_IN_USE\"}\n]",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "routes/users.js",
+    "groupTitle": "User"
+  },
+  {
+    "type": "delete",
+    "url": "api/users/",
+    "title": "Remove a user from the system.",
+    "name": "Delete_User",
+    "group": "User",
+    "permission": [
+      {
+        "name": "ANY USER WITH TOKEN"
+      }
+    ],
+    "header": {
+      "fields": {
+        "Header": [
+          {
+            "group": "Header",
+            "type": "String",
+            "optional": false,
+            "field": "Authorization",
+            "description": "<p>Users access token.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "200": [
+          {
+            "group": "200",
+            "type": "json",
+            "optional": false,
+            "field": "user",
+            "description": "<p>The new user.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "The user object and a new access token",
+          "content": "HTTP/1.1 200 OK\n[\"success]",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "USER_DOESNT_EXIST",
+            "description": "<p>This user ID is invalid</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "error",
+          "content": "HTTP/1.1 500\n[\n {\"error\":\"USER_DOESNT_EXIST\"}\n]",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "routes/users.js",
+    "groupTitle": "User"
   }
 ]

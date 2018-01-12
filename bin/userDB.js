@@ -42,12 +42,12 @@ exports.createUser = (newUser, _cb) => {
       return _cb(err);
     }
 
-    if (user.length === 0) {
-      return _cb("Something when wrong on fetching user from table!");
+    if (user[0][0]["USER_NAME_IN_USE"]) {
+      return _cb("USER_NAME_IN_USE");
     }
 
     // Return the new user to the caller
-    return _cb(null, user[0]);
+    return _cb(null, user[0][0]);
   });
 };
 
@@ -57,22 +57,24 @@ exports.createUser = (newUser, _cb) => {
  * @param _cb callback
  */
 exports.deleteUser = (userId, _cb) => {
-  console.log("Deleting userId [%d]", userId);
 
   if (!userId) {
     _cb("ER_NO_USER_ID");
     return;
   }
-
-  const sql = "DELETE FROM users WHERE userId = ?";
+  console.log("Deleting userId [%d]", userId);
+  const sql = "CALL delete_user(?)";
   const params = [userId];
 
-  mySQL.query(sql, params, (err) => {
+  mySQL.query(sql, params, (err,deleted) => {
     if (err) {
-      _cb(err);
-    } else {
-      _cb(null, "USER_DELETED");
+      return _cb(err);
     }
+    if(deleted[0][0]["USER_DOESNT_EXIST"]) {
+      return _cb("USER_DOESNT_EXIST");
+    }
+      console.log("Deleted userId [%d]", userId);
+      _cb(null, true);
   });
 };
 
@@ -99,10 +101,10 @@ exports.loginUser = (userName, password, _cb) => {
       return _cb(err.code);
     }
 
-    if (user.length === 0) {
+    if (user.length === 0) { //TODO fix error code gen
       return _cb("No user found with this name!");
     }
-    console.log(user);
+
     user = user[0][0];
     const thisHash = passwordUtil.getPasswordHash(password, user.passwordSalt);
 

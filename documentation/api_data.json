@@ -111,10 +111,15 @@
   },
   {
     "type": "post",
-    "url": "/activatePresentation/:presentationId",
+    "url": "api/presentations/:presentationId/activate",
     "title": "Activate a specific presentation",
     "name": "Activate_Presentation",
     "group": "Presentations",
+    "permission": [
+      {
+        "name": "ADMIN ONLY"
+      }
+    ],
     "parameter": {
       "fields": {
         "Parameter": [
@@ -130,9 +135,9 @@
     },
     "success": {
       "fields": {
-        "Success 200": [
+        "200": [
           {
-            "group": "Success 200",
+            "group": "200",
             "type": "String",
             "optional": false,
             "field": "success",
@@ -142,9 +147,95 @@
       },
       "examples": [
         {
-          "title": "Success",
-          "content": "HTTP/1.1 200 OK\n[{\n  \"status\": \"success\"\n}]",
+          "title": "ACTIVATED This Presentation ID is now active.",
+          "content": "HTTP/1.1 200 OK\n[\"ACTIVATED\"]",
           "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "UN_AUTHORIZED",
+            "description": "<p>This user ID is not allowed to activate this presentation.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "error",
+          "content": "HTTP/1.1 500\n[\n \"UN_AUTHORIZED\"\n]",
+          "type": "String"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "routes/presentationRoutes.js",
+    "groupTitle": "Presentations"
+  },
+  {
+    "type": "post",
+    "url": "api/presentations/:presentationId/activate",
+    "title": "Activate a specific presentation",
+    "name": "De_Activate_Presentation",
+    "group": "Presentations",
+    "permission": [
+      {
+        "name": "ADMIN ONLY"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "presentationId",
+            "description": "<p>Presentations unique ID.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "200": [
+          {
+            "group": "200",
+            "type": "String",
+            "optional": false,
+            "field": "DE_ACTIVATED",
+            "description": "<p>Presentation Activated.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "DE_ACTIVATED",
+          "content": "HTTP/1.1 200 OK\n[\"DE_ACTIVATED\"]",
+          "type": "String"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "UN_AUTHORIZED",
+            "description": "<p>This user ID is not allowed to modify this presentation.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "UN_AUTHORIZED",
+          "content": "HTTP/1.1 500\n[\n \"UN_AUTHORIZED\"\n]",
+          "type": "String"
         }
       ]
     },
@@ -202,7 +293,7 @@
   },
   {
     "type": "get",
-    "url": "api/:presentationId/allSlides",
+    "url": "api/presentations/:presentationId/allSlides",
     "title": "Get all slides for a presentation",
     "name": "Request_Presentation_Slides",
     "group": "Presentations",
@@ -323,6 +414,140 @@
     "version": "0.0.0",
     "filename": "routes/presentationRoutes.js",
     "groupTitle": "Presentations"
+  },
+  {
+    "type": "post",
+    "url": "api/slides/:slideId/activate",
+    "title": "Activate a specific slide",
+    "name": "Activate_Slide",
+    "group": "Slides",
+    "permission": [
+      {
+        "name": "ADMIN ONLY"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "slideId",
+            "description": "<p>Slides' unique ID.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "200": [
+          {
+            "group": "200",
+            "type": "String",
+            "optional": false,
+            "field": "ACTIVATED",
+            "description": "<p>Slide Activated.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "ACTIVATED",
+          "content": "HTTP/1.1 200 OK\n[\"ACTIVATED\"]",
+          "type": "String"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "UN_AUTHORIZED",
+            "description": "<p>This user ID is not allowed to modify this presentation.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "UN_AUTHORIZED",
+          "content": "HTTP/1.1 500\n[\n \"UN_AUTHORIZED\"\n]",
+          "type": "String"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "routes/slides.js",
+    "groupTitle": "Slides"
+  },
+  {
+    "type": "post",
+    "url": "api/slides/:slideId/de-activate",
+    "title": "De-Activate a specific slide",
+    "name": "De_Activate_Slide",
+    "group": "Slides",
+    "permission": [
+      {
+        "name": "ADMIN ONLY"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "slideId",
+            "description": "<p>Slides' unique ID.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "200": [
+          {
+            "group": "200",
+            "type": "String",
+            "optional": false,
+            "field": "DE_ACTIVATED",
+            "description": "<p>Slide De-Activated.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "DE_ACTIVATED",
+          "content": "HTTP/1.1 200 OK\n[\"DE_ACTIVATED\"]",
+          "type": "String"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "UN_AUTHORIZED",
+            "description": "<p>This user ID is not allowed to modify this presentation.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "UN_AUTHORIZED",
+          "content": "HTTP/1.1 500\n[\n \"UN_AUTHORIZED\"\n]",
+          "type": "String"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "routes/slides.js",
+    "groupTitle": "Slides"
   },
   {
     "type": "post",
@@ -472,7 +697,7 @@
       "examples": [
         {
           "title": "The user object and a new access token",
-          "content": "HTTP/1.1 200 OK\n[\"success]",
+          "content": "HTTP/1.1 200 OK\n[\"success\"]",
           "type": "json"
         }
       ]

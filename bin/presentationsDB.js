@@ -52,26 +52,24 @@ exports.updatePresentation = (userId, presentationUpdate, _cb) => {
 
   console.log(`Updating presentationId ${presentationUpdate.presentationId} for userId ${userId}`);
 
-  const sql = "CALL update_presentation(?,?,?,?,?,?)";
+  const sql = "CALL update_presentation(?,?,?,?)";
   const params = [
     userId,
     presentationUpdate.presentationId,
-    presentationUpdate.className,
     presentationUpdate.title,
-    presentationUpdate.totalSlides,
     presentationUpdate.description
   ];
 
-  mySQL.query(sql, params, (err, data) => {
+  mySQL.query(sql, params, (err, presentation) => {
     if (err) {
       return _cb(err.code);
     }
 
-    if (data.length === 0) {
-      return _cb("PRESENTATION_UPDATE_FAILED");
+    if (presentation[0][0]["UN_AUTHORIZED"]) {
+      return _cb("UN_AUTHORIZED");
     }
 
-    return _cb(null, data[0]);
+    return _cb(null, presentation[0][0]);
   });
 };
 
@@ -127,7 +125,7 @@ exports.togglePresentation = (userId, presentationId, newState, _cb) => {
 
   console.log(`Toggling presentationId ${presentationId} -> ${newState}`);
 
-  const sql = "call toggle_session(?, ?, ?)";
+  const sql = "call change_presentation_activation(?, ?, ?)";
   const params = [userId, presentationId, newState];
 
   mySQL.query(sql, params, (err, data) => {
@@ -135,8 +133,8 @@ exports.togglePresentation = (userId, presentationId, newState, _cb) => {
       return _cb(err.code);
     }
 
-    if (data.length === 0) {
-      return _cb("ERR_TOGGLE_FAILURE");
+    if (data[0][0]["UN_AUTHORIZED"]) {
+      return _cb("UN_AUTHORIZED");
     }
 
     return _cb(null, true);

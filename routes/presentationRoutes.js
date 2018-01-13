@@ -6,7 +6,6 @@ const express = require("express"),
   router = express.Router(),
   db = require("../bin/presentationsDB"),
   slidesDb = require("../bin/slidesDB"),
-  userDb = require("../bin/userDB"),
   formidable = require("formidable"),
   fs = require("fs"),
   uuidv4 = require("uuid/v4"),
@@ -42,13 +41,118 @@ router.all('/*', (req, res, next) => {
       return res.json({success:false, msg: "failed to decode token"});
     }
 
-    console.log(`user = ${JSON.stringify(user)}`);
     req.user = user;
 
     // Continue on to the next route match.
     next();
   });
 
+});
+
+/**
+ * @api {get} api/presentation/:presentationId Get a specific presentation
+ * @apiName Request Presentation
+ * @apiGroup Presentations
+ * @apiPermission ALL
+ *
+ * @apiParam {Number} presentationId The unique ID of the presentation to retrieve.
+ *
+ * @apiSuccess (200) {json} presentation Presentation json data
+ * @apiSuccessExample {json} The presentation data
+ *    HTTP/1.1 200 OK
+ *    [{
+ *       "presentationId": 1,
+ *        "userId": 1,
+ *        "classId": 1,
+ *        "title": "asdf",
+ *        "isActive": 0,
+ *        "totalSlides": 0,
+ *        "useCount": 31,
+ *        "description": "asdf",
+ *        "isFavorite": 0,
+ *        "dateLastUsed": "2018-01-10T02:17:49.000Z",
+ *        "dateCreated": "2017-08-23T05:42:03.000Z"
+ *   }
+ *   ]
+ *
+ * @apiError (500) UN_AUTHORIZED This user ID is not allowed to get this presentation.
+ * @apiErrorExample {String} UN_AUTHORIZED
+ * HTTP/1.1 500
+ * [
+ *  "UN_AUTHORIZED"
+ * ]
+ */
+router.get("/:presentationId", (req, res) => {
+
+  if (!req.params.presentationId) {
+    return res.status(500).json({error: "ERR_NO_PRES_ID"});
+  }
+
+  db.getPresentation( req.user.userId, req.params.presentationId, (err, presentation) => {
+    if (err) {
+      return res.status(500).json({error: err});
+    }
+
+    res.json(presentation);
+  });
+});
+
+/**
+ * @api {get} api/presentations/:presentationId/allSlides Get all slides for a presentation
+ * @apiName Request Presentation Slides
+ * @apiGroup Presentations
+ * @apiPermission ADMIN ONLY
+ *
+ * @apiParam {Number} presentationId The unique ID of the presentation to retrieve slides for.
+ *
+ * @apiSuccess (200) {json} slides Array of slides
+ * @apiSuccessExample {json} The user object and a new access token
+ *    HTTP/1.1 200 OK
+ *    [{
+ *           "slideId": 5,
+ *           "userId": 1,
+ *           "classId": 1,
+ *           "presentationId": 7,
+ *           "imgFileName": "9e7f6fb9-adde-4459-bdc6-e5b17a3b1a42_viklander.jpg",
+ *           "isActive": 0,
+ *           "dateCreated": "2017-08-26T20:47:09.000Z",
+ *           "question": null,
+ *           "orderNumber": 0,
+ *           "correctAnswer": null,
+ *           "timeStamp": 1503776829
+ *       },
+ *        {
+ *            "slideId": 6,
+ *            "userId": 1,
+ *            "classId": 1,
+ *            "presentationId": 7,
+ *            "imgFileName": "27305fbf-8631-47d9-98a2-7bb127a7ce53_viklander.jpg",
+ *            "isActive": 0,
+ *            "dateCreated": "2017-08-27T14:35:26.000Z",
+ *            "question": null,
+ *            "orderNumber": 0,
+ *            "correctAnswer": null,
+ *            "timeStamp": 1503840926
+ *        }
+ *   ]
+ *
+ * @apiError (500) UN_AUTHORIZED This user ID is not authorized.
+ * @apiErrorExample {String} UN_AUTHORIZED
+ * HTTP/1.1 500
+ * [
+ *  "UN_AUTHORIZED"
+ * ]
+ */
+router.get("/:presentationId/allSlides", (req, res) => {
+
+  db.getPresentationSlides(req.user.userId, req.params.presentationId,(err, slides) => {
+    if (err) {
+      res.status(500).json({error: err});
+      return;
+    }
+
+    res.json(slides);
+  });
 });
 
 /**
@@ -62,7 +166,7 @@ router.all('/*', (req, res, next) => {
  * @apiParam {String} description Presentations quick description.
  * @apiParamExample {json} Request Example
  * {"classId":1, "title":"PHY 101", "description":"Physics..."}
- * @apiSuccess {String} success Presentation Activated.
+ * @apiSuccess (200) {json} object The new Presentation.
  * @apiSuccessExample {json} The new presentation data
  *    HTTP/1.1 200 OK
  *    [{
@@ -75,6 +179,13 @@ router.all('/*', (req, res, next) => {
  *      "dateLastUsed": 201923943,
  *      "dateCreated": 2010210312
  *    }]
+ *
+ * @apiError (500) UN_AUTHORIZED This user ID is not authorized or resource not possible.
+ * @apiErrorExample {String} UN_AUTHORIZED
+ * HTTP/1.1 500
+ * [
+ *  "UN_AUTHORIZED"
+ * ]
  */
 router.post("/saveNewPresentation", (req, res) => {
 
@@ -88,22 +199,50 @@ router.post("/saveNewPresentation", (req, res) => {
 });
 
 /**
- * POST to update an existing session. Refer to db.updatePresentation() for details.
+ * @api {patch} api/presentations/ Update fields in a presentation
+ * @apiPermission ADMIN ONLY
+ * @apiGroup Presentations
+ * @apiName Update Presentation
+ * @apiParam {Number} presentationId Presentations unique ID.
+ * @apiParam {String} title Presentations new title.
+ * @apiParam {String} description Presentations quick description.
+ * @apiParamExample {json} Request Example
+ * {"presentationId":1, "title":"PHY 101", "description":"Physics..."}
+ * @apiSuccess (200) {json} update The new Presentation.
+ * @apiSuccessExample {json} The new presentation data
+ *    HTTP/1.1 200 OK
+ *    [{
+ *      "presentationId:"1",
+ *      "classId":"1",
+ *      "title":"PHY 101",
+ *      "description":"Physics...",
+ *      "totalSlides":2,
+ *      "useCount":0,
+ *      "dateLastUsed": 201923943,
+ *      "dateCreated": 2010210312
+ *    }]
+ *
+ * @apiError (500) UN_AUTHORIZED This user ID is not authorized.
+ * @apiErrorExample {String} UN_AUTHORIZED
+ * HTTP/1.1 500
+ * [
+ *  "UN_AUTHORIZED"
+ * ]
  */
-router.post("/updatePresentation", (req, res) => {
+router.patch("/", (req, res) => {
 
-  db.updatePresentation(req.user.userId, req.body, (err, updated) => {
+  db.updatePresentation(req.user.userId, req.body, (err, updatedPresentation) => {
+
     if (err) {
-      console.error(new Error(`Updating presentation: ${err}`));
+      console.log(`Updating presentation: ${err}`);
       return res.status(500).json({error: err});
     }
-    return res.json(updated);
+
+    return res.json(updatedPresentation);
   });
 });
 
-/**
- * POST to save an array of new questions for a session.
- */
+//TODO resolve with jay if we need this still.
 router.post("/savePresentationSlides", (req, res) => {
 
   const slides = req.body.slides;
@@ -150,212 +289,107 @@ router.post("/savePresentationSlides", (req, res) => {
 });
 
 /**
- * @api {post} /activatePresentation/:presentationId Activate a specific presentation
+ * @api {post} api/presentations/:presentationId/activate Activate a specific presentation
  * @apiName Activate Presentation
  * @apiGroup Presentations
- *
+ * @apiPermission ADMIN ONLY
  * @apiParam {Number} presentationId Presentations unique ID.
  *
- * @apiSuccess {String} success Presentation Activated.
- * @apiSuccessExample {json} Success
+ * @apiSuccess (200) {String} success Presentation Activated.
+ * @apiSuccessExample {json} ACTIVATED This Presentation ID is now active.
  *    HTTP/1.1 200 OK
- *    [{
- *      "status": "success"
- *    }]
+ *    ["ACTIVATED"]
+ *
+ * @apiError (500) UN_AUTHORIZED This user ID is not allowed to activate this presentation.
+ * @apiErrorExample {String} UN_AUTHORIZED
+ * HTTP/1.1 500
+ * [
+ *  "UN_AUTHORIZED"
+ * ]
  */
-router.post("/activatePresentation/:presentationId", (req, res) => {
+router.post("/:presentationId/activate", (req, res) => {
 
   let presentationId = req.params.presentationId;
 
   db.togglePresentation(req.user.userId, presentationId, true, (err, activated) => {
 
       if (err) {
-        return res.status(500).json({error: err});
+        return res.status(403).json({error: err});
       }
 
       // Set array for socket.io operations to happen without DB interaction.
       if (activated) {
 
         // Alert all sockets
-        socketAPI.emitSessionActivated(presentationId);
+        //socketAPI.emitSessionActivated(presentationId);
 
         // Alert the user that the operation was successful
-        res.json({ status: "activated"});
+        res.status(200).send("ACTIVATED");
       }
     });
 });
 
 /**
- * POST to put a specific presentation into the in active state.
+ * @api {post} api/presentations/:presentationId/activate De-Activate a specific presentation
+ * @apiName De-Activate Presentation
+ * @apiGroup Presentations
+ * @apiPermission ADMIN ONLY
+ * @apiParam {Number} presentationId Presentations unique ID.
+ *
+ * @apiSuccess (200) {String} DE_ACTIVATED Presentation Activated.
+ * @apiSuccessExample {String} DE_ACTIVATED
+ *    HTTP/1.1 200 OK
+ *    ["DE_ACTIVATED"]
+ *
+ * @apiError (500) UN_AUTHORIZED This user ID is not allowed to modify this presentation.
+ * @apiErrorExample {String} UN_AUTHORIZED
+ * HTTP/1.1 500
+ * [
+ *  "UN_AUTHORIZED"
+ * ]
  */
-router.post("/de-activateSession/:presentationId", (req, res) => {
+router.post("/:presentationId/de-activate", (req, res) => {
 
   let presentationId = req.params.presentationId;
 
   db.togglePresentation(req.user.userId, presentationId, false, (err, activated) => {
 
     if (err) {
-      res.status(500).json({error: err});
-      return;
+      return res.status(403).json({error: err});
     }
 
     // Set array for socket.io operations to happen without DB interaction.
     if (activated) {
 
       // Alert all sockets
-      socketAPI.emitSessionActivated(presentationId); //TODO change to deactivated
+      //socketAPI.emitSessionActivated(presentationId);
 
       // Alert the user that the operation was successful
-      res.json({ status: "de-activated"});
+      res.status(200).send("DE_ACTIVATED");
     }
   });
 });
 
 /**
- * POST activate a question in the DB for user access.
+ * @api {delete} api/presentations/:presentationId Delete a specific presentation
+ * @apiName Delete Presentation
+ * @apiGroup Presentations
+ * @apiPermission ADMIN ONLY
+ * @apiParam {Number} presentationId Presentations unique ID.
+ *
+ * @apiSuccess (200) {String} SUCCESS Presentation has been deleted.
+ * @apiSuccessExample {json} SUCCESS
+ *    HTTP/1.1 200 OK
+ *    ["SUCCESS"]
+ *
+ * @apiError (500) UN_AUTHORIZED This user ID is not allowed to delete this presentation.
+ * @apiErrorExample {String} UN_AUTHORIZED
+ * HTTP/1.1 500
+ * [
+ *  "UN_AUTHORIZED"
+ * ]
  */
-router.post('/activateQuestion/:questionId', (req, res) => {
-
-  db.activateQuestion(req.user.userId, req.params.questionId, (err, sessionId) => {
-    if (err) {
-      res.status(500).json({error: err});
-    } else {
-      res.json({status: "success"});
-
-      // Alert the room to the new question
-      socketAPI.emitNewQuestion(req.params.questionId, sessionId);
-    }
-  });
-});
-
-/**
- * POST activate a question in the DB for user access.
- */
-router.post('/deactivateQuestion/:questionId', (req, res) => {
-
-  db.deactivateQuestion(req.user.userId, req.params.questionId, (err, sessionId) => {
-    if (err) {
-      res.status(500).json({error: err});
-    } else {
-      res.json({status: "success"});
-
-      // Alert the room to the new question
-      socketAPI.emitNewQuestion(req.params.questionId, sessionId);
-    }
-  });
-});
-
-/**
- * POST route to upload new media for a specific session. Under beta right now, but will at some point need to have
- * access to a sessionId.
- */
-router.post("/uploadImageFile", (req, res) => {
-
-  // create an incoming form object
-  const form = new formidable.IncomingForm();
-
-  // store all uploads in the /uploads directory
-  form.uploadDir = path.join(__dirname, "../uploads");
-
-  // every time a file has been uploaded successfully
-  form.on("file", (field, file) => {
-    const newFileName = `${uuidv4()}_${file.name}`;
-    const fileStream = fs.createReadStream(file.path);
-    fileStream.on("error", (err) => {
-      console.error(new Error(`file stream error: ${err}`));
-    });
-
-    let params = {
-      Bucket: "voto-question-images",
-      Key: newFileName,
-      Body: fileStream,
-    };
-
-    s3.putObject(params, (err, data) => {
-      if (err) {
-        console.error(new Error(`uploading new image file: ${err}`));
-        res.status(500).json({error: 1});
-        return;
-      }
-
-      console.log("S3 Upload Success");
-      fs.unlink(file.path);
-
-      params = {Bucket: "voto-question-images", Key: newFileName, Expires: 10 * 60}; // 10 minutes
-
-      s3.getSignedUrl("getObject", params, (err, url) => {
-        if (err) {
-          console.error(new Error(`generating signed image URL: ${err}`));
-          return;
-        }
-
-        console.log("The URL is", url);
-        res.json({
-          url,
-          imgFileName: newFileName,
-        });
-      });
-    });
-  });
-
-  // log any errors that occur
-  form.on("error", (err) => {
-    console.error(new Error(`file upload: ${err}`));
-    res.status(500).send(err);
-  });
-
-  // parse the incoming request containing the form data
-  form.parse(req);
-});
-
-/**
- * DELETE route to remove a question from the DB. URL: /deleteSlide?questionId=x&imgFileName=x
- */
-router.delete("/:questionId/image/:imgFileName", (req, res) => {
-
-  console.log(`Deleting object ${req.params.imgFileName}`);
-
-  const removeImage = (imgFileName) => {
-    const params = {
-      Bucket: "voto-question-images",
-      Key: imgFileName,
-    };
-    s3.deleteObject(params, (err, data) => {
-      if (err) {
-        console.error(new Error("ER_S3_DELETE"));
-        res.status(500).json({error: "ER_S3_DELETE"});
-        return;
-      }
-
-      res.json({status: "success"});
-    });
-  };
-
-
-  if (req.params.questionId > 0) {
-    // Delete this questionId from the DB.
-    db.deleteSlide(req.params.questionId, (err) => {
-      if (err) {
-        console.error(new Error(err));
-        res.status(500).json({error: err});
-        return;
-      }
-
-      if (req.params.imgFileName) {
-        removeImage(req.params.imgFileName);
-      } else {
-        res.json({status: "success"});
-      }
-    });
-  } else if (req.params.imgFileName) {
-    removeImage(req.params.imgFileName);
-  }
-});
-
-/**
- * DELETE route to remove a session from the DB. URL "/deletePresentation?sessionId=xx"
- */
-router.delete("/deletePresentation/:sessionId", (req, res) => {
+router.delete("/:presentationId", (req, res) => {
 
   db.deletePresentation(req.params.sessionId, req.user.userId, (err) => {
     if (err) {
@@ -363,124 +397,7 @@ router.delete("/deletePresentation/:sessionId", (req, res) => {
       return;
     }
 
-    res.json({status: "success"});
-  });
-});
-
-/**
- * @api {get} api/presentation/:presentationId Get a specific presentation
- * @apiName Request Presentation
- * @apiGroup Presentations
- * @apiPermission ALL
- *
- * @apiParam {Number} presentationId The unique ID of the presentation to retrieve.
- *
- * @apiSuccess (200) {json} presentation Presentation json data
- * @apiSuccessExample {json} The user object and a new access token
- *    HTTP/1.1 200 OK
- *    [{
- *       "presentationId": 1,
- *        "userId": 1,
- *        "classId": 1,
- *        "title": "asdf",
- *        "isActive": 0,
- *        "totalSlides": 0,
- *        "useCount": 31,
- *        "description": "asdf",
- *        "isFavorite": 0,
- *        "dateLastUsed": "2018-01-10T02:17:49.000Z",
- *        "dateCreated": "2017-08-23T05:42:03.000Z"
- *   }
- *   ]
- */
-router.get("/:presentationId", (req, res) => {
-
-  if (!req.params.presentationId) {
-    return res.status(500).json({error: "ERR_NO_PRES_ID"});
-  }
-
-  db.getPresentation( req.user.userId, req.params.presentationId, (err, presentation) => {
-    if (err) {
-      return res.status(500).json({error: err});
-    }
-
-    res.json(presentation);
-  });
-});
-
-/**
- * @api {get} api/:presentationId/allSlides Get all slides for a presentation
- * @apiName Request Presentation Slides
- * @apiGroup Presentations
- * @apiPermission ADMIN ONLY
- *
- * @apiParam {Number} presentationId The unique ID of the presentation to retrieve slides for.
- *
- * @apiSuccess (200) {json} slides Array of slides
- * @apiSuccessExample {json} The user object and a new access token
- *    HTTP/1.1 200 OK
- *    [{
- *           "slideId": 5,
- *           "userId": 1,
- *           "classId": 1,
- *           "presentationId": 7,
- *           "imgFileName": "9e7f6fb9-adde-4459-bdc6-e5b17a3b1a42_viklander.jpg",
- *           "isActive": 0,
- *           "dateCreated": "2017-08-26T20:47:09.000Z",
- *           "question": null,
- *           "orderNumber": 0,
- *           "correctAnswer": null,
- *           "timeStamp": 1503776829
- *       },
- *        {
- *            "slideId": 6,
- *            "userId": 1,
- *            "classId": 1,
- *            "presentationId": 7,
- *            "imgFileName": "27305fbf-8631-47d9-98a2-7bb127a7ce53_viklander.jpg",
- *            "isActive": 0,
- *            "dateCreated": "2017-08-27T14:35:26.000Z",
- *            "question": null,
- *            "orderNumber": 0,
- *            "correctAnswer": null,
- *            "timeStamp": 1503840926
- *        }
- *   ]
- */
-router.get("/:presentationId/allSlides", (req, res) => {
-
-  db.getPresentationSlides(req.user.userId, req.params.presentationId,(err, slides) => {
-    if (err) {
-      res.status(500).json({error: err});
-      return;
-    }
-
-    res.json(slides);
-  });
-});
-
-/**
- * GET method to return a one time URL to view a question image slide. URL:"/sessionQuestions?sessionId=xxxx.ext".
- */
-router.get("/questionImageURL/:imgFileName", (req, res) => {
-
-  if (!req.params.imgFileName) {
-    res.status(500).json({error: "ER_NO_FILENAME"});
-  }
-
-  const imgFileName = req.params.imgFileName;
-  const params = {Bucket: "voto-question-images", Key: imgFileName, Expires: 10 * 60};
-
-  s3.getSignedUrl("getObject", params, (err, url) => {
-    if (err) {
-      console.error(new Error(`generating signed image URL: ${err}`));
-      return;
-    }
-
-    console.log("The URL is", url);
-    res.json({
-      url,
-    });
+    res.status(200).send("SUCCESS");
   });
 });
 

@@ -1,13 +1,6 @@
 const express = require("express"),
   router = express.Router(),
   db = require("../bin/classesDB"),
-  userDb = require("../bin/userDB"),
-  formidable = require("formidable"),
-  fs = require("fs"),
-  uuidv4 = require("uuid/v4"),
-  path = require("path"),
-  async = require("async"),
-  socketAPI = require("../socketAPI").api,
   jwt = require('jsonwebtoken'),
   serverConfig = require('../serverConfig');
 

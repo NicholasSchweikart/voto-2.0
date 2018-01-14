@@ -11,26 +11,18 @@
 <script>
 
     let socket = {};
-    let cred = {userName:"Nicbilly",password:"password"};
+    let token = "";
 
-    $.post('https://voto.io/api/login', cred)
+    function login(userName, password) {
+
+      let cred = {userName:userName,password:password};
+
+      $.post('localhost:8080/api/login', cred)
         .done((response) => {
 
-            console.log('login successful!\n');
-            accessSession();
-        })
-        .fail((xhr, status, err) => {
-            console.log(xhr);
-            console.log(status);
-            console.log(err);
-        });
-
-    function accessSession() {
-      $.get('https://voto.io/api/sessions/setAuthorizations')
-        .success((response) => {
-
-          console.log('session access successful!');
-          sock();
+          console.log('login successful!\n');
+          token = response.token;
+          initSocket();
         })
         .fail((xhr, status, err) => {
           console.log(xhr);
@@ -38,23 +30,33 @@
           console.log(err);
         });
     }
+    function registerForClasses() {
+      socket.emit('subscribe-to-class-channels');
+    }
+    function initSocket(){
+      socket = io.connect('localhost:8080/?token=' + token);
+    }
 
-    function sock() {
-      socket = io.connect('https://voto.io');
+    function togglePresentation(presentationId, state) {
+      socket.emit('toggle-presentation',presentationId,state);
+    }
 
-      socket.on('new-session', (sessionId)=>{
-        console.log(sessionId)
+    function toggleSlide(slideId, state) {
+      socket.emit('toggle-slide',slideId,state);
+    }
+    function registerListeners() {
+
+      socket.on('slide-active', (slideId)=>{
+        console.log('SlideID[%d] active',slideId)
       });
 
-      socket.on('session-active', (sessionId)=>{
-        console.log('New active session: ' + sessionId)
+      socket.on('presentation-active', (presentationId)=>{
+        console.log('presentationID[%d] active', presentationId);
       });
 
       socket.on('error', (error)=>{
         console.log('ERR: ' + error);
       });
-
-      socket.emit('subscribe-to-sessions-student');
     }
 </script>
 </body>

@@ -43,8 +43,27 @@ define({ "api": [
         }
       ]
     },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "UN_AUTHORIZED",
+            "description": "<p>This user ID is not authorized.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "UN_AUTHORIZED",
+          "content": "HTTP/1.1 500\n[\n \"UN_AUTHORIZED\"\n]",
+          "type": "String"
+        }
+      ]
+    },
     "version": "0.0.0",
-    "filename": "routes/classes.js",
+    "filename": "routes/classesRouter.js",
     "groupTitle": "Classes"
   },
   {
@@ -90,10 +109,17 @@ define({ "api": [
         "Success 200": [
           {
             "group": "Success 200",
-            "type": "String",
+            "type": "json",
             "optional": false,
-            "field": "success",
-            "description": "<p>Login worked.</p>"
+            "field": "user",
+            "description": "<p>The user.</p>"
+          },
+          {
+            "group": "Success 200",
+            "type": "json",
+            "optional": false,
+            "field": "token",
+            "description": "<p>The new access token.</p>"
           }
         ]
       },
@@ -106,8 +132,75 @@ define({ "api": [
       ]
     },
     "version": "0.0.0",
-    "filename": "routes/login.js",
+    "filename": "routes/loginRouter.js",
     "groupTitle": "Login"
+  },
+  {
+    "type": "delete",
+    "url": "api/media/:imgFileName/",
+    "title": "De-Activate a specific slide",
+    "name": "Delete_Slide_Image",
+    "group": "Media",
+    "permission": [
+      {
+        "name": "ADMIN ONLY"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "imgFileName",
+            "description": "<p>File to remove from S3.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "200": [
+          {
+            "group": "200",
+            "type": "String",
+            "optional": false,
+            "field": "SUCCESS",
+            "description": "<p>Slide Image Removed.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "SUCCESS",
+          "content": "HTTP/1.1 200 OK\n[\"SUCCESS\"]",
+          "type": "String"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ER_S3_DELETE",
+            "description": "<p>Error deleting resource.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "ER_S3_DELETE",
+          "content": "HTTP/1.1 500\n[\n \"ER_S3_DELETE\"\n]",
+          "type": "String"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "routes/mediaRouter.js",
+    "groupTitle": "Media"
   },
   {
     "type": "post",
@@ -166,7 +259,7 @@ define({ "api": [
       },
       "examples": [
         {
-          "title": "error",
+          "title": "UN_AUTHORIZED",
           "content": "HTTP/1.1 500\n[\n \"UN_AUTHORIZED\"\n]",
           "type": "String"
         }
@@ -179,7 +272,7 @@ define({ "api": [
   {
     "type": "post",
     "url": "api/presentations/:presentationId/activate",
-    "title": "Activate a specific presentation",
+    "title": "De-Activate a specific presentation",
     "name": "De_Activate_Presentation",
     "group": "Presentations",
     "permission": [
@@ -244,6 +337,73 @@ define({ "api": [
     "groupTitle": "Presentations"
   },
   {
+    "type": "delete",
+    "url": "api/presentations/:presentationId",
+    "title": "Delete a specific presentation",
+    "name": "Delete_Presentation",
+    "group": "Presentations",
+    "permission": [
+      {
+        "name": "ADMIN ONLY"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "presentationId",
+            "description": "<p>Presentations unique ID.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "200": [
+          {
+            "group": "200",
+            "type": "String",
+            "optional": false,
+            "field": "SUCCESS",
+            "description": "<p>Presentation has been deleted.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "SUCCESS",
+          "content": "HTTP/1.1 200 OK\n[\"SUCCESS\"]",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "UN_AUTHORIZED",
+            "description": "<p>This user ID is not allowed to delete this presentation.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "UN_AUTHORIZED",
+          "content": "HTTP/1.1 500\n[\n \"UN_AUTHORIZED\"\n]",
+          "type": "String"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "routes/presentationRoutes.js",
+    "groupTitle": "Presentations"
+  },
+  {
     "type": "get",
     "url": "api/presentation/:presentationId",
     "title": "Get a specific presentation",
@@ -281,9 +441,28 @@ define({ "api": [
       },
       "examples": [
         {
-          "title": "The user object and a new access token",
+          "title": "The presentation data",
           "content": " HTTP/1.1 200 OK\n [{\n    \"presentationId\": 1,\n     \"userId\": 1,\n     \"classId\": 1,\n     \"title\": \"asdf\",\n     \"isActive\": 0,\n     \"totalSlides\": 0,\n     \"useCount\": 31,\n     \"description\": \"asdf\",\n     \"isFavorite\": 0,\n     \"dateLastUsed\": \"2018-01-10T02:17:49.000Z\",\n     \"dateCreated\": \"2017-08-23T05:42:03.000Z\"\n}\n]",
           "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "UN_AUTHORIZED",
+            "description": "<p>This user ID is not allowed to get this presentation.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "UN_AUTHORIZED",
+          "content": "HTTP/1.1 500\n[\n \"UN_AUTHORIZED\"\n]",
+          "type": "String"
         }
       ]
     },
@@ -332,6 +511,25 @@ define({ "api": [
           "title": "The user object and a new access token",
           "content": " HTTP/1.1 200 OK\n [{\n        \"slideId\": 5,\n        \"userId\": 1,\n        \"classId\": 1,\n        \"presentationId\": 7,\n        \"imgFileName\": \"9e7f6fb9-adde-4459-bdc6-e5b17a3b1a42_viklander.jpg\",\n        \"isActive\": 0,\n        \"dateCreated\": \"2017-08-26T20:47:09.000Z\",\n        \"question\": null,\n        \"orderNumber\": 0,\n        \"correctAnswer\": null,\n        \"timeStamp\": 1503776829\n    },\n     {\n         \"slideId\": 6,\n         \"userId\": 1,\n         \"classId\": 1,\n         \"presentationId\": 7,\n         \"imgFileName\": \"27305fbf-8631-47d9-98a2-7bb127a7ce53_viklander.jpg\",\n         \"isActive\": 0,\n         \"dateCreated\": \"2017-08-27T14:35:26.000Z\",\n         \"question\": null,\n         \"orderNumber\": 0,\n         \"correctAnswer\": null,\n         \"timeStamp\": 1503840926\n     }\n]",
           "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "UN_AUTHORIZED",
+            "description": "<p>This user ID is not authorized.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "UN_AUTHORIZED",
+          "content": "HTTP/1.1 500\n[\n \"UN_AUTHORIZED\"\n]",
+          "type": "String"
         }
       ]
     },
@@ -393,13 +591,13 @@ define({ "api": [
     },
     "success": {
       "fields": {
-        "Success 200": [
+        "200": [
           {
-            "group": "Success 200",
-            "type": "String",
+            "group": "200",
+            "type": "json",
             "optional": false,
-            "field": "success",
-            "description": "<p>Presentation Activated.</p>"
+            "field": "object",
+            "description": "<p>The new Presentation.</p>"
           }
         ]
       },
@@ -411,54 +609,6 @@ define({ "api": [
         }
       ]
     },
-    "version": "0.0.0",
-    "filename": "routes/presentationRoutes.js",
-    "groupTitle": "Presentations"
-  },
-  {
-    "type": "post",
-    "url": "api/slides/:slideId/activate",
-    "title": "Activate a specific slide",
-    "name": "Activate_Slide",
-    "group": "Slides",
-    "permission": [
-      {
-        "name": "ADMIN ONLY"
-      }
-    ],
-    "parameter": {
-      "fields": {
-        "Parameter": [
-          {
-            "group": "Parameter",
-            "type": "Number",
-            "optional": false,
-            "field": "slideId",
-            "description": "<p>Slides' unique ID.</p>"
-          }
-        ]
-      }
-    },
-    "success": {
-      "fields": {
-        "200": [
-          {
-            "group": "200",
-            "type": "String",
-            "optional": false,
-            "field": "ACTIVATED",
-            "description": "<p>Slide Activated.</p>"
-          }
-        ]
-      },
-      "examples": [
-        {
-          "title": "ACTIVATED",
-          "content": "HTTP/1.1 200 OK\n[\"ACTIVATED\"]",
-          "type": "String"
-        }
-      ]
-    },
     "error": {
       "fields": {
         "500": [
@@ -466,7 +616,7 @@ define({ "api": [
             "group": "500",
             "optional": false,
             "field": "UN_AUTHORIZED",
-            "description": "<p>This user ID is not allowed to modify this presentation.</p>"
+            "description": "<p>This user ID is not authorized or resource not possible.</p>"
           }
         ]
       },
@@ -479,8 +629,96 @@ define({ "api": [
       ]
     },
     "version": "0.0.0",
-    "filename": "routes/slides.js",
-    "groupTitle": "Slides"
+    "filename": "routes/presentationRoutes.js",
+    "groupTitle": "Presentations"
+  },
+  {
+    "type": "patch",
+    "url": "api/presentations/",
+    "title": "Update fields in a presentation",
+    "permission": [
+      {
+        "name": "ADMIN ONLY"
+      }
+    ],
+    "group": "Presentations",
+    "name": "Update_Presentation",
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "presentationId",
+            "description": "<p>Presentations unique ID.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "title",
+            "description": "<p>Presentations new title.</p>"
+          },
+          {
+            "group": "Parameter",
+            "type": "String",
+            "optional": false,
+            "field": "description",
+            "description": "<p>Presentations quick description.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "Request Example",
+          "content": "{\"presentationId\":1, \"title\":\"PHY 101\", \"description\":\"Physics...\"}",
+          "type": "json"
+        }
+      ]
+    },
+    "success": {
+      "fields": {
+        "200": [
+          {
+            "group": "200",
+            "type": "json",
+            "optional": false,
+            "field": "update",
+            "description": "<p>The new Presentation.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "The new presentation data",
+          "content": "HTTP/1.1 200 OK\n[{\n  \"presentationId:\"1\",\n  \"classId\":\"1\",\n  \"title\":\"PHY 101\",\n  \"description\":\"Physics...\",\n  \"totalSlides\":2,\n  \"useCount\":0,\n  \"dateLastUsed\": 201923943,\n  \"dateCreated\": 2010210312\n}]",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "UN_AUTHORIZED",
+            "description": "<p>This user ID is not authorized.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "UN_AUTHORIZED",
+          "content": "HTTP/1.1 500\n[\n \"UN_AUTHORIZED\"\n]",
+          "type": "String"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "routes/presentationRoutes.js",
+    "groupTitle": "Presentations"
   },
   {
     "type": "post",
@@ -546,7 +784,141 @@ define({ "api": [
       ]
     },
     "version": "0.0.0",
-    "filename": "routes/slides.js",
+    "filename": "routes/slidesRouter.js",
+    "groupTitle": "Slides"
+  },
+  {
+    "type": "delete",
+    "url": "api/slides/:slideId/",
+    "title": "De-Activate a specific slide",
+    "name": "De_Activate_Slide",
+    "group": "Slides",
+    "permission": [
+      {
+        "name": "ADMIN ONLY"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "slideId",
+            "description": "<p>Slides' unique ID.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "200": [
+          {
+            "group": "200",
+            "type": "String",
+            "optional": false,
+            "field": "DE_ACTIVATED",
+            "description": "<p>Slide De-Activated.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "DE_ACTIVATED",
+          "content": "HTTP/1.1 200 OK\n[\"DE_ACTIVATED\"]",
+          "type": "String"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "UN_AUTHORIZED",
+            "description": "<p>This user ID is not allowed to modify this presentation.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "UN_AUTHORIZED",
+          "content": "HTTP/1.1 500\n[\n \"UN_AUTHORIZED\"\n]",
+          "type": "String"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "routes/slidesRouter.js",
+    "groupTitle": "Slides"
+  },
+  {
+    "type": "get",
+    "url": "api/slides/:slideId",
+    "title": "Get a specific slide",
+    "name": "Get_Slide",
+    "group": "Slides",
+    "permission": [
+      {
+        "name": "ALL"
+      }
+    ],
+    "parameter": {
+      "fields": {
+        "Parameter": [
+          {
+            "group": "Parameter",
+            "type": "Number",
+            "optional": false,
+            "field": "slideId",
+            "description": "<p>The unique ID of the slide to retrieve.</p>"
+          }
+        ]
+      }
+    },
+    "success": {
+      "fields": {
+        "200": [
+          {
+            "group": "200",
+            "type": "json",
+            "optional": false,
+            "field": "object",
+            "description": "<p>Slide json data</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "The slide object and a new access token",
+          "content": " HTTP/1.1 200 OK\n [\n \"slide\":{\n     \"slideId\": 1,\n     \"userId\": 1,\n     \"classId\": 1,\n     \"presentationId\": 1,\n     \"imgFileName\": \"9e7f6fb9-adde-4459-bdc6-e5b17a3b1a42_example.jpg\",\n     \"isActive\": 0,\n     \"dateCreated\": \"2017-08-23T05:42:03.000Z\"\n},\n\"url\":\"url.com\"\n]",
+          "type": "json"
+        }
+      ]
+    },
+    "error": {
+      "fields": {
+        "500": [
+          {
+            "group": "500",
+            "optional": false,
+            "field": "ERROR",
+            "description": "<p>This user ID is not authorized.</p>"
+          }
+        ]
+      },
+      "examples": [
+        {
+          "title": "ERROR",
+          "content": "HTTP/1.1 500\n[\n {\"error\":err}\n]",
+          "type": "json"
+        }
+      ]
+    },
+    "version": "0.0.0",
+    "filename": "routes/slidesRouter.js",
     "groupTitle": "Slides"
   },
   {
@@ -655,7 +1027,7 @@ define({ "api": [
       ]
     },
     "version": "0.0.0",
-    "filename": "routes/users.js",
+    "filename": "routes/usersRouter.js",
     "groupTitle": "User"
   },
   {
@@ -722,7 +1094,7 @@ define({ "api": [
       ]
     },
     "version": "0.0.0",
-    "filename": "routes/users.js",
+    "filename": "routes/usersRouter.js",
     "groupTitle": "User"
   }
 ] });

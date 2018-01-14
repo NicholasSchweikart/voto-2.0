@@ -123,22 +123,22 @@ exports.toggleSlide = (userId, slideId, newState, _cb) => {
     return _cb("ER_NEED_IDS");
   }
 
-  console.log(`Toggling sldieId ${slideId} -> ${newState}`);
+  console.log(`user ${userId} toggling slideId ${slideId} -> ${newState}`);
 
   const sql = "call change_slide_activation(?, ?, ?)";
   const params = [userId, slideId, newState];
 
-  mySQL.query(sql, params, (err, slideId) => {
+  mySQL.query(sql, params, (err, classId) => {
     if (err) {
       return _cb(err.code);
     }
 
-    if (slideId[0][0]["UN_AUTHORIZED"]) {
+    if (classId[0][0]["UN_AUTHORIZED"]) {
       return _cb("UN_AUTHORIZED");
     }
 
-    // Return the presentation ID for socket updating
-    return _cb(null, slideId[0][0]);
+    // Return the whole slide
+    return _cb(null, classId[0][0]);
   });
 };
 

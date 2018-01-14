@@ -128,16 +128,16 @@ exports.togglePresentation = (userId, presentationId, newState, _cb) => {
   const sql = "call change_presentation_activation(?, ?, ?)";
   const params = [userId, presentationId, newState];
 
-  mySQL.query(sql, params, (err, data) => {
+  mySQL.query(sql, params, (err, classId) => {
     if (err) {
       return _cb(err.code);
     }
 
-    if (data[0][0]["UN_AUTHORIZED"]) {
+    if (classId[0][0]["UN_AUTHORIZED"]) {
       return _cb("UN_AUTHORIZED");
     }
 
-    return _cb(null, true);
+    return _cb(null, classId[0][0]["class_id"]);
   });
 };
 

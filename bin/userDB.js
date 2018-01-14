@@ -201,11 +201,11 @@ exports.getAuthorizedClasses = (userId, _cb) => {
 
     // Create the array of classIds that are valid.
     const authorizedClassIds = [];
-    classes.map((row) => {
-      authorizedIds.push(row.classId);
+    classes[0].map((row) => {
+      authorizedClassIds.push(row.classId);
     });
 
-    return _cb(null, authorizedIds);
+    return _cb(null, authorizedClassIds);
   });
 };
 

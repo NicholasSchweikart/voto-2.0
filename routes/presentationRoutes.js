@@ -311,17 +311,17 @@ router.post("/:presentationId/activate", (req, res) => {
 
   let presentationId = req.params.presentationId;
 
-  db.togglePresentation(req.user.userId, presentationId, true, (err, activated) => {
+  db.togglePresentation(req.user.userId, presentationId, true, (err, classId) => {
 
       if (err) {
         return res.status(403).json({error: err});
       }
 
       // Set array for socket.io operations to happen without DB interaction.
-      if (activated) {
+      if (classId) {
 
-        // Alert all sockets
-        //socketAPI.emitSessionActivated(presentationId);
+        // Alert sockets
+        socketAPI.emitPresentationActive(presentationId,classId);
 
         // Alert the user that the operation was successful
         res.status(200).send("ACTIVATED");
@@ -352,17 +352,17 @@ router.post("/:presentationId/de-activate", (req, res) => {
 
   let presentationId = req.params.presentationId;
 
-  db.togglePresentation(req.user.userId, presentationId, false, (err, activated) => {
+  db.togglePresentation(req.user.userId, presentationId, false, (err, classId) => {
 
     if (err) {
       return res.status(403).json({error: err});
     }
 
     // Set array for socket.io operations to happen without DB interaction.
-    if (activated) {
+    if (classId) {
 
       // Alert all sockets
-      //socketAPI.emitSessionActivated(presentationId);
+      socketAPI.emitPresentationActive(presentationId, classId);
 
       // Alert the user that the operation was successful
       res.status(200).send("DE_ACTIVATED");

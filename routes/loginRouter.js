@@ -20,7 +20,8 @@ const express = require("express"),
  * @apiParamExample {json} Request Example
  * {"userName":"User123", "password":"password"}
  *
- * @apiSuccess {String} success Login worked.
+ * @apiSuccess {json} user The user.
+ * @apiSuccess {json} token The new access token.
  * @apiSuccessExample {json} The user object and a new access token
  *    HTTP/1.1 200 OK
  *    [{
@@ -60,15 +61,6 @@ router.post("/", (req, res) => {
         res.json({user:response,token:token});
     });
   });
-});
-
-/**
- * POST logs a user out of the system by destroying there session.
- */
-router.post("/logout", (req, res) => {
-  if (!req.user.userId) {
-    res.status(401).json({ error: "ER_NOT_LOGGED_IN" });
-  }
 });
 
 module.exports = router;

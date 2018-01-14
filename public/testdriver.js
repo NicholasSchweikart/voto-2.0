@@ -1,26 +1,38 @@
-
-const token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOjIsImZpcnN0TmFtZSI6IkJvYiIsImxhc3ROYW1lIjoiVG9vbCIsInVzZXJOYW1lIjoiTmljYmlsbHkiLCJjcmVhdGlvbkRhdGUiOiIyMDE3LTA4LTIzVDEyOjMyOjI4LjAwMFoiLCJ0eXBlIjoiUyIsImVtYWlsIjoibWVAbWUuY29tIiwiaWF0IjoxNTEzODE3OTM2LCJleHAiOjE1MTM5MDQzMzZ9.AjLSYdQH317Sa2JV5az9QceQcTR2rACpyBKK44psNNk"
-
 const io = require('socket.io-client');
 
-let socket = io.connect(`http://localhost:8080/?token=${token}`);
+let socket = {}, api = {};
 
-socket.on('connected',()=>{
-  console.log('connected!')
-});
+module.exports.initSocket = (token)=>{
+  socket = io.connect(`http://localhost:8080/?token=${token}`);
+  registerListeners();
+};
 
-socket.on('new-session', (sessionId)=>{
-  console.log(sessionId)
-});
+module.exports.togglePresentation = (presentationId, state) => {
+  socket.emit('toggle-presentation',presentationId, state);
+};
 
-socket.on('session-active', (sessionId)=>{
-  console.log('New active session: ' + sessionId)
-});
+module.exports.toggleSlide =(slideId, state)=> {
+  socket.emit('toggle-slide',slideId, state);
+};
 
-socket.on('error', (error)=>{
-  console.log('ERR: ' + error);
-});
+module.exports.registerForClasses = () => {
+  socket.emit('subscribe-to-class-channels');
+};
 
-socket.emit('subscribe-to-sessions-student');
+function registerListeners() {
+  socket.on('connected',()=>{
+    console.log('connected!');
 
+    socket.on('slide-active', (slideId)=>{
+      console.log('slideID[%d] active',slideId)
+    });
 
+    socket.on('presentation-active', (presentationId)=>{
+      console.log('presentationID[%d] active', presentationId);
+    });
+
+    socket.on('error', (error)=>{
+      console.log('ERR: ' + error);
+    });
+  });
+}

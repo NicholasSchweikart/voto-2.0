@@ -66,6 +66,13 @@ router.all('/*', (req, res, next) => {
  *    ]
  *     }
  *    ]
+ *
+ * @apiError (500) UN_AUTHORIZED This user ID is not authorized.
+ * @apiErrorExample {String} UN_AUTHORIZED
+ * HTTP/1.1 500
+ * [
+ *  "UN_AUTHORIZED"
+ * ]
  */
 router.get("/", (req, res) => {
 

@@ -1,50 +1,28 @@
-const cookieParser = require("cookie-parser"),
-  cookie = require("cookie"),
+const
   redis = require('socket.io-redis'),
   userDb = require('./bin/userDB'),
   jwt = require('jsonwebtoken'),
-  serverConfig = require('./serverConfig');
+  serverConfig = require('./serverConfig'),
+  presentationsDb = require("./bin/presentationsDB.js"),
+  slidesDb = require('./bin/slidesDB');
 
 const api = {};
 
 module.exports = (io) => {
 
-  /**
-   * Emits a user respon se notification event to a teacher userId.
-   * @param response the response logged in the system.
-   * @param teacherId the userId of the teacher used to find the room.
-   */
-  api.emitUserResponse = (response, teacherId) => {
-    console.log(`Emitting to teacher userId: ${teacherId} update: ${JSON.stringify(response)}`);
-    io.sockets.in(teacherId).emit("user-response", response);
+  api.emitUserResponse = (response, adminId) => {
+    console.log(`Emitting to teacher socketId: ${adminId} update: ${JSON.stringify(response)}`);
+    io.sockets.in(adminId).emit("user-response", response);
   };
 
-  /**
-   * Emits a new-question event to all the users in a specific session room.
-   * @param questionId the ID of the question being activated.
-   * @param sessionId the sessionId to find the room.
-   */
-  api.emitNewQuestion = (questionId, sessionId) => {
-    console.log(`Emitting to sessionId: ${sessionId} new questionId: ${questionId}`);
-    io.sockets.in(`sessionId_${sessionId}`).emit("new-question", questionId);
+  api.emitSlideActive = (slideId, classId) => {
+    console.log(`Emitting slide activation for presentationId ${slideId} classId ${classId}`);
+    //io.sockets.in(`classId_${classId}`).emit("presentation-active", presentationId);
   };
 
-  /**
-   * Emits a session-active event to all the users in the session room.
-   * @param sessionId the session ID to find the room.
-   */
-  api.emitSessionActivated = (sessionId) => {
-    console.log(`Emitting session activation for sessionId ${sessionId}`);
-    io.sockets.in(`sessionId_${sessionId}`).emit("session-active", sessionId);
-  };
-
-  /**
-   * Emits a session-de-activated event to all clients in the room.
-   * @param sessionId the sessionId to find the room.
-   */
-  api.emitSessionDeactivated = (sessionId) => {
-    console.log(`Emitting session de-activation for sessionId ${sessionId}`);
-    io.sockets.in(`sessionId_${sessionId}`).emit("session-de-activated", sessionId);
+  api.emitPresentationActive = (presentationId, classId) => {
+    console.log(`Emitting presentation activation for presentationId ${presentationId} classId ${classId}`);
+    //io.sockets.in(`classId_${classId}`).emit("presentation-active", presentationId);
   };
 
   // Attach to the local redis server for scalability.
@@ -65,6 +43,7 @@ module.exports = (io) => {
       } else {
         console.log(`new socket authorized`);
         socket.user = user;
+
         next();
       }
     });
@@ -74,11 +53,9 @@ module.exports = (io) => {
    * Handle the connection of a new socket client.
    */
   io.on("connection", (socket) => {
-    console.log("New client connected to socket.io!");
 
-    /**
-     * Subscribe a student to the channel for all authorized sessions.
-     */
+    console.log(`userId[${socket.user.userId}] connected to socket.io!`);
+
     socket.on("subscribe-to-class-channels", () => {
 
       let userId = socket.user.userId;
@@ -86,7 +63,7 @@ module.exports = (io) => {
 
       userDb.getAuthorizedClasses(userId, (err, authorizedClasses) => {
         if (err) {
-          return res.status(500).json({error: err});
+          return new Error(err);
         }
         console.log(`User authorized for ${authorizedClasses}`);
         authorizedClasses.map((classId) => {
@@ -96,38 +73,53 @@ module.exports = (io) => {
       });
     });
 
-    /**
-     * Subscribe a student to the channel for a specific presentation.
-     */
-    socket.on("subscribe-to-presentation-channel", (presenationId) => {
+    socket.on('toggle-presentation', (presentationId, state) =>{
 
-      let userId = socket.user.userId;
-      console.log(`Checking authorizations for userId ${userId} for presentationId ${presenationId}`);
+      presentationsDb.togglePresentation(socket.user.userId, presentationId, state, (err, classId) => {
 
-      userDb.canUserJoinPresentationChannel(userId, (err, yes) => {
         if (err) {
-          return res.status(500).json({error: err});
+          return new Error(`${err}`);
         }
 
-        if(yes){
-          return socket.join(`presentationId_${presenationId}`);
+        // Set array for socket.io operations to happen without DB interaction.
+        if (classId) {
+
+          // Alert sockets
+          console.log(`Emitting presentation activation for presentationId ${presentationId} classId ${classId}`);
+          io.sockets.in(`classId_${classId}`).emit("presentation-active", presentationId);
         }
       });
     });
 
-    /**
-     * Authorize and then open a room for an active session. Teacher ONLY
-     */
-    socket.on("subscribe-to-channel-teacher", () => {
-      socket.join(socket.user.userId);
-      console.log(`teacher userId ${socket.user.userId} has opened a new channel`);
+    socket.on('toggle-slide', (slideId, state)=>{
+
+      slidesDb.toggleSlide(socket.user.userId, slideId, state, (err, slide) => {
+
+        if (err) {
+          console.log(`Error toggle slide: ${err}`);
+          return new Error(err);
+        }
+
+        // Set array for socket.io operations to happen without DB interaction.
+        if (slide) {
+
+          // Alert sockets
+          console.log(`Emitting slide activation for slideId ${slide.slideId} classId ${slide.classId}`);
+          io.sockets.in(`classId_${slide.classId}`).emit("slide-active", slide);
+        }
+      });
     });
 
-    /**
-     * Error handler for all sockets.
-     */
+    socket.on('submit-response',(response) => {
+
+    });
+
     socket.on("error", (err) => {
       console.error(new Error(`Socket Error: ${err}`));
+    });
+
+    socket.on("disconnect", (reason) => {
+      console.log(`socket.id = [${socket.id}] disconnected`);
     });
   });
 
